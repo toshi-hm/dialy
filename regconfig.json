@@ -1,0 +1,18 @@
+{
+  "core": {
+    "workingDir": ".reg",
+    "actualDir": "./storybook-static",
+    "thresholdRate": 0,
+    "addIgnore": true,
+    "ximgdiff": {
+      "invocationType": "client"
+    }
+  },
+  "plugins": {
+    "reg-keygen-git-hash-plugin": true,
+    "reg-simple-keygen-plugin": {
+      "expectedKey": "expected",
+      "actualKey": "actual"
+    }
+  }
+}
