@@ -11,7 +11,7 @@ A diary app that lets you see past entries for the same day at a glance.
 - **CSS**: Tailwind v4.1
 - **Validation**: Zod v4.3.6
 - **Unit Testing**: Vitest v4.0.18
-- **Component Development**: Storybook v8.6+
+- **Component Development**: Storybook v10.2.0
 - **Visual Regression Testing**: reg-suit v0.14.4
 - **CI/CD**: GitHub Actions (Unit Test / VRT / Lint / Format)
 
@@ -88,8 +88,6 @@ pnpm format:check # Check code formatting
 pnpm storybook       # Start Storybook dev server
 pnpm build-storybook # Build Storybook for production
 ```
-
-**Note**: Storybook integration with Next.js 16.x is currently limited due to compatibility issues. Full Storybook support is expected in a future Storybook release.
 
 ### Visual Regression Testing
 
