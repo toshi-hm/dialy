@@ -107,11 +107,11 @@ Dial（円形のコントロール）をドラッグ回転させることで、�
 ### 1.4 実装アルゴリズム
 
 ```typescript
-interface DialProps {
+type DialProps = {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   maxDate?: Date; // デフォルト: 今日
-}
+};
 
 function Dial({ selectedDate, onDateChange, maxDate = new Date() }: DialProps) {
   const [isDragging, setIsDragging] = useState(false);
