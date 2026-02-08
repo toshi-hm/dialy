@@ -1,13 +1,38 @@
 import { z } from 'zod';
+import { isFutureDate } from '@/lib/utils/date';
 
-export const diaryEntrySchema = z.object({
-  id: z.string().uuid().optional(),
-  title: z.string().min(1, 'Title is required').max(100, 'Title must be 100 characters or less'),
-  content: z.string().min(1, 'Content is required'),
-  date: z.date(),
-  tags: z.array(z.string()).optional(),
-  createdAt: z.date().optional(),
-  updatedAt: z.date().optional(),
+export const DiaryDateSchema = z.date().refine((date) => !isFutureDate(date), {
+  message: 'Future date is not allowed',
 });
 
-export type DiaryEntry = z.infer<typeof diaryEntrySchema>;
+export const DiaryEntrySchema = z.object({
+  date: DiaryDateSchema,
+  content: z.string().max(10_000, 'Content exceeds maximum length (10,000 characters)'),
+});
+
+export type DiaryEntryInput = z.infer<typeof DiaryEntrySchema>;
+
+export const CreateDiaryEntrySchema = DiaryEntrySchema;
+export type CreateDiaryEntryInput = z.infer<typeof CreateDiaryEntrySchema>;
+
+const DiaryEntryIdSchema = z.string().uuid('Invalid ID format');
+
+export const UpdateDiaryEntrySchema = z.object({
+  id: DiaryEntryIdSchema,
+  content: z.string().max(10_000, 'Content exceeds maximum length (10,000 characters)'),
+});
+export type UpdateDiaryEntryInput = z.infer<typeof UpdateDiaryEntrySchema>;
+
+export const DeleteDiaryEntrySchema = z.object({
+  id: DiaryEntryIdSchema,
+});
+export type DeleteDiaryEntryInput = z.infer<typeof DeleteDiaryEntrySchema>;
+
+export const GetEntriesBySameDateSchema = z.object({
+  date: DiaryDateSchema,
+  years: z.number().int().positive().max(50).default(5),
+});
+export type GetEntriesBySameDateInput = z.infer<typeof GetEntriesBySameDateSchema>;
+
+// Backward-compatible alias until all imports are migrated.
+export const diaryEntrySchema = DiaryEntrySchema;
