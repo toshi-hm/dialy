@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Dialy is a diary application built with Next.js 16.1.5 and React 19.2.4 that allows users to view past entries for the same day at a glance. The project follows the Atomic Design pattern and uses modern tooling with TypeScript.
+Dialy is a diary application built with Next.js 16 and React 19 that allows users to view past entries for the same day at a glance. The project follows the Atomic Design pattern and uses modern tooling with TypeScript.
 
 ## Essential Commands
 
@@ -92,8 +92,8 @@ npx reg-suit run  # Run visual regression tests (requires baseline)
 4. **Styling**: Tailwind CSS v4.1 is configured. Use utility classes directly.
 
 5. **Code Style**: Biome enforces:
-   - Single quotes for JS/TS
-   - Double quotes for JSX
+   - Single quotes for TS
+   - Double quotes for TSX
    - 2-space indentation
    - 100-character line width
    - Trailing commas
@@ -132,9 +132,9 @@ Test files must be colocated with components using `.test.tsx` suffix.
 
 ## Package Manager
 
-**Always use pnpm** (version 10.28.2 specified in packageManager field). The project requires:
-- Node.js ≥20.0.0
-- pnpm ≥9.0.0
+**Always use pnpm** (version 10 specified in packageManager field). The project requires:
+- Node.js ≥ 22
+- pnpm ≥ 10
 
 Do not use npm or yarn.
 
