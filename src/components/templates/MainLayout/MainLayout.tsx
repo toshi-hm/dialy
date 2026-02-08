@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import { Header } from '@/components/organisms/Header';
 import { cn } from '@/lib/utils/cn';
 
-export interface MainLayoutProps {
+export type MainLayoutProps = {
   children: ReactNode;
   sidebar?: ReactNode;
   headerActions?: ReactNode;
   className?: string;
-}
+};
 
 export function MainLayout({ children, className, headerActions, sidebar }: MainLayoutProps) {
   return (

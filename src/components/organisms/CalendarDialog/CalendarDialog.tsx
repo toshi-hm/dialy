@@ -5,14 +5,14 @@ import { Button } from '@/components/atoms/Button';
 import { cn } from '@/lib/utils/cn';
 import { toISODate } from '@/lib/utils/date';
 
-export interface CalendarDialogProps {
+export type CalendarDialogProps = {
   open: boolean;
   selectedDate: Date;
   maxDate: Date;
   onSelect: (date: Date) => void;
   onClose: () => void;
   className?: string;
-}
+};
 
 export function CalendarDialog({
   className,

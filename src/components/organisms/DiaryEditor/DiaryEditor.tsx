@@ -7,14 +7,14 @@ import { cn } from '@/lib/utils/cn';
 import { debounce } from '@/lib/utils/debounce';
 import type { SaveStatus } from '@/types/diary';
 
-export interface DiaryEditorProps {
+export type DiaryEditorProps = {
   date: Date;
   initialContent?: string;
   onSave: (content: string) => Promise<void>;
   onRequestDelete?: () => void;
   maxLength?: number;
   className?: string;
-}
+};
 
 export function DiaryEditor({
   className,

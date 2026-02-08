@@ -1,10 +1,10 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/utils/cn';
 
-export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
   children: ReactNode;
   variant?: 'default' | 'error' | 'success' | 'warning';
-}
+};
 
 const variantClasses = {
   default: 'bg-gray-100 text-gray-700',

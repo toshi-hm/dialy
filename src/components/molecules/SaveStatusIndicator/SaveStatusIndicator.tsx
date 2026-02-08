@@ -2,11 +2,11 @@ import { Icon } from '@/components/atoms/Icon';
 import { cn } from '@/lib/utils/cn';
 import type { SaveStatus } from '@/types/diary';
 
-export interface SaveStatusIndicatorProps {
+export type SaveStatusIndicatorProps = {
   status: SaveStatus;
   errorMessage?: string;
   className?: string;
-}
+};
 
 export function SaveStatusIndicator({
   className,

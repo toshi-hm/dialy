@@ -6,7 +6,7 @@ import { addDays, formatDateWithWeekday, isFutureDate, startOfDay } from '@/lib/
 
 const ROTATION_STEP_DEGREE = 24;
 
-export interface DialProps {
+export type DialProps = {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   minDate?: Date;
@@ -15,7 +15,7 @@ export interface DialProps {
   onOpenCalendar?: () => void;
   className?: string;
   size?: number;
-}
+};
 
 export function Dial({
   className,

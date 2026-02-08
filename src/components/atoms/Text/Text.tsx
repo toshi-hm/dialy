@@ -1,13 +1,13 @@
 import type { ElementType, HTMLAttributes, ReactNode } from 'react';
 import { cn } from '@/lib/utils/cn';
 
-export interface TextProps extends HTMLAttributes<HTMLElement> {
+export type TextProps = HTMLAttributes<HTMLElement> & {
   as?: ElementType;
   children: ReactNode;
   tone?: 'default' | 'muted' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   weight?: 'normal' | 'medium' | 'bold';
-}
+};
 
 const toneClasses = {
   default: 'text-gray-900',

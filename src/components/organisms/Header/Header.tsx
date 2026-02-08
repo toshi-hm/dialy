@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils/cn';
 
-export interface HeaderProps {
+export type HeaderProps = {
   actions?: ReactNode;
   className?: string;
-}
+};
 
 export function Header({ actions, className }: HeaderProps) {
   return (

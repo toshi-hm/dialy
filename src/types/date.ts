@@ -1,11 +1,11 @@
 export type ISODateString = `${number}-${number}-${number}`;
 
-export interface DateRange {
+export type DateRange = {
   start: Date;
   end: Date;
-}
+};
 
-export interface SameDateQuery {
+export type SameDateQuery = {
   date: Date;
   years: number;
-}
+};

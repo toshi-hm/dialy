@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils/cn';
 import { formatDateWithWeekday } from '@/lib/utils/date';
 
-export interface DateDisplayProps {
+export type DateDisplayProps = {
   date: Date;
   className?: string;
-}
+};
 
 export function DateDisplay({ className, date }: DateDisplayProps) {
   return (

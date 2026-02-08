@@ -1,43 +1,43 @@
-export interface DiaryEntryData {
+export type DiaryEntryData = {
   id: string;
   date: Date;
   content: string;
   createdAt: Date;
   updatedAt: Date;
-}
+};
 
-export interface CreateDiaryEntryInput {
+export type CreateDiaryEntryInput = {
   date: Date;
   content: string;
-}
+};
 
-export interface UpdateDiaryEntryInput {
+export type UpdateDiaryEntryInput = {
   id: string;
   content: string;
-}
+};
 
-export interface DeleteDiaryEntryInput {
+export type DeleteDiaryEntryInput = {
   id: string;
-}
+};
 
-export interface StoredDiaryEntry {
+export type StoredDiaryEntry = {
   id: string;
   date: string;
   content: string;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface DiaryStorage {
+export type DiaryStorage = {
   version: string;
   entries: StoredDiaryEntry[];
-}
+};
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export interface DiaryPreviewData {
+export type DiaryPreviewData = {
   id: string;
   year: number;
   preview: string;
   characterCount: number;
-}
+};

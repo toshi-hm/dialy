@@ -3,11 +3,11 @@ import { cn } from '@/lib/utils/cn';
 
 export type IconName = 'alert' | 'calendar' | 'check' | 'clock' | 'trash';
 
-export interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
+export type IconProps = Omit<SVGProps<SVGSVGElement>, 'name'> & {
   name: IconName;
   label?: string;
   size?: number;
-}
+};
 
 const iconPaths: Record<IconName, JSX.Element> = {
   calendar: (

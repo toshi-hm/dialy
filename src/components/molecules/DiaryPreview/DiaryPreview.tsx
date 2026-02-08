@@ -3,12 +3,12 @@ import { Button } from '@/components/atoms/Button';
 import type { DiaryEntry } from '@/lib/domain/diary-entry';
 import { cn } from '@/lib/utils/cn';
 
-export interface DiaryPreviewProps {
+export type DiaryPreviewProps = {
   entry: DiaryEntry;
   expanded?: boolean;
   onToggle?: () => void;
   className?: string;
-}
+};
 
 export function DiaryPreview({ className, entry, expanded = false, onToggle }: DiaryPreviewProps) {
   const text = expanded ? entry.content : entry.getPreviewText(100);

@@ -1,12 +1,12 @@
 import { Badge } from '@/components/atoms/Badge';
 import { cn } from '@/lib/utils/cn';
 
-export interface CharacterCountProps {
+export type CharacterCountProps = {
   content: string;
   maxLength?: number;
   warningThreshold?: number;
   className?: string;
-}
+};
 
 export function CharacterCount({
   className,

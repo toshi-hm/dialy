@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { Button } from '@/components/atoms/Button';
 import { cn } from '@/lib/utils/cn';
 
-export interface DeleteConfirmDialogProps {
+export type DeleteConfirmDialogProps = {
   open: boolean;
   onConfirm: () => Promise<void>;
   onCancel: () => void;
   className?: string;
-}
+};
 
 export function DeleteConfirmDialog({
   className,

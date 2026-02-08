@@ -5,10 +5,10 @@ import { DiaryPreview } from '@/components/molecules';
 import type { DiaryEntry } from '@/lib/domain/diary-entry';
 import { cn } from '@/lib/utils/cn';
 
-export interface PastEntriesListProps {
+export type PastEntriesListProps = {
   entries: DiaryEntry[];
   className?: string;
-}
+};
 
 export function PastEntriesList({ className, entries }: PastEntriesListProps) {
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
