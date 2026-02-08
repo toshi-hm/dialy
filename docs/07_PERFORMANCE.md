@@ -647,7 +647,7 @@ Sentry.init({
 
 ### 8.1 レンダリング
 
-- [ ] Server Components優先
+- [ ] MVPはClient Components中心で構成（Phase 2でServer Components優先へ移行）
 - [ ] Client Componentsは必要最小限
 - [ ] React.memoで不要な再レンダリングを防止
 - [ ] useMemo/useCallbackで重い計算をメモ化
@@ -684,7 +684,7 @@ Sentry.init({
 
 ### 9.1 高優先度（MVP版で実施）
 
-1. Server Components優先
+1. Client Componentsの再レンダリング最適化
 2. デバウンス処理（自動保存）
 3. React.memoでメモ化
 4. LocalStorageキャッシング
@@ -727,7 +727,7 @@ Sentry.init({
 ## まとめ
 
 - **Core Web Vitals**: LCP < 2.5秒、FID < 100ms、CLS < 0.1
-- **レンダリング最適化**: Server Components優先、メモ化
+- **レンダリング最適化**: MVPはClient Components中心、将来はServer Components優先
 - **データ取得最適化**: 並列取得、デバウンス、プリフェッチ
 - **キャッシング**: Next.jsの自動キャッシング、LocalStorageキャッシュ
 - **バンドル最適化**: Dynamic Import、Tree Shaking

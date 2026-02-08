@@ -134,7 +134,7 @@ dialy/
 │   │   ├── layout.tsx            # ルートレイアウト
 │   │   ├── page.tsx              # トップページ（日記作成画面）
 │   │   ├── globals.css           # グローバルスタイル
-│   │   └── actions/              # Server Actions
+│   │   └── actions/              # Server Actions（Phase 2以降）
 │   │       ├── diary.ts          # 日記関連のアクション
 │   │       └── date.ts           # 日付関連のアクション
 │   │
@@ -153,7 +153,8 @@ dialy/
 │   │   ├── molecules/            # Atomic Design: 小さなコンポーネントの組み合わせ
 │   │   │   ├── DateDisplay/      # 日付表示（◯月◯日（曜日））
 │   │   │   ├── DiaryPreview/     # 日記プレビューカード
-│   │   │   └── SaveButton/       # 保存ボタン（アイコン+テキスト）
+│   │   │   ├── CharacterCount/   # 文字数カウンター
+│   │   │   └── SaveStatusIndicator/  # 自動保存状態表示
 │   │   │
 │   │   ├── organisms/            # Atomic Design: 複雑なUIコンポーネント
 │   │   │   ├── Dial/             # 日付選択Dial
@@ -226,7 +227,7 @@ dialy/
 - **Next.js App Router** (`src/app/`)
   - ページコンポーネント
   - レイアウトコンポーネント
-  - Server Actions（データ変更）
+  - Server Actions（Phase 2以降）
 
 - **UI Components** (`src/components/`)
   - Atomic Design階層に従ったコンポーネント
@@ -516,19 +517,28 @@ dialy/
 #### Molecules（小さなコンポーネントの組み合わせ）
 - `DateDisplay`: 日付表示（◯月◯日（曜日））
 - `DiaryPreview`: 日記プレビューカード（年 + 冒頭テキスト）
-- `SaveButton`: 保存ボタン（アイコン + テキスト）
 - `CharacterCount`: 文字数カウンター
+- `SaveStatusIndicator`: 自動保存状態（保存中/完了/失敗）
 
 #### Organisms（複雑なUIコンポーネント）
 - `Dial`: 日付選択Dial（円形コントロール）
-- `DiaryEditor`: 日記編集エリア（テキストエリア + 自動保存 + 保存ボタン）
+- `DiaryEditor`: 日記編集エリア（テキストエリア + 自動保存）
 - `PastEntriesList`: 過去の同じ日の日記リスト
 - `Header`: ヘッダー
 
 #### Templates（ページレイアウト）
 - `MainLayout`: メインレイアウト（Header + Main content）
 
-### 6.2 主要コンポーネントの詳細
+### 6.2 Atomic Design依存ルール
+
+- `atoms` は `atoms`・`lib`・`types` のみ参照可能
+- `molecules` は `atoms`・`molecules`・`lib`・`types` のみ参照可能
+- `organisms` は `atoms`・`molecules`・`organisms`・`lib`・`types` のみ参照可能
+- `templates` は `atoms`・`molecules`・`organisms`・`templates`・`lib`・`types` のみ参照可能
+- 上位階層から下位階層への参照は許可、下位から上位への逆依存は禁止
+- 依存違反（例: `atoms -> organisms`）は設計違反としてレビューで差し戻す
+
+### 6.3 主要コンポーネントの詳細
 
 #### Dial（日付選択Dial）
 
@@ -621,8 +631,8 @@ export const PastEntriesList: FC<PastEntriesListProps> = ({
 
 MVP版ではシンプルな状態管理を採用:
 
-1. **Server State**: Server ComponentsとServer Actionsで管理
-2. **Client State**: React Hooksで管理
+1. **Client State**: React Hooksで管理
+2. **Persistence State**: LocalStorageRepositoryで管理
 3. **URL State**: Next.js App Routerのパラメータで管理（将来）
 
 ### 7.2 主要な状態
@@ -631,7 +641,7 @@ MVP版ではシンプルな状態管理を採用:
 |------|---------|---------|
 | 選択中の日付 | Client | useState |
 | 編集中の日記内容 | Client | useState |
-| 過去の日記データ | Server | Server Actions |
+| 過去の日記データ | Client | LocalStorageRepository + useEffect |
 | 保存状態 | Client | useState (isSaving) |
 | エラー状態 | Client | useState |
 
@@ -646,7 +656,7 @@ MVP版ではシンプルな状態管理を採用:
 
 ### 8.1 最適化戦略
 
-1. **Server Components優先**: デフォルトでServer Components
+1. **MVPはClient Components前提**: LocalStorage利用のため、画面統合はClient Componentsで構成
 2. **Code Splitting**: 動的インポートで遅延ロード
 3. **メモ化**: React.memo、useMemo、useCallbackの活用
 4. **デバウンス**: 自動保存処理のデバウンス
@@ -671,11 +681,12 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 - Reactのデフォルトエスケープに依存
 
 ### 9.2 CSRF対策
-- Next.jsのServer Actionsが自動的に対応
+- MVPでは書き込み先がLocalStorageのためCSRFは適用対象外
+- Phase 2でServer Actions/API Routeへ移行後にCSRF対策を適用
 
 ### 9.3 データ検証
 - クライアント側: Zodスキーマで入力検証
-- サーバー側: Server Actionsで再検証
+- サーバー側: Phase 2でServer Actions/API Route導入後に再検証
 
 ## 10. 将来的な技術的拡張
 
