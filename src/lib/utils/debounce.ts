@@ -1,6 +1,4 @@
-export type DebouncedFunction<TArgs extends unknown[]> = ((
-  ...args: TArgs
-) => void) & {
+export type DebouncedFunction<TArgs extends unknown[]> = ((...args: TArgs) => void) & {
   cancel: () => void;
   flush: () => void;
 };

@@ -1,7 +1,7 @@
 import type { DiaryEntry } from '@/lib/domain/diary-entry';
 import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
-import { FetchFailedError } from '@/types/errors';
 import { GetEntriesBySameDateSchema } from '@/lib/validations/diary';
+import { FetchFailedError } from '@/types/errors';
 
 export class GetEntriesBySameDateUseCase {
   constructor(private readonly repository: DiaryRepository) {}

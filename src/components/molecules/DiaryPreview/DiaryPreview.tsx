@@ -30,7 +30,9 @@ export function DiaryPreview({ className, entry, expanded = false, onToggle }: D
           </Button>
         )}
       </header>
-      <p className="mb-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700">{text}</p>
+      <p className="mb-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700">
+        {text}
+      </p>
       <Badge variant="default">文字数: {entry.getCharacterCount().toLocaleString()}</Badge>
     </article>
   );

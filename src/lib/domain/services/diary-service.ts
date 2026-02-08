@@ -1,4 +1,4 @@
-import { DiaryEntry } from '@/lib/domain/diary-entry';
+import type { DiaryEntry } from '@/lib/domain/diary-entry';
 
 export class DiaryService {
   getEntriesBySameDate(entries: DiaryEntry[], date: Date, years: number = 5): DiaryEntry[] {

@@ -126,10 +126,7 @@ describe('diary use cases', () => {
 
     const result = await useCase.execute(new Date('2026-02-08T00:00:00.000Z'), 5);
 
-    expect(repository.findBySameDate).toHaveBeenCalledWith(
-      new Date('2026-02-08T00:00:00.000Z'),
-      5,
-    );
+    expect(repository.findBySameDate).toHaveBeenCalledWith(new Date('2026-02-08T00:00:00.000Z'), 5);
     expect(result).toEqual(entries);
   });
 });

@@ -1,9 +1,6 @@
 import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
+import { type DeleteDiaryEntryInput, DeleteDiaryEntrySchema } from '@/lib/validations/diary';
 import { SaveFailedError } from '@/types/errors';
-import {
-  DeleteDiaryEntrySchema,
-  type DeleteDiaryEntryInput,
-} from '@/lib/validations/diary';
 
 export class DeleteDiaryEntryUseCase {
   constructor(private readonly repository: DiaryRepository) {}

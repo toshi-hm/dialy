@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useMemo, useRef } from 'react';
-import { addDays, formatDateWithWeekday, isFutureDate, startOfDay } from '@/lib/utils/date';
 import { cn } from '@/lib/utils/cn';
+import { addDays, formatDateWithWeekday, isFutureDate, startOfDay } from '@/lib/utils/date';
 
 const ROTATION_STEP_DEGREE = 24;
 
@@ -34,7 +34,10 @@ export function Dial({
     pointerId: null,
   });
 
-  const ariaValueNow = useMemo(() => Math.floor(startOfDay(selectedDate).getTime() / 86400000), [selectedDate]);
+  const ariaValueNow = useMemo(
+    () => Math.floor(startOfDay(selectedDate).getTime() / 86400000),
+    [selectedDate],
+  );
 
   const canMoveToDate = useCallback(
     (candidate: Date) => {

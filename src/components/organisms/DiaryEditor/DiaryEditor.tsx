@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
 import { CharacterCount, SaveStatusIndicator } from '@/components/molecules';
-import { debounce } from '@/lib/utils/debounce';
 import { cn } from '@/lib/utils/cn';
+import { debounce } from '@/lib/utils/debounce';
 import type { SaveStatus } from '@/types/diary';
 
 export interface DiaryEditorProps {
@@ -29,15 +29,16 @@ export function DiaryEditor({
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const lastSavedContentRef = useRef(initialContent);
   const resetStatusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dateKey = date.getTime();
 
-  const clearResetStatusTimer = () => {
+  const clearResetStatusTimer = useCallback(() => {
     if (!resetStatusTimeoutRef.current) {
       return;
     }
 
     clearTimeout(resetStatusTimeoutRef.current);
     resetStatusTimeoutRef.current = null;
-  };
+  }, []);
 
   const saveNow = useCallback(
     async (value: string) => {
@@ -63,7 +64,7 @@ export function DiaryEditor({
         setErrorMessage('保存に失敗しました');
       }
     },
-    [maxLength, onSave],
+    [clearResetStatusTimer, maxLength, onSave],
   );
 
   const debouncedSave = useMemo(
@@ -75,12 +76,16 @@ export function DiaryEditor({
   );
 
   useEffect(() => {
+    if (Number.isNaN(dateKey)) {
+      return;
+    }
+
     setContent(initialContent);
     lastSavedContentRef.current = initialContent;
     setSaveStatus('idle');
     setErrorMessage(undefined);
     debouncedSave.cancel();
-  }, [date, initialContent, debouncedSave]);
+  }, [dateKey, initialContent, debouncedSave]);
 
   useEffect(() => {
     if (content === lastSavedContentRef.current) {
@@ -95,7 +100,7 @@ export function DiaryEditor({
       debouncedSave.cancel();
       clearResetStatusTimer();
     },
-    [debouncedSave],
+    [clearResetStatusTimer, debouncedSave],
   );
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {

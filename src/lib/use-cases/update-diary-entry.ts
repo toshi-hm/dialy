@@ -1,10 +1,7 @@
-import { DiaryEntry } from '@/lib/domain/diary-entry';
+import type { DiaryEntry } from '@/lib/domain/diary-entry';
 import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
+import { type UpdateDiaryEntryInput, UpdateDiaryEntrySchema } from '@/lib/validations/diary';
 import { FetchFailedError, SaveFailedError } from '@/types/errors';
-import {
-  UpdateDiaryEntrySchema,
-  type UpdateDiaryEntryInput,
-} from '@/lib/validations/diary';
 
 export class UpdateDiaryEntryUseCase {
   constructor(private readonly repository: DiaryRepository) {}

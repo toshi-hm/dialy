@@ -24,11 +24,7 @@ describe('LocalStorageDiaryRepository', () => {
 
   it('saves and retrieves entries', async () => {
     const repository = new LocalStorageDiaryRepository();
-    const entry = reconstructEntry(
-      '550e8400-e29b-41d4-a716-446655440000',
-      '2026-02-08',
-      'entry',
-    );
+    const entry = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'entry');
 
     await repository.save(entry);
 
@@ -42,16 +38,8 @@ describe('LocalStorageDiaryRepository', () => {
 
   it('throws ValidationError when duplicate date entry is saved', async () => {
     const repository = new LocalStorageDiaryRepository();
-    const first = reconstructEntry(
-      '550e8400-e29b-41d4-a716-446655440000',
-      '2026-02-08',
-      'first',
-    );
-    const second = reconstructEntry(
-      '550e8400-e29b-41d4-a716-446655440001',
-      '2026-02-08',
-      'second',
-    );
+    const first = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'first');
+    const second = reconstructEntry('550e8400-e29b-41d4-a716-446655440001', '2026-02-08', 'second');
 
     await repository.save(first);
 
@@ -143,6 +131,6 @@ describe('LocalStorageDiaryRepository', () => {
     const raw = localStorage.getItem(STORAGE_KEY);
 
     expect(result).toHaveLength(1);
-    expect(raw).toContain(`\"version\":\"${STORAGE_VERSION}\"`);
+    expect(raw).toContain(`"version":"${STORAGE_VERSION}"`);
   });
 });

@@ -1,5 +1,5 @@
-import { formatDateWithWeekday } from '@/lib/utils/date';
 import { cn } from '@/lib/utils/cn';
+import { formatDateWithWeekday } from '@/lib/utils/date';
 
 export interface DateDisplayProps {
   date: Date;

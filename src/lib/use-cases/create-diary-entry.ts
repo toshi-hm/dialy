@@ -1,10 +1,7 @@
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
+import { type CreateDiaryEntryInput, CreateDiaryEntrySchema } from '@/lib/validations/diary';
 import { SaveFailedError, ValidationError } from '@/types/errors';
-import {
-  CreateDiaryEntrySchema,
-  type CreateDiaryEntryInput,
-} from '@/lib/validations/diary';
 
 export class CreateDiaryEntryUseCase {
   constructor(private readonly repository: DiaryRepository) {}

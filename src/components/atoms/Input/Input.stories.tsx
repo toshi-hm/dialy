@@ -31,7 +31,7 @@ export const WithValue: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     placeholder: '文字数が上限を超えています',
     hasError: true,

@@ -21,10 +21,7 @@ describe('PastEntriesList', () => {
   });
 
   it('renders entries and toggles expansion', () => {
-    const entries = [
-      entry('1', '2025-02-08', 'one'),
-      entry('2', '2024-02-08', 'two'),
-    ];
+    const entries = [entry('1', '2025-02-08', 'one'), entry('2', '2024-02-08', 'two')];
     render(<PastEntriesList entries={entries} />);
 
     expect(screen.getByText('2025年')).toBeInTheDocument();

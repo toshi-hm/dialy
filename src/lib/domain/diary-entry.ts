@@ -15,13 +15,7 @@ export class DiaryEntry {
   }
 
   static create(date: Date, content: string): DiaryEntry {
-    return new DiaryEntry(
-      crypto.randomUUID(),
-      new Date(date),
-      content,
-      new Date(),
-      new Date(),
-    );
+    return new DiaryEntry(crypto.randomUUID(), new Date(date), content, new Date(), new Date());
   }
 
   static reconstruct(
@@ -31,13 +25,7 @@ export class DiaryEntry {
     createdAt: Date,
     updatedAt: Date,
   ): DiaryEntry {
-    return new DiaryEntry(
-      id,
-      new Date(date),
-      content,
-      new Date(createdAt),
-      new Date(updatedAt),
-    );
+    return new DiaryEntry(id, new Date(date), content, new Date(createdAt), new Date(updatedAt));
   }
 
   update(newContent: string): DiaryEntry {

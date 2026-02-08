@@ -31,7 +31,7 @@ export const Saved: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     status: 'error',
     errorMessage: '保存に失敗しました',

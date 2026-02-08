@@ -46,7 +46,9 @@ export class LocalStorageDiaryRepository implements DiaryRepository {
   private cache: DiaryStorage | null = null;
   private readonly storage: Storage | null;
 
-  constructor(storage: Storage | null = typeof window === 'undefined' ? null : window.localStorage) {
+  constructor(
+    storage: Storage | null = typeof window === 'undefined' ? null : window.localStorage,
+  ) {
     this.storage = storage;
   }
 

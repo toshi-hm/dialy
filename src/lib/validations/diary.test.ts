@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  CreateDiaryEntrySchema,
-  DeleteDiaryEntrySchema,
-  UpdateDiaryEntrySchema,
-} from './diary';
+import { CreateDiaryEntrySchema, DeleteDiaryEntrySchema, UpdateDiaryEntrySchema } from './diary';
 
 describe('diary validation schemas', () => {
   it('rejects future date for create schema', () => {

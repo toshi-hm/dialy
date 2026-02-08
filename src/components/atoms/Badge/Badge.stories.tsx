@@ -39,7 +39,7 @@ export const Warning: Story = {
   },
 };
 
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     children: '上限超過',
     variant: 'error',

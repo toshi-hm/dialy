@@ -9,7 +9,6 @@ export interface HeaderProps {
 export function Header({ actions, className }: HeaderProps) {
   return (
     <header
-      role="banner"
       className={cn(
         'flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 md:px-6',
         className,
