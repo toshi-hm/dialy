@@ -43,12 +43,12 @@ Presentation → Application → Domain
 
 ```typescript
 // src/lib/domain/diary.ts
-export interface Diary {
+export type Diary = {
   id: string;
   title: string;
   content: string;
   date: Date;
-}
+};
 
 export class DiaryEntry {
   constructor(
@@ -175,17 +175,17 @@ export async function createDiaryAction(formData: FormData) {
 - ✅ フレームワーク固有のAPI
 - ✅ UIライブラリ
 
-## インターフェースとDI（依存性の注入）
+## 型エイリアスとDI（依存性の注入）
 
 ### リポジトリパターン
 
 ```typescript
 // src/lib/interfaces/diary-repository.ts (抽象)
-export interface DiaryRepository {
+export type DiaryRepository = {
   save(entry: DiaryEntry): Promise<void>;
   findById(id: string): Promise<DiaryEntry | null>;
   findByDateRange(start: Date, end: Date): Promise<DiaryEntry[]>;
-}
+};
 
 // src/lib/infrastructure/prisma-diary-repository.ts (具体実装)
 import { PrismaClient } from '@prisma/client';
@@ -217,7 +217,7 @@ export class CreateDiaryEntryUseCase {
   private repository = new PrismaDiaryRepository(new PrismaClient());
 }
 
-// ✅ Good - インターフェースに依存、実装は外部から注入
+// ✅ Good - 抽象型に依存、実装は外部から注入
 export class CreateDiaryEntryUseCase {
   constructor(private repository: DiaryRepository) {}
 }

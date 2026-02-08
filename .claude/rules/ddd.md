@@ -10,11 +10,11 @@
 
 ```typescript
 // ❌ Bad - 技術的な用語
-interface Record {
+type Record = {
   id: string;
   text: string;
   timestamp: number;
-}
+};
 
 class RecordManager {
   create(data: any) { /* ... */ }
@@ -22,11 +22,11 @@ class RecordManager {
 }
 
 // ✅ Good - ビジネスドメインの用語
-interface DiaryEntry {
+type DiaryEntry = {
   id: string;
   content: string;
   writtenAt: Date;
-}
+};
 
 class DiaryService {
   writeEntry(content: string): DiaryEntry { /* ... */ }
@@ -237,11 +237,11 @@ export class Diary {
 
 ```typescript
 // src/lib/domain/interfaces/diary-repository.ts
-export interface DiaryRepository {
+export type DiaryRepository = {
   save(diary: Diary): Promise<void>;
   findById(id: string): Promise<Diary | null>;
   findByOwnerId(ownerId: string): Promise<Diary | null>;
-}
+};
 ```
 
 ```typescript
@@ -525,16 +525,16 @@ await repository.save(diary);
 
 ```typescript
 // ❌ Bad - エンティティごとにリポジトリ
-interface DiaryEntryRepository {
+type DiaryEntryRepository = {
   save(entry: DiaryEntry): Promise<void>;
   findById(id: string): Promise<DiaryEntry>;
-}
+};
 
 // ✅ Good - 集約ルート単位でリポジトリ
-interface DiaryRepository {
+type DiaryRepository = {
   save(diary: Diary): Promise<void>;
   findById(id: string): Promise<Diary>;
-}
+};
 ```
 
 ## テスト戦略

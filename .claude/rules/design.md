@@ -151,10 +151,10 @@ export function cn(...inputs: ClassValue[]) {
 
 ```typescript
 // Button.tsx
-interface ButtonProps {
+type ButtonProps = {
   variant?: 'primary' | 'secondary' | 'outline';
   size?: 'sm' | 'md' | 'lg';
-}
+};
 
 const variantStyles = {
   primary: 'bg-blue-600 text-white hover:bg-blue-700',
