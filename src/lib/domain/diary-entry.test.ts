@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { FutureDateError, ValidationError } from '@/types/errors';
+import { ContentTooLongError, FutureDateError, ValidationError } from '@/types/errors';
 import { DiaryEntry } from './diary-entry';
 
 describe('DiaryEntry', () => {
@@ -29,12 +29,12 @@ describe('DiaryEntry', () => {
     vi.useRealTimers();
   });
 
-  it('throws ValidationError when content exceeds 10000 characters', () => {
+  it('throws ContentTooLongError when content exceeds 10000 characters', () => {
     const tooLong = 'a'.repeat(10001);
 
     expect(() => {
       DiaryEntry.create(new Date('2026-02-08T00:00:00.000Z'), tooLong);
-    }).toThrow(ValidationError);
+    }).toThrow(ContentTooLongError);
   });
 
   it('updates updatedAt when content is updated', () => {

@@ -1,5 +1,5 @@
 import { isFutureDate, isSameDate } from '@/lib/utils/date';
-import { FutureDateError, ValidationError } from '@/types/errors';
+import { ContentTooLongError, FutureDateError, ValidationError } from '@/types/errors';
 
 const MAX_CONTENT_LENGTH = 10_000;
 
@@ -74,7 +74,7 @@ export class DiaryEntry {
     }
 
     if (this.content.length > MAX_CONTENT_LENGTH) {
-      throw new ValidationError('Content exceeds maximum length (10,000 characters)');
+      throw new ContentTooLongError('Content exceeds maximum length (10,000 characters)');
     }
   }
 }

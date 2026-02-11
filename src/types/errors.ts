@@ -2,7 +2,10 @@ export type AppErrorCode =
   | 'VALIDATION_ERROR'
   | 'SAVE_FAILED'
   | 'FUTURE_DATE_NOT_ALLOWED'
-  | 'FETCH_FAILED';
+  | 'FETCH_FAILED'
+  | 'CONTENT_TOO_LONG'
+  | 'LOAD_FAILED'
+  | 'DUPLICATE_DATE_ENTRY';
 
 export class AppError extends Error {
   constructor(
@@ -40,6 +43,27 @@ export class FetchFailedError extends AppError {
   constructor(message: string, cause?: unknown) {
     super('FETCH_FAILED', message, cause);
     this.name = 'FetchFailedError';
+  }
+}
+
+export class ContentTooLongError extends AppError {
+  constructor(message: string = 'Content exceeds maximum length', cause?: unknown) {
+    super('CONTENT_TOO_LONG', message, cause);
+    this.name = 'ContentTooLongError';
+  }
+}
+
+export class LoadFailedError extends AppError {
+  constructor(message: string = 'Failed to load diary entries', cause?: unknown) {
+    super('LOAD_FAILED', message, cause);
+    this.name = 'LoadFailedError';
+  }
+}
+
+export class DuplicateDateEntryError extends AppError {
+  constructor(message: string = 'An entry for this date already exists', cause?: unknown) {
+    super('DUPLICATE_DATE_ENTRY', message, cause);
+    this.name = 'DuplicateDateEntryError';
   }
 }
 

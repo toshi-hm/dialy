@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
-import { ValidationError } from '@/types/errors';
+import { DuplicateDateEntryError } from '@/types/errors';
 import { CreateDiaryEntryUseCase } from './create-diary-entry';
 import { DeleteDiaryEntryUseCase } from './delete-diary-entry';
 import { GetDiaryEntryUseCase } from './get-diary-entry';
@@ -53,7 +53,7 @@ describe('diary use cases', () => {
         date: new Date('2026-02-08T00:00:00.000Z'),
         content: 'duplicate',
       }),
-    ).rejects.toThrow(ValidationError);
+    ).rejects.toThrow(DuplicateDateEntryError);
   });
 
   it('updates a diary entry and persists changes', async () => {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
-import { ValidationError } from '@/types/errors';
+import { DuplicateDateEntryError } from '@/types/errors';
 import {
   LocalStorageDiaryRepository,
   STORAGE_KEY,
@@ -36,14 +36,14 @@ describe('LocalStorageDiaryRepository', () => {
     expect(localStorage.getItem(STORAGE_KEY)).toContain(STORAGE_VERSION);
   });
 
-  it('throws ValidationError when duplicate date entry is saved', async () => {
+  it('throws DuplicateDateEntryError when duplicate date entry is saved', async () => {
     const repository = new LocalStorageDiaryRepository();
     const first = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'first');
     const second = reconstructEntry('550e8400-e29b-41d4-a716-446655440001', '2026-02-08', 'second');
 
     await repository.save(first);
 
-    await expect(repository.save(second)).rejects.toThrow(ValidationError);
+    await expect(repository.save(second)).rejects.toThrow(DuplicateDateEntryError);
   });
 
   it('finds entries by same date in past years sorted desc', async () => {

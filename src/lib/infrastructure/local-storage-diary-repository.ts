@@ -2,7 +2,7 @@ import { DiaryEntry } from '@/lib/domain/diary-entry';
 import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
 import { toISODate } from '@/lib/utils/date';
 import type { DiaryStorage, StoredDiaryEntry } from '@/types/diary';
-import { ValidationError } from '@/types/errors';
+import { DuplicateDateEntryError } from '@/types/errors';
 
 export const STORAGE_KEY = 'dialy_entries';
 export const STORAGE_VERSION = '1.0.0';
@@ -61,7 +61,7 @@ export class LocalStorageDiaryRepository implements DiaryRepository {
     );
 
     if (duplicateEntry) {
-      throw new ValidationError('An entry for this date already exists');
+      throw new DuplicateDateEntryError('An entry for this date already exists');
     }
 
     const targetIndex = storage.entries.findIndex((stored) => stored.id === entry.id);

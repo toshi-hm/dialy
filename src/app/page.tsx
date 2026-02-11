@@ -20,7 +20,13 @@ import {
   UpdateDiaryEntryUseCase,
 } from '@/lib/use-cases';
 import { startOfDay } from '@/lib/utils/date';
-import { FetchFailedError, FutureDateError, ValidationError } from '@/types/errors';
+import {
+  ContentTooLongError,
+  DuplicateDateEntryError,
+  FetchFailedError,
+  FutureDateError,
+  ValidationError,
+} from '@/types/errors';
 
 const RETRY_DELAYS_MS = [250, 500, 1000];
 
@@ -131,7 +137,12 @@ export default function Home() {
           setPastEntries(sameDateEntries);
           return;
         } catch (error) {
-          if (error instanceof ValidationError || error instanceof FutureDateError) {
+          if (
+            error instanceof ValidationError ||
+            error instanceof FutureDateError ||
+            error instanceof DuplicateDateEntryError ||
+            error instanceof ContentTooLongError
+          ) {
             throw error;
           }
 
