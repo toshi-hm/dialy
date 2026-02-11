@@ -763,10 +763,12 @@ function CharacterCount({ content, maxLength = 10000 }: CharacterCountProps) {
 
 | エラー種別 | errorCode | ユーザーへの表示（日本語） | 例外メッセージ（英語） | システム対応 |
 |-----------|-----------|----------------------------|-------------------------|------------|
+| バリデーションエラー | `VALIDATION_ERROR` | 「入力内容に誤りがあります」 | `Validation failed` | 入力修正を促す |
 | 保存失敗 | `SAVE_FAILED` | 「保存に失敗しました。再度お試しください。」 | `Failed to save diary entry` | 自動リトライ（3回） |
 | 文字数超過 | `CONTENT_TOO_LONG` | 「文字数が上限を超えています」 | `Content exceeds maximum length` | 入力制限 |
 | 未来の日付 | `FUTURE_DATE_NOT_ALLOWED` | 「未来の日付は選択できません」 | `Future date is not allowed` | 日付選択を無効化 |
-| データ取得失敗 | `LOAD_FAILED` | 「データの読み込みに失敗しました」 | `Failed to load diary entries` | フェイルセーフ復元または空表示 |
+| データ取得失敗 | `FETCH_FAILED` | 「データの取得に失敗しました」 | `Failed to fetch data` | フェイルセーフ復元または空表示 |
+| データ読み込み失敗 | `LOAD_FAILED` | 「データの読み込みに失敗しました」 | `Failed to load diary entries` | フェイルセーフ復元または空表示 |
 | 重複作成 | `DUPLICATE_DATE_ENTRY` | （通常は表示なし） | `An entry for this date already exists` | 編集モードに自動切り替え |
 
 ### 8.2 エラー処理フロー
