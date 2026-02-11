@@ -1,3 +1,9 @@
+---
+trigger: always_on
+glob: src/lib/domain/**/*.{ts,tsx}
+description: Domain Driven Development (DDD)の原則。エンティティ、値オブジェクト、集約、リポジトリなどのパターン。
+---
+
 # Domain Driven Development (DDD) Rules
 
 ドメイン駆動開発（DDD）の原則に従い、ビジネスロジックをドメイン層に集約します。
@@ -152,20 +158,8 @@ export class DateRange {
     return new DateRange(start, end);
   }
 
-  static lastMonth(): DateRange {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const end = new Date(now.getFullYear(), now.getMonth(), 0);
-    return new DateRange(start, end);
-  }
-
   includes(date: Date): boolean {
     return date >= this.start && date <= this.end;
-  }
-
-  durationInDays(): number {
-    const diff = this.end.getTime() - this.start.getTime();
-    return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
   }
 
   equals(other: DateRange): boolean {
@@ -220,14 +214,6 @@ export class Diary {
   getEntriesInRange(range: DateRange): DiaryEntry[] {
     return this.entries.filter((entry) => range.includes(entry.writtenAt));
   }
-
-  getEntriesByTag(tag: string): DiaryEntry[] {
-    return this.entries.filter((entry) => entry.tags.includes(tag));
-  }
-
-  getTotalEntries(): number {
-    return this.entries.length;
-  }
 }
 ```
 
@@ -244,55 +230,6 @@ export type DiaryRepository = {
 }
 ```
 
-```typescript
-// src/lib/infrastructure/prisma-diary-repository.ts
-import { PrismaClient } from '@prisma/client';
-import type { Diary } from '@/lib/domain/diary';
-import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
-
-export class PrismaDiaryRepository implements DiaryRepository {
-  constructor(private prisma: PrismaClient) {}
-
-  async save(diary: Diary): Promise<void> {
-    await this.prisma.diary.upsert({
-      where: { id: diary.id },
-      create: {
-        id: diary.id,
-        ownerId: diary.ownerId,
-      },
-      update: {
-        ownerId: diary.ownerId,
-      },
-    });
-
-    // エントリーも保存
-    // （実装の詳細は省略）
-  }
-
-  async findByOwnerId(ownerId: string): Promise<Diary | null> {
-    const data = await this.prisma.diary.findUnique({
-      where: { ownerId },
-      include: { entries: true },
-    });
-
-    if (!data) return null;
-
-    // データベースのデータからドメインモデルを再構築
-    return Diary.reconstruct(
-      data.id,
-      data.ownerId,
-      data.entries.map((e) =>
-        DiaryEntry.reconstruct(e.id, e.title, e.content, e.writtenAt, e.tags)
-      ),
-    );
-  }
-
-  async findById(id: string): Promise<Diary | null> {
-    // 実装
-  }
-}
-```
-
 ### 5. ドメインサービス（Domain Service）
 
 複数のエンティティにまたがるロジック。
@@ -303,7 +240,6 @@ export class DiaryStatisticsService {
   calculateWritingStreak(entries: DiaryEntry[]): number {
     if (entries.length === 0) return 0;
 
-    // エントリーを日付順にソート
     const sorted = entries
       .slice()
       .sort((a, b) => b.writtenAt.getTime() - a.writtenAt.getTime());
@@ -326,21 +262,6 @@ export class DiaryStatisticsService {
 
     return streak;
   }
-
-  findMostUsedTags(entries: DiaryEntry[], limit: number = 10): string[] {
-    const tagCounts = new Map<string, number>();
-
-    entries.forEach((entry) => {
-      entry.tags.forEach((tag) => {
-        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-      });
-    });
-
-    return Array.from(tagCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, limit)
-      .map(([tag]) => tag);
-  }
 }
 ```
 
@@ -360,98 +281,6 @@ export class DiaryEntryCreated {
 }
 ```
 
-```typescript
-// src/lib/domain/diary.ts
-export class Diary {
-  private events: DiaryEntryCreated[] = [];
-
-  addEntry(title: string, content: string, tags: string[] = []): DiaryEntry {
-    const entry = DiaryEntry.create(title, content, tags);
-
-    // ビジネスルールのチェック
-    // ...
-
-    this.entries.push(entry);
-
-    // ドメインイベントを記録
-    this.events.push(
-      new DiaryEntryCreated(entry.id, this.ownerId, entry.title),
-    );
-
-    return entry;
-  }
-
-  getEvents(): DiaryEntryCreated[] {
-    return this.events;
-  }
-
-  clearEvents(): void {
-    this.events = [];
-  }
-}
-```
-
-## レイヤー構造とDDD
-
-```
-src/lib/
-├── domain/                    # ドメイン層
-│   ├── diary.ts              # 集約ルート
-│   ├── diary-entry.ts        # エンティティ
-│   ├── date-range.ts         # 値オブジェクト
-│   ├── events/               # ドメインイベント
-│   │   └── diary-entry-created.ts
-│   ├── services/             # ドメインサービス
-│   │   └── diary-statistics.ts
-│   └── interfaces/           # リポジトリインターフェース
-│       └── diary-repository.ts
-├── use-cases/                # アプリケーション層
-│   ├── create-diary-entry.ts
-│   └── get-diary-statistics.ts
-└── infrastructure/           # インフラ層
-    └── prisma-diary-repository.ts
-```
-
-## ユースケース（Application Layer）
-
-ドメインロジックを組み合わせてビジネスフローを実現。
-
-```typescript
-// src/lib/use-cases/create-diary-entry.ts
-import type { Diary } from '@/lib/domain/diary';
-import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
-
-export class CreateDiaryEntryUseCase {
-  constructor(private diaryRepository: DiaryRepository) {}
-
-  async execute(input: {
-    ownerId: string;
-    title: string;
-    content: string;
-    tags?: string[];
-  }): Promise<{ entryId: string }> {
-    // 1. 日記を取得（なければ作成）
-    let diary = await this.diaryRepository.findByOwnerId(input.ownerId);
-
-    if (!diary) {
-      diary = Diary.create(input.ownerId);
-    }
-
-    // 2. ドメインロジックでエントリーを追加
-    const entry = diary.addEntry(input.title, input.content, input.tags);
-
-    // 3. 永続化
-    await this.diaryRepository.save(diary);
-
-    // 4. ドメインイベントの処理（例: 通知送信）
-    const events = diary.getEvents();
-    // イベントハンドラーに委譲...
-
-    return { entryId: entry.id };
-  }
-}
-```
-
 ## DDDのベストプラクティス
 
 ### 1. ドメインロジックはドメイン層に
@@ -463,10 +292,6 @@ export class CreateDiaryEntryUseCase {
     if (input.title.trim().length === 0) {
       throw new Error('Title cannot be empty');
     }
-    if (input.content.length > 10000) {
-      throw new Error('Content too long');
-    }
-    // ...
   }
 }
 
@@ -475,9 +300,6 @@ export class DiaryEntry {
   private validate() {
     if (this.title.trim().length === 0) {
       throw new Error('Title cannot be empty');
-    }
-    if (this.content.length > 10000) {
-      throw new Error('Content too long');
     }
   }
 }
@@ -489,18 +311,14 @@ export class DiaryEntry {
 // ❌ Bad - ミュータブル
 export class DiaryEntry {
   public title: string;
-  public content: string;
-
   updateContent(newContent: string) {
-    this.content = newContent; // 状態を直接変更
+    this.content = newContent;
   }
 }
 
 // ✅ Good - イミュータブル
 export class DiaryEntry {
   public readonly title: string;
-  public readonly content: string;
-
   revise(newContent: string): DiaryEntry {
     return new DiaryEntry(this.id, this.title, newContent, this.writtenAt, this.tags);
   }
@@ -512,8 +330,8 @@ export class DiaryEntry {
 ```typescript
 // ❌ Bad - 集約外から内部を直接操作
 const diary = await repository.findById(id);
-const entry = diary.entries[0]; // 内部配列に直接アクセス
-entry.content = 'new content'; // 直接変更
+const entry = diary.entries[0];
+entry.content = 'new content';
 
 // ✅ Good - 集約ルート経由で操作
 const diary = await repository.findById(id);
@@ -527,50 +345,12 @@ await repository.save(diary);
 // ❌ Bad - エンティティごとにリポジトリ
 type DiaryEntryRepository = {
   save(entry: DiaryEntry): Promise<void>;
-  findById(id: string): Promise<DiaryEntry>;
 }
 
 // ✅ Good - 集約ルート単位でリポジトリ
 type DiaryRepository = {
   save(diary: Diary): Promise<void>;
-  findById(id: string): Promise<Diary>;
 }
-```
-
-## テスト戦略
-
-### ドメインモデルのテスト
-
-```typescript
-// diary-entry.test.ts
-import { describe, test, expect } from 'vitest';
-import { DiaryEntry } from './diary-entry';
-
-describe('DiaryEntry', () => {
-  test('creates valid diary entry', () => {
-    const entry = DiaryEntry.create('Title', 'Content');
-    expect(entry.id).toBeDefined();
-    expect(entry.title).toBe('Title');
-  });
-
-  test('throws error for empty title', () => {
-    expect(() => DiaryEntry.create('', 'Content')).toThrow(
-      'Title cannot be empty',
-    );
-  });
-
-  test('adds tag correctly', () => {
-    const entry = DiaryEntry.create('Title', 'Content');
-    const updated = entry.addTag('personal');
-    expect(updated.tags).toContain('personal');
-  });
-
-  test('does not add duplicate tag', () => {
-    const entry = DiaryEntry.create('Title', 'Content', ['personal']);
-    const updated = entry.addTag('personal');
-    expect(updated.tags).toEqual(['personal']);
-  });
-});
 ```
 
 ## まとめ

@@ -1,6 +1,7 @@
 ---
-paths:
-  - "src/**/*.{ts,tsx}"
+trigger: always_on
+glob: src/**/*.{ts,tsx}
+description: Clean Architectureの原則に従った依存関係ルール。Domain、Application、Presentationの3層構造。
 ---
 
 # Clean Architecture Principles

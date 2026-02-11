@@ -124,7 +124,7 @@ forwardRefは不要になりました。
 
 ```typescript
 // ✅ Good - React 19: 直接refをpropとして受け取る
-interface ButtonProps {
+type ButtonProps = {
   children: React.ReactNode;
   ref?: React.Ref<HTMLButtonElement>;
 }
@@ -573,7 +573,7 @@ export function DiaryComponent() {
 
 ```typescript
 // ✅ Good - 明示的な型定義
-interface ButtonProps {
+type ButtonProps = {
   children: React.ReactNode;
   variant?: 'primary' | 'secondary';
   size?: 'sm' | 'md' | 'lg';
@@ -587,7 +587,7 @@ export const Button: FC<ButtonProps> = ({ children, ...props }) => {
 };
 
 // ✅ Better - HTMLButtonAttributesを継承
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary';
   size?: 'sm' | 'md' | 'lg';
 }

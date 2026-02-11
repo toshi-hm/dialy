@@ -41,7 +41,7 @@ describe('Button', () => {
 // Button.tsx
 import type { FC, ReactNode } from 'react';
 
-interface ButtonProps {
+type ButtonProps = {
   children: ReactNode;
 }
 
@@ -61,7 +61,7 @@ export const Button: FC<ButtonProps> = ({ children }) => {
 // Button.tsx
 import type { FC, ReactNode, ButtonHTMLAttributes } from 'react';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
   variant?: 'primary' | 'secondary';
 }
