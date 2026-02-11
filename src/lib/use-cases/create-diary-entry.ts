@@ -4,7 +4,7 @@ import { type CreateDiaryEntryInput, CreateDiaryEntrySchema } from '@/lib/valida
 import { DuplicateDateEntryError, SaveFailedError } from '@/types/errors';
 
 export class CreateDiaryEntryUseCase {
-  constructor(private readonly repository: DiaryRepository) { }
+  constructor(private readonly repository: DiaryRepository) {}
 
   async execute(input: CreateDiaryEntryInput): Promise<DiaryEntry> {
     const validated = CreateDiaryEntrySchema.parse(input);
