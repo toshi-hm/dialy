@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+Answer **ALWAYS** in **Japanese**.
+
 ## Project Structure & Module Organization
 This repository is a Next.js (App Router) + TypeScript app using Atomic Design.
 
