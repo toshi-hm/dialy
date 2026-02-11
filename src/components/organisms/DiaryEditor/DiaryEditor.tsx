@@ -43,6 +43,7 @@ export function DiaryEditor({
   const saveNow = useCallback(
     async (value: string) => {
       if (value.length > maxLength) {
+        clearResetStatusTimer();
         setSaveStatus('error');
         setErrorMessage('文字数が上限を超えています');
         return;
@@ -85,7 +86,8 @@ export function DiaryEditor({
     setSaveStatus('idle');
     setErrorMessage(undefined);
     debouncedSave.cancel();
-  }, [dateKey, initialContent, debouncedSave]);
+    clearResetStatusTimer();
+  }, [dateKey, initialContent, debouncedSave, clearResetStatusTimer]);
 
   useEffect(() => {
     if (content === lastSavedContentRef.current) {
@@ -118,6 +120,7 @@ export function DiaryEditor({
         value={content}
         onChange={(event) => setContent(event.target.value)}
         onKeyDown={handleKeyDown}
+        maxLength={maxLength}
         placeholder="今日の日記を書く..."
         className="h-[300px] w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 md:h-[350px] lg:h-[400px]"
       />
