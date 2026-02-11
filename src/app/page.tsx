@@ -20,7 +20,7 @@ import {
   UpdateDiaryEntryUseCase,
 } from '@/lib/use-cases';
 import { startOfDay } from '@/lib/utils/date';
-import { FetchFailedError } from '@/types/errors';
+import { FetchFailedError, FutureDateError, ValidationError } from '@/types/errors';
 
 const RETRY_DELAYS_MS = [250, 500, 1000];
 
@@ -120,7 +120,7 @@ export default function Home() {
     async (content: string) => {
       let lastError: unknown;
 
-      for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+      for (let attempt = 0; ; attempt += 1) {
         try {
           const savedEntry = currentEntry
             ? await updateDiaryEntryUseCase.execute({ id: currentEntry.id, content })
@@ -131,6 +131,10 @@ export default function Home() {
           setPastEntries(sameDateEntries);
           return;
         } catch (error) {
+          if (error instanceof ValidationError || error instanceof FutureDateError) {
+            throw error;
+          }
+
           lastError = error;
           if (attempt >= RETRY_DELAYS_MS.length) {
             break;
