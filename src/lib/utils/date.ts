@@ -25,17 +25,26 @@ export function addDays(date: Date, days: number): Date {
 }
 
 export function toISODate(date: Date): ISODateString {
-  return date.toISOString().split('T')[0] as ISODateString;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}` as ISODateString;
 }
 
 export function parseISODate(value: string): Date {
-  const parsed = new Date(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
+    throw new Error('Invalid ISO date format');
+  }
 
-  if (Number.isNaN(parsed.getTime())) {
+  const [, yearStr, monthStr, dayStr] = match;
+  const date = new Date(Number(yearStr), Number(monthStr) - 1, Number(dayStr));
+
+  if (Number.isNaN(date.getTime())) {
     throw new Error('Invalid ISO date');
   }
 
-  return parsed;
+  return date;
 }
 
 export function formatDateWithWeekday(date: Date): string {
