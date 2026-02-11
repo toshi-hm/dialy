@@ -53,4 +53,40 @@ describe('DiaryEntry', () => {
 
     vi.useRealTimers();
   });
+
+  it('throws ValidationError when date is invalid (NaN)', () => {
+    expect(() => {
+      DiaryEntry.reconstruct(
+        '550e8400-e29b-41d4-a716-446655440000',
+        new Date('invalid'),
+        'content',
+        new Date('2026-02-08T00:00:00.000Z'),
+        new Date('2026-02-08T00:00:00.000Z'),
+      );
+    }).toThrow(ValidationError);
+  });
+
+  it('throws ValidationError when createdAt is invalid (NaN)', () => {
+    expect(() => {
+      DiaryEntry.reconstruct(
+        '550e8400-e29b-41d4-a716-446655440000',
+        new Date('2026-02-08T00:00:00.000Z'),
+        'content',
+        new Date('invalid'),
+        new Date('2026-02-08T00:00:00.000Z'),
+      );
+    }).toThrow(ValidationError);
+  });
+
+  it('throws ValidationError when updatedAt is invalid (NaN)', () => {
+    expect(() => {
+      DiaryEntry.reconstruct(
+        '550e8400-e29b-41d4-a716-446655440000',
+        new Date('2026-02-08T00:00:00.000Z'),
+        'content',
+        new Date('2026-02-08T00:00:00.000Z'),
+        new Date('invalid'),
+      );
+    }).toThrow(ValidationError);
+  });
 });

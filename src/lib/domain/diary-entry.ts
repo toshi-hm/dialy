@@ -57,6 +57,18 @@ export class DiaryEntry {
       throw new ValidationError('ID is required');
     }
 
+    if (Number.isNaN(this.date.getTime())) {
+      throw new ValidationError('Invalid date');
+    }
+
+    if (Number.isNaN(this.createdAt.getTime())) {
+      throw new ValidationError('Invalid createdAt');
+    }
+
+    if (Number.isNaN(this.updatedAt.getTime())) {
+      throw new ValidationError('Invalid updatedAt');
+    }
+
     if (isFutureDate(this.date)) {
       throw new FutureDateError();
     }
