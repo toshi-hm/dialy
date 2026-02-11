@@ -27,7 +27,7 @@ React 19.2.4 と Next.js 16.1.5 を使用した高品質なコンポーネント
 // src/components/[階層]/ComponentName/ComponentName.tsx
 import type { FC } from 'react';
 
-export interface ComponentNameProps {
+export type ComponentNameProps = {
   // Props定義（必須/オプションを明確に）
   title: string;
   description?: string;

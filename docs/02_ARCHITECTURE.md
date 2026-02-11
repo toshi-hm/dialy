@@ -533,7 +533,7 @@ dialy/
 #### Dial（日付選択Dial）
 
 ```typescript
-interface DialProps {
+type DialProps = {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   minDate?: Date;  // 選択可能な最小日付
@@ -555,7 +555,7 @@ export const Dial: FC<DialProps> = ({
 #### DiaryEditor（日記編集エリア）
 
 ```typescript
-interface DiaryEditorProps {
+type DiaryEditorProps = {
   date: Date;
   initialContent?: string;
   onSave: (content: string) => Promise<void>;
@@ -591,7 +591,7 @@ export const DiaryEditor: FC<DiaryEditorProps> = ({
 #### PastEntriesList（過去の日記リスト）
 
 ```typescript
-interface PastEntriesListProps {
+type PastEntriesListProps = {
   entries: DiaryEntry[];
   onEntryClick?: (entry: DiaryEntry) => void;
 }

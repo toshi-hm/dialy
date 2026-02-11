@@ -302,7 +302,7 @@ const STORAGE_KEY = 'dialy_entries';
 
 ```typescript
 // LocalStorageに保存される形式
-interface StoredDiaryEntry {
+type StoredDiaryEntry = {
   id: string;
   date: string;  // ISO 8601形式: YYYY-MM-DD
   content: string;
@@ -311,7 +311,7 @@ interface StoredDiaryEntry {
 }
 
 // LocalStorage全体のデータ構造
-interface DiaryStorage {
+type DiaryStorage = {
   version: string;  // データバージョン（マイグレーション用）
   entries: StoredDiaryEntry[];
 }
@@ -398,7 +398,7 @@ export type DeleteDiaryEntryInput = z.infer<typeof DeleteDiaryEntrySchema>;
 // src/lib/domain/interfaces/diary-repository.ts
 import type { DiaryEntry } from '@/lib/domain/diary-entry';
 
-export interface DiaryRepository {
+export type DiaryRepository = {
   /**
    * 日記エントリーを保存（作成または更新）
    */
@@ -444,18 +444,18 @@ import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
 const STORAGE_KEY = 'dialy_entries';
 const STORAGE_VERSION = '1.0.0';
 
-interface StoredDiaryEntry {
+type StoredDiaryEntry = {
   id: string;
   date: string;
   content: string;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-interface DiaryStorage {
+type DiaryStorage = {
   version: string;
   entries: StoredDiaryEntry[];
-}
+};
 
 export class LocalStorageDiaryRepository implements DiaryRepository {
   private getStorage(): DiaryStorage {
@@ -626,7 +626,7 @@ export async function migrateFromLocalStorage(prisma: PrismaClient) {
 LocalStorageにバージョン情報を保存し、将来的なデータ構造変更に対応。
 
 ```typescript
-interface DiaryStorage {
+type DiaryStorage = {
   version: string;  // "1.0.0"
   entries: StoredDiaryEntry[];
 }
