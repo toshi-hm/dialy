@@ -7,8 +7,8 @@ describe('CalendarDialog', () => {
     render(
       <CalendarDialog
         open
-        selectedDate={new Date('2026-02-08T00:00:00.000Z')}
-        maxDate={new Date('2026-02-08T00:00:00.000Z')}
+        selectedDate={new Date(2026, 1, 8)}
+        maxDate={new Date(2026, 1, 8)}
         onClose={() => {}}
         onSelect={() => {}}
       />,
@@ -24,8 +24,8 @@ describe('CalendarDialog', () => {
     render(
       <CalendarDialog
         open
-        selectedDate={new Date('2026-02-08T00:00:00.000Z')}
-        maxDate={new Date('2026-02-08T00:00:00.000Z')}
+        selectedDate={new Date(2026, 1, 8)}
+        maxDate={new Date(2026, 1, 8)}
         onClose={() => {}}
         onSelect={handleSelect}
       />,
@@ -34,6 +34,8 @@ describe('CalendarDialog', () => {
     fireEvent.change(screen.getByLabelText('日付'), { target: { value: '2026-02-07' } });
     fireEvent.click(screen.getByRole('button', { name: '適用' }));
 
-    expect(handleSelect).toHaveBeenCalledWith(new Date('2026-02-07T00:00:00.000Z'));
+    expect(handleSelect).toHaveBeenCalledTimes(1);
+    const selected = handleSelect.mock.calls[0][0] as Date;
+    expect(selected.getTime()).toBe(new Date(2026, 1, 7).getTime());
   });
 });

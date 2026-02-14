@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
 import { cn } from '@/lib/utils/cn';
-import { toISODate } from '@/lib/utils/date';
+import { parseISODate, toISODate } from '@/lib/utils/date';
 
 export type CalendarDialogProps = {
   open: boolean;
@@ -33,7 +33,7 @@ export function CalendarDialog({
   }
 
   const handleApply = () => {
-    onSelect(new Date(`${value}T00:00:00.000Z`));
+    onSelect(parseISODate(value));
     onClose();
   };
 
