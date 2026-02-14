@@ -1,0 +1,9 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit",
+    "typescript.inlayHints.variableTypes.enabled": true,
+    "typescript.inlayHints.parameterNames.enabled": true,
+    "typescript.inlayHints.functionLikeReturnTypes.enabled": true
+  }
+}
