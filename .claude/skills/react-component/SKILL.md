@@ -35,7 +35,7 @@ export type ComponentNameProps = {
   onClick?: () => void;
   className?: string;
   children?: React.ReactNode;
-}
+};
 
 export const ComponentName: FC<ComponentNameProps> = ({
   title,
@@ -57,7 +57,7 @@ export const ComponentName: FC<ComponentNameProps> = ({
 **TypeScript**:
 - すべてのpropsに型定義を提供
 - `FC<Props>` を使用
-- エクスポートされるprops interfaceは `export interface` で定義
+- エクスポートされるpropsは `export type` で定義
 
 **Styling (Tailwind CSS v4.1)**:
 - ユーティリティクラスを直接使用

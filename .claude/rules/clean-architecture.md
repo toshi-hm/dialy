@@ -48,7 +48,7 @@ export type Diary = {
   title: string;
   content: string;
   date: Date;
-}
+};
 
 export class DiaryEntry {
   constructor(
@@ -151,7 +151,7 @@ export class CreateDiaryEntryUseCase {
 import { createDiaryEntryUseCase } from '@/lib/use-cases/create-diary-entry';
 import { prismaRepository } from '@/lib/infrastructure/prisma-repository';
 
-export async function createDiaryAction(formData: FormData) {
+export const createDiaryAction = async (formData: FormData) => {
   const title = formData.get('title') as string;
   const content = formData.get('content') as string;
 
@@ -175,7 +175,7 @@ export async function createDiaryAction(formData: FormData) {
 - ✅ フレームワーク固有のAPI
 - ✅ UIライブラリ
 
-## インターフェースとDI（依存性の注入）
+## 型エイリアスとDI（依存性の注入）
 
 ### リポジトリパターン
 
@@ -185,7 +185,7 @@ export type DiaryRepository = {
   save(entry: DiaryEntry): Promise<void>;
   findById(id: string): Promise<DiaryEntry | null>;
   findByDateRange(start: Date, end: Date): Promise<DiaryEntry[]>;
-}
+};
 
 // src/lib/infrastructure/prisma-diary-repository.ts (具体実装)
 import { PrismaClient } from '@prisma/client';
@@ -217,7 +217,7 @@ export class CreateDiaryEntryUseCase {
   private repository = new PrismaDiaryRepository(new PrismaClient());
 }
 
-// ✅ Good - インターフェースに依存、実装は外部から注入
+// ✅ Good - 抽象型に依存、実装は外部から注入
 export class CreateDiaryEntryUseCase {
   constructor(private repository: DiaryRepository) {}
 }
@@ -253,7 +253,7 @@ export type DiaryEntryInput = z.infer<typeof DiaryEntrySchema>;
 
 import { DiaryEntrySchema } from '@/lib/validations/diary';
 
-export default function NewDiaryPage() {
+const NewDiaryPage = () => {
   const handleSubmit = (formData: FormData) => {
     const input = {
       title: formData.get('title'),

@@ -43,7 +43,7 @@ import type { FC, ReactNode } from 'react';
 
 type ButtonProps = {
   children: ReactNode;
-}
+};
 
 export const Button: FC<ButtonProps> = ({ children }) => {
   return <button>{children}</button>;
@@ -64,7 +64,7 @@ import type { FC, ReactNode, ButtonHTMLAttributes } from 'react';
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
   variant?: 'primary' | 'secondary';
-}
+};
 
 export const Button: FC<ButtonProps> = ({
   children,
@@ -126,7 +126,7 @@ describe('validateEmail', () => {
 
 ```typescript
 // validateEmail.ts
-export function validateEmail(email: string): boolean {
+export const validateEmail = (email: string): boolean => {
   return true; // 最小限の実装
 }
 ```
@@ -146,7 +146,7 @@ test('returns false for invalid email', () => {
 #### Step 4: 実装を改善（Green）
 
 ```typescript
-export function validateEmail(email: string): boolean {
+export const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
@@ -176,7 +176,7 @@ import { z } from 'zod';
 
 export const emailSchema = z.string().email();
 
-export function validateEmail(email: string): boolean {
+export const validateEmail = (email: string): boolean => {
   return emailSchema.safeParse(email).success;
 }
 ```

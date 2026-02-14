@@ -26,7 +26,7 @@
 
 | レベル | 対象 | 実装時期 |
 |-------|------|---------|
-| L1: 基本 | XSS対策、CSRF対策、入力検証 | MVP版 |
+| L1: 基本 | XSS対策、入力検証、（Phase 2）CSRF対策 | MVP版 |
 | L2: 標準 | HTTPS強制、セキュリティヘッダー | MVP版 |
 | L3: 高度 | 認証・認可、暗号化 | 将来実装 |
 | L4: 最高 | 多要素認証、監査ログ | 長期実装 |
@@ -109,7 +109,7 @@ import { Auth0Provider } from '@auth0/auth0-react';
 
 ```typescript
 // ミドルウェアでアクセスチェック
-export async function middleware(request: NextRequest) {
+export const middleware = async (request: NextRequest) => {
   const session = await getSession(request);
 
   if (!session) {
@@ -125,7 +125,7 @@ export async function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
-}
+};
 ```
 
 ## 3. データ保護
@@ -159,7 +159,7 @@ const nextConfig = {
 
 ```typescript
 // middleware.ts
-export function middleware(request: NextRequest) {
+export const middleware = (request: NextRequest) => {
   // HTTP → HTTPS リダイレクト（本番環境のみ）
   if (
     process.env.NODE_ENV === 'production' &&
@@ -220,7 +220,7 @@ import crypto from 'crypto';
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY!; // 32バイトのキー
 const IV_LENGTH = 16;
 
-export function encrypt(text: string): string {
+export const encrypt = (text: string): string => {
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(
     'aes-256-gcm',
@@ -236,7 +236,7 @@ export function encrypt(text: string): string {
   return `${iv.toString('hex')}:${authTag}:${encrypted}`;
 }
 
-export function decrypt(encryptedData: string): string {
+export const decrypt = (encryptedData: string): string => {
   const [ivHex, authTagHex, encrypted] = encryptedData.split(':');
 
   const iv = Buffer.from(ivHex, 'hex');
@@ -268,7 +268,7 @@ MVP版ではLocalStorageを使用するが、以下の点に注意:
 
 ```typescript
 // Web Crypto APIを使用した暗号化
-async function encryptForStorage(data: string, password: string): Promise<string> {
+const encryptForStorage = async (data: string, password: string): Promise<string> => {
   const encoder = new TextEncoder();
   const data = encoder.encode(data);
 
@@ -306,7 +306,7 @@ async function encryptForStorage(data: string, password: string): Promise<string
   result.set(encryptedArray, iv.length);
 
   return btoa(String.fromCharCode(...result));
-}
+};
 ```
 
 ## 4. プライバシー保護
@@ -337,14 +337,14 @@ async function encryptForStorage(data: string, password: string): Promise<string
 
 ```typescript
 // すべてのデータを削除
-export async function deleteAllUserDataUseCase(userId: string): Promise<void> {
+export const deleteAllUserDataUseCase = async (userId: string): Promise<void> => {
   await prisma.$transaction([
     // すべての日記を削除
     prisma.diaryEntry.deleteMany({ where: { userId } }),
     // ユーザーアカウントを削除
     prisma.user.delete({ where: { id: userId } }),
   ]);
-}
+};
 ```
 
 ### 4.3 プライバシーポリシー
@@ -381,7 +381,7 @@ Server Actionsでも再検証（クライアント側検証を信用しない）
 
 import { DiaryEntrySchema } from '@/lib/validations/diary';
 
-export async function createDiaryAction(formData: FormData) {
+export const createDiaryAction = async (formData: FormData) => {
   const rawData = {
     date: new Date(formData.get('date') as string),
     content: formData.get('content') as string,
@@ -392,7 +392,7 @@ export async function createDiaryAction(formData: FormData) {
 
   // ユースケース実行
   await createDiaryEntryUseCase.execute(validated);
-}
+};
 ```
 
 ### 5.3 XSS対策
@@ -431,7 +431,9 @@ await prisma.$queryRaw`SELECT * FROM diary_entries WHERE id = ${entryId}`;
 
 ### 5.5 CSRF対策
 
-Next.jsのServer Actionsが自動的にCSRF対策を提供。
+MVPでは書き込み先がLocalStorageのため、CSRFの適用対象外。
+
+Phase 2でServer Actions/API Routeに移行した時点で、CSRF対策を有効化する。
 
 ## 6. セキュリティヘッダー
 
@@ -511,7 +513,7 @@ connect-src 'self';
 | 脅威 | リスクレベル | 対策 |
 |------|------------|------|
 | XSS攻撃 | 中 | Reactのデフォルトエスケープ |
-| CSRF攻撃 | 中 | Server Actionsの自動対策 |
+| CSRF攻撃 | 低（MVP）/中（Phase 2以降） | MVPは対象外、Phase 2でServer Actions/API Routeの対策を適用 |
 | SQL Injection | 低 | Prisma ORM使用 |
 | セッションハイジャック | 高（将来） | HTTPS強制、セキュアCookie |
 | 不正アクセス | 高（将来） | 認証・認可の実装 |
@@ -552,7 +554,7 @@ connect-src 'self';
 ### 8.1 MVP版チェックリスト
 
 - [ ] XSS対策: Reactのデフォルトエスケープを使用
-- [ ] CSRF対策: Server Actionsを使用
+- [ ] CSRF対策: MVPは適用対象外であることを明記（Phase 2で適用）
 - [ ] 入力検証: Zodスキーマで検証
 - [ ] HTTPS強制: セキュリティヘッダー設定
 - [ ] CSP設定: Content Security Policyヘッダー
@@ -611,7 +613,7 @@ Email: security@dialy.example.com（将来設置）
 
 ## まとめ
 
-- **MVP版**: 基本的なセキュリティ対策（XSS、CSRF、HTTPS）
+- **MVP版**: 基本的なセキュリティ対策（XSS、入力検証、HTTPS）
 - **将来実装**: 認証・認可、データ暗号化、監査ログ
 - **継続的改善**: 定期的なセキュリティレビューと脆弱性対応
 - **透明性**: セキュリティポリシーの明確な開示

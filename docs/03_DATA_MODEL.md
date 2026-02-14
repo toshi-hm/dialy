@@ -308,13 +308,13 @@ type StoredDiaryEntry = {
   content: string;
   createdAt: string;  // ISO 8601形式: YYYY-MM-DDTHH:mm:ss.sssZ
   updatedAt: string;  // ISO 8601形式: YYYY-MM-DDTHH:mm:ss.sssZ
-}
+};
 
 // LocalStorage全体のデータ構造
 type DiaryStorage = {
   version: string;  // データバージョン（マイグレーション用）
   entries: StoredDiaryEntry[];
-}
+};
 ```
 
 ### 4.3 データ例
@@ -431,7 +431,7 @@ export type DiaryRepository = {
    * すべての日記エントリーを取得（将来の検索機能用）
    */
   findAll(): Promise<DiaryEntry[]>;
-}
+};
 ```
 
 ### 6.2 LocalStorageDiaryRepository実装（MVP版）
@@ -602,7 +602,7 @@ export class LocalStorageDiaryRepository implements DiaryRepository {
 
 ```typescript
 // 移行スクリプト例
-export async function migrateFromLocalStorage(prisma: PrismaClient) {
+export const migrateFromLocalStorage = async (prisma: PrismaClient) => {
   const storage = JSON.parse(localStorage.getItem('dialy_entries') || '{}');
 
   for (const entry of storage.entries || []) {
@@ -618,7 +618,7 @@ export async function migrateFromLocalStorage(prisma: PrismaClient) {
   }
 
   console.log(`Migrated ${storage.entries.length} entries`);
-}
+};
 ```
 
 ### 7.2 データバージョン管理
@@ -629,16 +629,16 @@ LocalStorageにバージョン情報を保存し、将来的なデータ構造�
 type DiaryStorage = {
   version: string;  // "1.0.0"
   entries: StoredDiaryEntry[];
-}
+};
 
 // バージョンチェック
-function checkStorageVersion(storage: DiaryStorage): DiaryStorage {
+const checkStorageVersion = (storage: DiaryStorage): DiaryStorage => {
   if (storage.version !== STORAGE_VERSION) {
     // マイグレーション処理
     return migrateStorage(storage);
   }
   return storage;
-}
+};
 ```
 
 ## 8. データ整合性保証
@@ -652,17 +652,17 @@ function checkStorageVersion(storage: DiaryStorage): DiaryStorage {
 
 ```typescript
 // 同じ日付の日記が既に存在するかチェック
-async function ensureUniqueDateEntry(
+const ensureUniqueDateEntry = async (
   repository: DiaryRepository,
   date: Date,
   excludeId?: string
-): Promise<void> {
+): Promise<void> => {
   const existing = await repository.findByDate(date);
 
   if (existing && existing.id !== excludeId) {
     throw new Error('An entry for this date already exists');
   }
-}
+};
 ```
 
 ## 9. パフォーマンス考慮事項

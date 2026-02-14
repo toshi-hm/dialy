@@ -20,24 +20,17 @@ Dial（円形のコントロール）をドラッグ回転させることで、�
 
 #### 入力方法
 
-**主要操作: カレンダーから日付選択**
-- **クリック/タップ**: Dialをクリック/タップ
-- **カレンダー表示**: カレンダーダイアログが表示される
-- **日付範囲**: 過去の任意の日付を選択可能（未来は不可）
-
-**補助操作: Dialで前後移動**
+**主要操作: Dialドラッグ回転**
 - **ドラッグ操作**: マウス/タッチでDialをドラッグ
 - **回転方向**:
   - 時計回り → 翌日
   - 反時計回り → 前日
 - **連続回転**: 連続して回すことで高速スクロール可能
 
-#### 処理（カレンダー選択）
-1. Dialをクリック/タップ
-2. カレンダーダイアログを表示
-3. ユーザーが日付を選択
-4. 日付の妥当性チェック（未来の日付は不可）
-5. 日付を更新
+**補助操作: カレンダー日付選択（MVPでは任意）**
+- **クリック/タップ**: Dialをクリック/タップ
+- **カレンダー表示**: カレンダーダイアログを表示
+- **日付範囲**: 過去の任意の日付を選択可能（未来は不可）
 
 #### 処理（Dial回転）
 1. ドラッグ開始位置を記録
@@ -46,6 +39,13 @@ Dial（円形のコントロール）をドラッグ回転させることで、�
 4. 現在選択中の日付に1日加減算
 5. 日付の妥当性チェック（未来の日付は不可）
 6. 日付を更新
+
+#### 処理（カレンダー選択: 任意）
+1. Dialをクリック/タップ
+2. カレンダーダイアログを表示
+3. ユーザーが日付を選択
+4. 日付の妥当性チェック（未来の日付は不可）
+5. 日付を更新
 
 #### 出力
 - 選択された日付（Date型）
@@ -59,7 +59,23 @@ Dial（円形のコントロール）をドラッグ回転させることで、�
 
 #### 正常系
 
-**ケース1: カレンダーから過去の日付を選択**
+**ケース1: Dialで1日前の日付に移動**
+
+```
+前提条件: 現在の選択日付が2026年2月8日
+操作: Dialを反時計回りに回転（1回）
+結果: 日付が2026年2月7日に変更される
+```
+
+**ケース2: Dialで連続回転して1週間前に移動**
+
+```
+前提条件: 現在の選択日付が2026年2月8日
+操作: Dialを反時計回りに連続して7回回転
+結果: 日付が2026年2月1日に変更される
+```
+
+**ケース3: （任意）カレンダーから過去の日付を選択**
 
 ```
 前提条件: 現在の選択日付が2026年2月8日
@@ -70,33 +86,9 @@ Dial（円形のコントロール）をドラッグ回転させることで、�
 結果: 日付が2025年2月8日に変更される
 ```
 
-**ケース2: Dialで1日前の日付に移動**
-
-```
-前提条件: 現在の選択日付が2026年2月8日
-操作: Dialを反時計回りに回転（1回）
-結果: 日付が2026年2月7日に変更される
-```
-
-**ケース3: Dialで連続回転して1週間前に移動**
-
-```
-前提条件: 現在の選択日付が2026年2月8日
-操作: Dialを反時計回りに連続して7回回転
-結果: 日付が2026年2月1日に変更される
-```
-
 #### 異常系
 
-**ケース4: 未来の日付を選択しようとする（カレンダー）**
-
-```
-前提条件: 今日は2026年2月8日
-操作: カレンダーで2026年2月9日を選択しようとする
-結果: 未来の日付は選択不可（グレーアウトまたは選択できない）
-```
-
-**ケース5: 未来の日付に移動しようとする（Dial）**
+**ケース4: 未来の日付に移動しようとする（Dial）**
 
 ```
 前提条件: 現在の選択日付が2026年2月8日（今日）
@@ -104,16 +96,24 @@ Dial（円形のコントロール）をドラッグ回転させることで、�
 結果: 日付は変更されず、何も起こらない
 ```
 
+**ケース5: （任意）未来の日付を選択しようとする（カレンダー）**
+
+```
+前提条件: 今日は2026年2月8日
+操作: カレンダーで2026年2月9日を選択しようとする
+結果: 未来の日付は選択不可（グレーアウトまたは選択できない）
+```
+
 ### 1.4 実装アルゴリズム
 
 ```typescript
-type DialProps {
+type DialProps = {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
   maxDate?: Date; // デフォルト: 今日
-}
+};
 
-function Dial({ selectedDate, onDateChange, maxDate = new Date() }: DialProps) {
+const Dial = ({ selectedDate, onDateChange, maxDate = new Date() }: DialProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [startAngle, setStartAngle] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -203,7 +203,7 @@ function Dial({ selectedDate, onDateChange, maxDate = new Date() }: DialProps) {
       )}
     </>
   );
-}
+};
 ```
 
 ### 1.5 将来的な拡張
@@ -365,10 +365,10 @@ export class CreateDiaryEntryUseCase {
   1. 日付を2026年2月8日に選択
   2. 既存の日記がテキストエリアに表示される
   3. 「設計書を作成した。とても楽しかった。」と追記
-  4. 保存ボタンをクリック
+  4. 入力を停止して1秒待つ（自動保存）
 結果:
   - 日記が更新される
-  - 「保存しました」のフィードバック表示
+  - 「保存中...」の後に「✓ 保存しました」を表示
   - updatedAtが更新される
 ```
 
@@ -639,10 +639,10 @@ export class GetEntriesBySameDateUseCase {
 
 ```typescript
 // デバウンスフック
-function useDebouncedSave(
+const useDebouncedSave = (
   saveFunction: (content: string) => Promise<void>,
   delay: number = 1000
-) {
+) => {
   const [isSaving, setIsSaving] = useState(false);
 
   const debouncedSave = useMemo(
@@ -662,10 +662,10 @@ function useDebouncedSave(
   );
 
   return { debouncedSave, isSaving };
-}
+};
 
 // 使用例
-function DiaryEditor({ date, initialContent }: DiaryEditorProps) {
+const DiaryEditor = ({ date, initialContent }: DiaryEditorProps) => {
   const [content, setContent] = useState(initialContent);
 
   const { debouncedSave, isSaving } = useDebouncedSave(
@@ -687,7 +687,7 @@ function DiaryEditor({ date, initialContent }: DiaryEditorProps) {
   }, [content]);
 
   // ...
-}
+};
 ```
 
 ## 7. 文字数カウント
@@ -738,7 +738,7 @@ function DiaryEditor({ date, initialContent }: DiaryEditorProps) {
 ### 7.4 実装例
 
 ```typescript
-function CharacterCount({ content, maxLength = 10000 }: CharacterCountProps) {
+const CharacterCount = ({ content, maxLength = 10000 }: CharacterCountProps) => {
   const count = content.length;
   const isOverLimit = count > maxLength;
 
@@ -749,20 +749,27 @@ function CharacterCount({ content, maxLength = 10000 }: CharacterCountProps) {
       {isOverLimit && <span> （上限超過）</span>}
     </div>
   );
-}
+};
 ```
 
 ## 8. エラーハンドリング
 
 ### 8.1 エラー種別と対応
 
-| エラー種別 | 原因 | ユーザーへの表示 | システム対応 |
-|-----------|------|----------------|------------|
-| 保存失敗 | ネットワークエラー | 「保存に失敗しました。再度お試しください。」 | 自動リトライ（3回） |
-| 文字数超過 | 10,000文字超過 | 「文字数が上限を超えています」 | 入力制限 |
-| 未来の日付 | 未来の日付を選択 | 「未来の日付は選択できません」 | 日付選択を無効化 |
-| データ取得失敗 | データベースエラー | 「データの読み込みに失敗しました」 | エラーページ表示 |
-| 重複作成 | 同じ日の日記が既に存在 | - | 編集モードに自動切り替え |
+**メッセージ方針（MVP）**:
+- UI表示文言は日本語で統一する
+- 例外メッセージは英語で統一し、ログ/開発用途に限定する
+- UIは `errorCode` を受け取り、日本語文言へマッピングして表示する
+
+| エラー種別 | errorCode | ユーザーへの表示（日本語） | 例外メッセージ（英語） | システム対応 |
+|-----------|-----------|----------------------------|-------------------------|------------|
+| バリデーションエラー | `VALIDATION_ERROR` | 「入力内容に誤りがあります」 | `Validation failed` | 入力修正を促す |
+| 保存失敗 | `SAVE_FAILED` | 「保存に失敗しました。再度お試しください。」 | `Failed to save diary entry` | 自動リトライ（3回） |
+| 文字数超過 | `CONTENT_TOO_LONG` | 「文字数が上限を超えています」 | `Content exceeds maximum length` | 入力制限 |
+| 未来の日付 | `FUTURE_DATE_NOT_ALLOWED` | 「未来の日付は選択できません」 | `Future date is not allowed` | 日付選択を無効化 |
+| データ取得失敗 | `FETCH_FAILED` | 「データの取得に失敗しました」 | `Failed to fetch data` | フェイルセーフ復元または空表示 |
+| データ読み込み失敗 | `LOAD_FAILED` | 「データの読み込みに失敗しました」 | `Failed to load diary entries` | フェイルセーフ復元または空表示 |
+| 重複作成 | `DUPLICATE_DATE_ENTRY` | （通常は表示なし） | `An entry for this date already exists` | 編集モードに自動切り替え |
 
 ### 8.2 エラー処理フロー
 
@@ -788,10 +795,10 @@ function CharacterCount({ content, maxLength = 10000 }: CharacterCountProps) {
 
 ```typescript
 // エラーハンドリング付き保存
-async function saveDiaryWithErrorHandling(
+const saveDiaryWithErrorHandling = async (
   entry: DiaryEntry,
   maxRetries: number = 3
-): Promise<void> {
+): Promise<void> => {
   let retries = 0;
 
   while (retries < maxRetries) {
@@ -804,14 +811,14 @@ async function saveDiaryWithErrorHandling(
 
       if (retries >= maxRetries) {
         // 最終リトライ失敗
-        throw new Error('保存に失敗しました。再度お試しください。');
+        throw new Error('Failed to save diary entry after retries');
       }
 
       // リトライ前に待機（指数バックオフ）
       await sleep(Math.pow(2, retries) * 1000);
     }
   }
-}
+};
 ```
 
 ## まとめ

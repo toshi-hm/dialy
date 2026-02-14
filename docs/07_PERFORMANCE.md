@@ -68,7 +68,7 @@ MVP版ではLocalStorageを使用するため、すべてClient Componentsで実
 import { useState, useEffect } from 'react';
 import { LocalStorageDiaryRepository } from '@/lib/infrastructure/local-storage-diary-repository';
 
-export default function HomePage() {
+const HomePage = () => {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -100,7 +100,7 @@ export default function HomePage() {
 ```typescript
 // 将来版: Server Component優先
 // app/page.tsx
-export default async function HomePage() {
+const HomePage = async () => {
   const entries = await getDiaryEntries(); // サーバーでデータ取得
 
   return (
@@ -143,7 +143,7 @@ export const DiaryPreview = React.memo<DiaryPreviewProps>(
 
 ```typescript
 // components/organisms/PastEntriesList/PastEntriesList.tsx
-export function PastEntriesList({ entries }: PastEntriesListProps) {
+export const PastEntriesList = ({ entries }: PastEntriesListProps) => {
   // 重い計算をメモ化
   const sortedEntries = useMemo(
     () => entries.sort((a, b) => b.date.getTime() - a.date.getTime()),
@@ -176,7 +176,7 @@ export function PastEntriesList({ entries }: PastEntriesListProps) {
 ```typescript
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-export function PastEntriesList({ entries }: PastEntriesListProps) {
+export const PastEntriesList = ({ entries }: PastEntriesListProps) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
@@ -222,7 +222,7 @@ export function PastEntriesList({ entries }: PastEntriesListProps) {
 // app/page.tsx
 import { Suspense } from 'react';
 
-export default function HomePage() {
+const HomePage = () => {
   return (
     <div>
       <DateDisplay date={new Date()} />
@@ -237,7 +237,7 @@ export default function HomePage() {
 }
 
 // 非同期コンポーネント
-async function PastEntriesList() {
+const PastEntriesList = async () => {
   const entries = await getEntriesBySameDate(new Date());
 
   return (
@@ -247,7 +247,7 @@ async function PastEntriesList() {
       ))}
     </div>
   );
-}
+};
 ```
 
 ## 3. データ取得最適化
@@ -258,7 +258,7 @@ async function PastEntriesList() {
 
 ```typescript
 // ✅ Good - Promise.allで並列取得
-export default async function HomePage() {
+const HomePage = async () => {
   const [todayEntry, pastEntries] = await Promise.all([
     getTodayEntry(),
     getEntriesBySameDate(new Date()),
@@ -268,7 +268,7 @@ export default async function HomePage() {
 }
 
 // ❌ Bad - 順次取得（遅い）
-export default async function HomePage() {
+const HomePage = async () => {
   const todayEntry = await getTodayEntry();
   const pastEntries = await getEntriesBySameDate(new Date());
 
@@ -298,9 +298,9 @@ import Link from 'next/link';
 const recentEntries = await getEntriesBySameDate(date, 3);
 
 // スクロールで追加読み込み
-function loadMoreEntries() {
+const loadMoreEntries = async () => {
   const olderEntries = await getEntriesBySameDate(date, 5);
-}
+};
 ```
 
 ### 3.4 デバウンス処理
@@ -309,17 +309,17 @@ function loadMoreEntries() {
 
 ```typescript
 // lib/utils/debounce.ts
-export function debounce<T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   delay: number
-): (...args: Parameters<T>) => void {
+): ((...args: Parameters<T>) => void) => {
   let timeoutId: NodeJS.Timeout;
 
-  return function (...args: Parameters<T>) {
+  return (...args: Parameters<T>) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), delay);
   };
-}
+};
 
 // 使用例
 const debouncedSave = useMemo(
@@ -336,51 +336,51 @@ Next.js 16のデフォルトキャッシングを活用。
 
 ```typescript
 // デフォルトでキャッシュされる
-async function getDiaryEntries() {
+const getDiaryEntries = async () => {
   const res = await fetch('https://api.example.com/entries');
   return res.json();
-}
+};
 
 // キャッシュを無効化
-async function getDiaryEntries() {
+const getDiaryEntries = async () => {
   const res = await fetch('https://api.example.com/entries', {
     cache: 'no-store',
   });
   return res.json();
-}
+};
 
 // 定期的に再検証（Revalidate）
-async function getDiaryEntries() {
+const getDiaryEntries = async () => {
   const res = await fetch('https://api.example.com/entries', {
     next: { revalidate: 3600 }, // 1時間ごとに再検証
   });
   return res.json();
-}
+};
 ```
 
 ### 4.2 タグベースの再検証
 
 ```typescript
 // データにタグを付与
-async function getDiaryEntries() {
+const getDiaryEntries = async () => {
   const res = await fetch('https://api.example.com/entries', {
     next: { tags: ['diary-entries'] },
   });
   return res.json();
-}
+};
 
 // Server Actionで特定タグを再検証
 'use server';
 
 import { revalidateTag } from 'next/cache';
 
-export async function createDiaryAction(formData: FormData) {
+export const createDiaryAction = async (formData: FormData) => {
   // 日記作成処理
   await createDiary(/* ... */);
 
   // タグを再検証
   revalidateTag('diary-entries');
-}
+};
 ```
 
 ### 4.3 LocalStorageキャッシング（MVP版）
@@ -437,13 +437,13 @@ class LocalStorageDiaryRepository implements DiaryRepository {
 // React Query例
 import { useQuery } from '@tanstack/react-query';
 
-function useDiaryEntries(date: Date) {
+const useDiaryEntries = (date: Date) => {
   return useQuery({
     queryKey: ['diary-entries', date.toISOString()],
     queryFn: () => getEntriesBySameDate(date),
     staleTime: 5 * 60 * 1000, // 5分間はフレッシュとみなす
   });
-}
+};
 ```
 
 ## 5. バンドル最適化
@@ -462,7 +462,7 @@ const DeleteConfirmDialog = dynamic(
 );
 
 // 使用
-export function DiaryEditor() {
+export const DiaryEditor = () => {
   const [showDialog, setShowDialog] = useState(false);
 
   return (
@@ -591,7 +591,7 @@ jobs:
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="ja">
       <body>
@@ -608,7 +608,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ```typescript
 // lib/utils/performance.ts
-export function measurePerformance(label: string) {
+export const measurePerformance = (label: string) => {
   const start = performance.now();
 
   return {
@@ -647,7 +647,7 @@ Sentry.init({
 
 ### 8.1 レンダリング
 
-- [ ] Server Components優先
+- [ ] MVPはClient Components中心で構成（Phase 2でServer Components優先へ移行）
 - [ ] Client Componentsは必要最小限
 - [ ] React.memoで不要な再レンダリングを防止
 - [ ] useMemo/useCallbackで重い計算をメモ化
@@ -684,7 +684,7 @@ Sentry.init({
 
 ### 9.1 高優先度（MVP版で実施）
 
-1. Server Components優先
+1. Client Componentsの再レンダリング最適化
 2. デバウンス処理（自動保存）
 3. React.memoでメモ化
 4. LocalStorageキャッシング
@@ -727,7 +727,7 @@ Sentry.init({
 ## まとめ
 
 - **Core Web Vitals**: LCP < 2.5秒、FID < 100ms、CLS < 0.1
-- **レンダリング最適化**: Server Components優先、メモ化
+- **レンダリング最適化**: MVPはClient Components中心、将来はServer Components優先
 - **データ取得最適化**: 並列取得、デバウンス、プリフェッチ
 - **キャッシング**: Next.jsの自動キャッシング、LocalStorageキャッシュ
 - **バンドル最適化**: Dynamic Import、Tree Shaking

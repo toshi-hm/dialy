@@ -14,7 +14,7 @@ type Record = {
   id: string;
   text: string;
   timestamp: number;
-}
+};
 
 class RecordManager {
   create(data: any) { /* ... */ }
@@ -26,7 +26,7 @@ type DiaryEntry = {
   id: string;
   content: string;
   writtenAt: Date;
-}
+};
 
 class DiaryService {
   writeEntry(content: string): DiaryEntry { /* ... */ }
@@ -241,7 +241,7 @@ export type DiaryRepository = {
   save(diary: Diary): Promise<void>;
   findById(id: string): Promise<Diary | null>;
   findByOwnerId(ownerId: string): Promise<Diary | null>;
-}
+};
 ```
 
 ```typescript
@@ -528,13 +528,13 @@ await repository.save(diary);
 type DiaryEntryRepository = {
   save(entry: DiaryEntry): Promise<void>;
   findById(id: string): Promise<DiaryEntry>;
-}
+};
 
 // ✅ Good - 集約ルート単位でリポジトリ
 type DiaryRepository = {
   save(diary: Diary): Promise<void>;
   findById(id: string): Promise<Diary>;
-}
+};
 ```
 
 ## テスト戦略
