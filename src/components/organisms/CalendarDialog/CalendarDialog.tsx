@@ -23,9 +23,11 @@ export const CalendarDialog = ({
   selectedDate,
 }: CalendarDialogProps) => {
   const [value, setValue] = useState<string>(toISODate(selectedDate));
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setValue(toISODate(selectedDate));
+    setErrorMessage(null);
   }, [selectedDate]);
 
   if (!open) {
@@ -33,8 +35,17 @@ export const CalendarDialog = ({
   }
 
   const handleApply = () => {
-    onSelect(parseISODate(value));
-    onClose();
+    if (!value) {
+      setErrorMessage('日付を選択してください');
+      return;
+    }
+
+    try {
+      onSelect(parseISODate(value));
+      onClose();
+    } catch {
+      setErrorMessage('有効な日付を選択してください');
+    }
   };
 
   return (
@@ -60,15 +71,23 @@ export const CalendarDialog = ({
             type="date"
             value={value}
             max={toISODate(maxDate)}
-            onChange={(event) => setValue(event.target.value)}
+            onChange={(event) => {
+              setValue(event.target.value);
+              setErrorMessage(null);
+            }}
             className="w-full rounded-md border border-gray-300 px-3 py-2"
           />
+          {errorMessage && (
+            <p role="alert" className="mt-2 text-sm text-red-600">
+              {errorMessage}
+            </p>
+          )}
         </div>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>
             キャンセル
           </Button>
-          <Button type="button" onClick={handleApply}>
+          <Button type="button" onClick={handleApply} disabled={!value}>
             適用
           </Button>
         </div>

@@ -18,6 +18,7 @@ export const DeleteConfirmDialog = ({
   open,
 }: DeleteConfirmDialogProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!open) {
     return null;
@@ -25,8 +26,11 @@ export const DeleteConfirmDialog = ({
 
   const handleConfirm = async () => {
     setIsDeleting(true);
+    setErrorMessage(null);
     try {
       await onConfirm();
+    } catch {
+      setErrorMessage('削除に失敗しました。再度お試しください。');
     } finally {
       setIsDeleting(false);
     }
@@ -47,6 +51,11 @@ export const DeleteConfirmDialog = ({
       >
         <h2 className="mb-2 text-lg font-semibold text-gray-900">日記を削除</h2>
         <p className="mb-4 text-sm text-gray-600">この操作は元に戻せません。本当に削除しますか？</p>
+        {errorMessage && (
+          <p role="alert" className="mb-4 text-sm text-red-600">
+            {errorMessage}
+          </p>
+        )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isDeleting}>
             キャンセル

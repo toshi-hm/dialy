@@ -38,4 +38,16 @@ describe('DeleteConfirmDialog', () => {
     });
     expect(handleConfirm).toHaveBeenCalledTimes(1);
   });
+
+  it('shows error message when delete fails', async () => {
+    const handleConfirm = vi.fn().mockRejectedValue(new Error('failed'));
+    render(<DeleteConfirmDialog open onCancel={() => {}} onConfirm={handleConfirm} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '削除する' }));
+    });
+
+    expect(handleConfirm).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('alert')).toHaveTextContent('削除に失敗しました。再度お試しください。');
+  });
 });

@@ -6,6 +6,8 @@ import { CharacterCount, SaveStatusIndicator } from '@/components/molecules';
 import { cn } from '@/lib/utils/cn';
 import { debounce } from '@/lib/utils/debounce';
 import type { SaveStatus } from '@/types/diary';
+import type { AppErrorCode } from '@/types/errors';
+import { isAppError } from '@/types/errors';
 
 export type DiaryEditorProps = {
   date: Date;
@@ -14,6 +16,24 @@ export type DiaryEditorProps = {
   onRequestDelete?: () => void;
   maxLength?: number;
   className?: string;
+};
+
+const SAVE_ERROR_MESSAGE_BY_CODE: Record<AppErrorCode, string> = {
+  VALIDATION_ERROR: '入力内容に誤りがあります',
+  SAVE_FAILED: '保存に失敗しました。再度お試しください。',
+  FUTURE_DATE_NOT_ALLOWED: '未来の日付は選択できません',
+  FETCH_FAILED: 'データの取得に失敗しました',
+  CONTENT_TOO_LONG: '文字数が上限を超えています',
+  LOAD_FAILED: 'データの読み込みに失敗しました',
+  DUPLICATE_DATE_ENTRY: '同じ日付の日記は既に存在します',
+};
+
+const toSaveErrorMessage = (error: unknown): string => {
+  if (isAppError(error)) {
+    return SAVE_ERROR_MESSAGE_BY_CODE[error.code];
+  }
+
+  return '保存に失敗しました';
 };
 
 export const DiaryEditor = ({
@@ -60,9 +80,9 @@ export const DiaryEditor = ({
         resetStatusTimeoutRef.current = setTimeout(() => {
           setSaveStatus('idle');
         }, 2000);
-      } catch {
+      } catch (error) {
         setSaveStatus('error');
-        setErrorMessage('保存に失敗しました');
+        setErrorMessage(toSaveErrorMessage(error));
       }
     },
     [clearResetStatusTimer, maxLength, onSave],

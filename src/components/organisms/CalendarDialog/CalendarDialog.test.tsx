@@ -38,4 +38,25 @@ describe('CalendarDialog', () => {
     const selected = handleSelect.mock.calls[0][0] as Date;
     expect(selected.getTime()).toBe(new Date(2026, 1, 7).getTime());
   });
+
+  it('disables apply button when date is empty', () => {
+    const handleSelect = vi.fn();
+
+    render(
+      <CalendarDialog
+        open
+        selectedDate={new Date(2026, 1, 8)}
+        maxDate={new Date(2026, 1, 8)}
+        onClose={() => {}}
+        onSelect={handleSelect}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText('日付'), { target: { value: '' } });
+    const applyButton = screen.getByRole('button', { name: '適用' });
+
+    expect(applyButton).toBeDisabled();
+    fireEvent.click(applyButton);
+    expect(handleSelect).not.toHaveBeenCalled();
+  });
 });

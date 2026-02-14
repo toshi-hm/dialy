@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
-import { DuplicateDateEntryError } from '@/types/errors';
+import {
+  ContentTooLongError,
+  DuplicateDateEntryError,
+  FutureDateError,
+  ValidationError,
+} from '@/types/errors';
 import { CreateDiaryEntryUseCase } from './create-diary-entry';
 import { DeleteDiaryEntryUseCase } from './delete-diary-entry';
 import { GetDiaryEntryUseCase } from './get-diary-entry';
@@ -56,6 +61,18 @@ describe('diary use cases', () => {
     ).rejects.toThrow(DuplicateDateEntryError);
   });
 
+  it('throws ContentTooLongError when creating an over-limit entry', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new CreateDiaryEntryUseCase(repository);
+
+    await expect(
+      useCase.execute({
+        date: new Date('2026-02-08T00:00:00.000Z'),
+        content: 'a'.repeat(10_001),
+      }),
+    ).rejects.toThrow(ContentTooLongError);
+  });
+
   it('updates a diary entry and persists changes', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-02-08T10:00:00.000Z'));
@@ -84,6 +101,18 @@ describe('diary use cases', () => {
     vi.useRealTimers();
   });
 
+  it('throws ValidationError when updating with invalid id', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new UpdateDiaryEntryUseCase(repository);
+
+    await expect(
+      useCase.execute({
+        id: 'invalid-id',
+        content: 'after',
+      }),
+    ).rejects.toThrow(ValidationError);
+  });
+
   it('deletes a diary entry by id', async () => {
     const repository = createRepositoryMock();
     const useCase = new DeleteDiaryEntryUseCase(repository);
@@ -91,6 +120,13 @@ describe('diary use cases', () => {
     await useCase.execute({ id: '550e8400-e29b-41d4-a716-446655440000' });
 
     expect(repository.delete).toHaveBeenCalledWith('550e8400-e29b-41d4-a716-446655440000');
+  });
+
+  it('throws ValidationError when deleting with invalid id', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new DeleteDiaryEntryUseCase(repository);
+
+    await expect(useCase.execute({ id: 'invalid-id' })).rejects.toThrow(ValidationError);
   });
 
   it('gets a diary entry by date', async () => {
@@ -108,6 +144,15 @@ describe('diary use cases', () => {
     const result = await useCase.execute(new Date('2026-02-08T00:00:00.000Z'));
 
     expect(result).toBe(entry);
+  });
+
+  it('throws FutureDateError when getting diary entry for future date', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new GetDiaryEntryUseCase(repository);
+
+    await expect(useCase.execute(new Date('2999-01-01T00:00:00.000Z'))).rejects.toThrow(
+      FutureDateError,
+    );
   });
 
   it('gets entries by same date', async () => {
@@ -128,5 +173,14 @@ describe('diary use cases', () => {
 
     expect(repository.findBySameDate).toHaveBeenCalledWith(new Date('2026-02-08T00:00:00.000Z'), 5);
     expect(result).toEqual(entries);
+  });
+
+  it('throws ValidationError when years is invalid', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new GetEntriesBySameDateUseCase(repository);
+
+    await expect(useCase.execute(new Date('2026-02-08T00:00:00.000Z'), 0)).rejects.toThrow(
+      ValidationError,
+    );
   });
 });
