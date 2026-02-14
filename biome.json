@@ -16,6 +16,15 @@
     "lineEnding": "lf",
     "lineWidth": 100
   },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "recommended": true,
+        "organizeImports": "on"
+      }
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {

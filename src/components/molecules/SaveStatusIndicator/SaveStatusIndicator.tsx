@@ -1,7 +1,7 @@
+import type { ReactElement } from 'react';
 import { Icon } from '@/components/atoms/Icon';
 import { cn } from '@/lib/utils/cn';
 import type { SaveStatus } from '@/types/diary';
-import type { ReactElement } from 'react';
 
 export type SaveStatusIndicatorProps = {
   status: SaveStatus;
