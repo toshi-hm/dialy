@@ -43,3 +43,6 @@ storybook-static
 
 # vitest
 coverage
+
+.gemini/
+gha-creds-*.json
