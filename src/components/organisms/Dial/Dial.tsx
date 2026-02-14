@@ -57,13 +57,31 @@ export function Dial({
   );
 
   const moveDate = useCallback(
-    (step: number) => {
-      const next = startOfDay(addDays(selectedDate, step));
-      if (!canMoveToDate(next)) {
+    (steps: number) => {
+      if (steps === 0) {
         return;
       }
 
-      onDateChange(next);
+      const direction = steps > 0 ? 1 : -1;
+      const totalSteps = Math.abs(steps);
+      let nextDate = startOfDay(selectedDate);
+      let moved = false;
+
+      for (let index = 0; index < totalSteps; index += 1) {
+        const candidate = startOfDay(addDays(nextDate, direction));
+        if (!canMoveToDate(candidate)) {
+          break;
+        }
+
+        nextDate = candidate;
+        moved = true;
+      }
+
+      if (!moved) {
+        return;
+      }
+
+      onDateChange(nextDate);
     },
     [canMoveToDate, onDateChange, selectedDate],
   );
@@ -112,11 +130,8 @@ export function Dial({
       return;
     }
 
-    const direction = delta > 0 ? 1 : -1;
     const steps = Math.floor(Math.abs(delta) / ROTATION_STEP_DEGREE);
-    for (let index = 0; index < steps; index += 1) {
-      moveDate(direction);
-    }
+    moveDate((delta > 0 ? 1 : -1) * steps);
 
     dragRef.current.lastAngle = currentAngle;
   };

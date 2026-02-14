@@ -7,9 +7,9 @@ describe('Dial', () => {
     const handleDateChange = vi.fn();
     render(
       <Dial
-        selectedDate={new Date('2026-02-08T00:00:00.000Z')}
+        selectedDate={new Date(2026, 1, 8)}
         onDateChange={handleDateChange}
-        maxDate={new Date('2026-02-10T00:00:00.000Z')}
+        maxDate={new Date(2026, 1, 10)}
       />,
     );
 
@@ -28,9 +28,9 @@ describe('Dial', () => {
 
     render(
       <Dial
-        selectedDate={new Date('2026-02-08T00:00:00.000Z')}
+        selectedDate={new Date(2026, 1, 8)}
         onDateChange={handleDateChange}
-        maxDate={new Date('2026-02-08T00:00:00.000Z')}
+        maxDate={new Date(2026, 1, 8)}
         onFutureDateAttempt={handleFutureAttempt}
       />,
     );
@@ -39,5 +39,49 @@ describe('Dial', () => {
 
     expect(handleDateChange).not.toHaveBeenCalled();
     expect(handleFutureAttempt).toHaveBeenCalledTimes(1);
+  });
+
+  it('moves multiple days when drag delta crosses multiple steps', () => {
+    const handleDateChange = vi.fn();
+
+    render(
+      <Dial
+        selectedDate={new Date(2026, 1, 8)}
+        onDateChange={handleDateChange}
+        maxDate={new Date(2026, 1, 20)}
+      />,
+    );
+
+    const slider = screen.getByRole('slider', { name: '日付選択' });
+    Object.defineProperty(slider, 'setPointerCapture', {
+      value: vi.fn(),
+      configurable: true,
+    });
+    vi.spyOn(slider, 'getBoundingClientRect').mockReturnValue({
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      right: 100,
+      bottom: 100,
+      toJSON: () => ({}),
+    } as DOMRect);
+
+    fireEvent.pointerDown(slider, {
+      pointerId: 1,
+      clientX: 100,
+      clientY: 50,
+    });
+    fireEvent.pointerMove(slider, {
+      pointerId: 1,
+      clientX: 82,
+      clientY: 88,
+    });
+
+    expect(handleDateChange).toHaveBeenCalledTimes(1);
+    const changedDate = handleDateChange.mock.calls[0][0] as Date;
+    expect(changedDate.getTime()).toBe(new Date(2026, 1, 10).getTime());
   });
 });
