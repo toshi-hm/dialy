@@ -1,6 +1,6 @@
 export default {
   '*.{js,jsx,ts,tsx,mjs,cjs,json,css}': (filenames) => [
-    `pnpm biome lint ${filenames.join(' ')}`,
-    `pnpm biome format --write ${filenames.join(' ')}`,
+    `pnpm lint ${filenames.join(' ')}`,
+    `pnpm format ${filenames.join(' ')}`,
   ],
 };
