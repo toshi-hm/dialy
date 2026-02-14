@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
+import { parseISODate } from '@/lib/utils/date';
 import { DuplicateDateEntryError } from '@/types/errors';
 import {
   LocalStorageDiaryRepository,
@@ -10,10 +11,10 @@ import {
 function reconstructEntry(id: string, date: string, content: string): DiaryEntry {
   return DiaryEntry.reconstruct(
     id,
-    new Date(`${date}T00:00:00.000Z`),
+    parseISODate(date),
     content,
-    new Date('2026-02-08T00:00:00.000Z'),
-    new Date('2026-02-08T00:00:00.000Z'),
+    parseISODate('2026-02-08'),
+    parseISODate('2026-02-08'),
   );
 }
 
@@ -29,11 +30,35 @@ describe('LocalStorageDiaryRepository', () => {
     await repository.save(entry);
 
     const byId = await repository.findById(entry.id);
-    const byDate = await repository.findByDate(new Date('2026-02-08T00:00:00.000Z'));
+    const byDate = await repository.findByDate(parseISODate('2026-02-08'));
 
     expect(byId?.content).toBe('entry');
     expect(byDate?.id).toBe(entry.id);
     expect(localStorage.getItem(STORAGE_KEY)).toContain(STORAGE_VERSION);
+  });
+
+  it('deserializes stored ISO date as local date', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: STORAGE_VERSION,
+        entries: [
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            date: '2026-02-08',
+            content: 'entry',
+            createdAt: '2026-02-08T00:00:00.000Z',
+            updatedAt: '2026-02-08T00:00:00.000Z',
+          },
+        ],
+      }),
+    );
+
+    const repository = new LocalStorageDiaryRepository();
+    const entry = await repository.findById('550e8400-e29b-41d4-a716-446655440000');
+
+    expect(entry).not.toBeNull();
+    expect(entry?.date.getTime()).toBe(parseISODate('2026-02-08').getTime());
   });
 
   it('throws DuplicateDateEntryError when duplicate date entry is saved', async () => {
@@ -61,7 +86,7 @@ describe('LocalStorageDiaryRepository', () => {
       reconstructEntry('550e8400-e29b-41d4-a716-446655440003', '2025-02-07', 'other'),
     );
 
-    const result = await repository.findBySameDate(new Date('2026-02-08T00:00:00.000Z'), 3);
+    const result = await repository.findBySameDate(parseISODate('2026-02-08'), 3);
 
     expect(result.map((entry) => entry.content)).toEqual(['2025', '2024', '2023']);
   });

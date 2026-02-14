@@ -1,6 +1,6 @@
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
-import { toISODate } from '@/lib/utils/date';
+import { parseISODate, toISODate } from '@/lib/utils/date';
 import type { DiaryStorage, StoredDiaryEntry } from '@/types/diary';
 import { DuplicateDateEntryError } from '@/types/errors';
 
@@ -199,7 +199,7 @@ export class LocalStorageDiaryRepository implements DiaryRepository {
   private deserialize(entry: StoredDiaryEntry): DiaryEntry {
     return DiaryEntry.reconstruct(
       entry.id,
-      new Date(entry.date),
+      parseISODate(entry.date),
       entry.content,
       new Date(entry.createdAt),
       new Date(entry.updatedAt),
