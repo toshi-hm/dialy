@@ -23,8 +23,8 @@ import { startOfDay } from '@/lib/utils/date';
 import {
   ContentTooLongError,
   DuplicateDateEntryError,
-  FetchFailedError,
   FutureDateError,
+  SaveFailedError,
   ValidationError,
 } from '@/types/errors';
 
@@ -124,8 +124,6 @@ export default function Home() {
 
   const saveContent = useCallback(
     async (content: string) => {
-      let lastError: unknown;
-
       for (let attempt = 0; ; attempt += 1) {
         try {
           const savedEntry = currentEntry
@@ -146,19 +144,16 @@ export default function Home() {
             throw error;
           }
 
-          lastError = error;
+          if (!(error instanceof SaveFailedError)) {
+            throw error;
+          }
+
           if (attempt >= RETRY_DELAYS_MS.length) {
-            break;
+            throw error;
           }
           await sleep(RETRY_DELAYS_MS[attempt]);
         }
       }
-
-      if (lastError instanceof FetchFailedError) {
-        throw lastError;
-      }
-
-      throw new Error('Failed to save diary entry');
     },
     [
       createDiaryEntryUseCase,
