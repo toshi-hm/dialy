@@ -10,7 +10,12 @@ export type DiaryPreviewProps = {
   className?: string;
 };
 
-export function DiaryPreview({ className, entry, expanded = false, onToggle }: DiaryPreviewProps) {
+export const DiaryPreview = ({
+  className,
+  entry,
+  expanded = false,
+  onToggle,
+}: DiaryPreviewProps) => {
   const text = expanded ? entry.content : entry.getPreviewText(100);
   const toggleLabel = expanded ? '閉じる' : '展開';
 
@@ -36,4 +41,4 @@ export function DiaryPreview({ className, entry, expanded = false, onToggle }: D
       <Badge variant="default">文字数: {entry.getCharacterCount().toLocaleString()}</Badge>
     </article>
   );
-}
+};

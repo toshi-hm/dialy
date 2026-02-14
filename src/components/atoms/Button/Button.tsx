@@ -5,13 +5,13 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: 'sm' | 'md' | 'lg';
 };
 
-export function Button({
+export const Button = ({
   children,
   variant = 'primary',
   size = 'md',
   className = '',
   ...props
-}: ButtonProps) {
+}: ButtonProps) => {
   const baseClasses = 'font-semibold rounded-lg transition-colors duration-200';
 
   const variantClasses = {
@@ -33,4 +33,4 @@ export function Button({
       {children}
     </button>
   );
-}
+};

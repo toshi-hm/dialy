@@ -9,7 +9,7 @@ export type MainLayoutProps = {
   className?: string;
 };
 
-export function MainLayout({ children, className, headerActions, sidebar }: MainLayoutProps) {
+export const MainLayout = ({ children, className, headerActions, sidebar }: MainLayoutProps) => {
   return (
     <div className={cn('min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100', className)}>
       <Header actions={headerActions} />
@@ -21,4 +21,4 @@ export function MainLayout({ children, className, headerActions, sidebar }: Main
       </main>
     </div>
   );
-}
+};

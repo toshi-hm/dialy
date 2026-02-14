@@ -1,6 +1,7 @@
 import { Icon } from '@/components/atoms/Icon';
 import { cn } from '@/lib/utils/cn';
 import type { SaveStatus } from '@/types/diary';
+import type { ReactElement } from 'react';
 
 export type SaveStatusIndicatorProps = {
   status: SaveStatus;
@@ -8,12 +9,12 @@ export type SaveStatusIndicatorProps = {
   className?: string;
 };
 
-export function SaveStatusIndicator({
+export const SaveStatusIndicator = ({
   className,
   errorMessage = '保存に失敗しました',
   status,
-}: SaveStatusIndicatorProps) {
-  const contentByStatus: Record<SaveStatus, JSX.Element | null> = {
+}: SaveStatusIndicatorProps) => {
+  const contentByStatus: Record<SaveStatus, ReactElement | null> = {
     idle: null,
     saving: (
       <span className="inline-flex items-center gap-1 text-gray-600">
@@ -38,4 +39,4 @@ export function SaveStatusIndicator({
       {contentByStatus[status]}
     </output>
   );
-}
+};

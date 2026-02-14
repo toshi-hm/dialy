@@ -6,14 +6,16 @@ export const metadata: Metadata = {
   description: 'A diary app that lets you see past entries for the same day at a glance',
 };
 
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   return (
     <html lang="ja">
       <body>{children}</body>
     </html>
   );
-}
+};
+
+export default RootLayout;

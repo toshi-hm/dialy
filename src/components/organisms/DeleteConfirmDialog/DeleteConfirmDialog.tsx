@@ -11,12 +11,12 @@ export type DeleteConfirmDialogProps = {
   className?: string;
 };
 
-export function DeleteConfirmDialog({
+export const DeleteConfirmDialog = ({
   className,
   onCancel,
   onConfirm,
   open,
-}: DeleteConfirmDialogProps) {
+}: DeleteConfirmDialogProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   if (!open) {
@@ -58,4 +58,4 @@ export function DeleteConfirmDialog({
       </div>
     </div>
   );
-}
+};

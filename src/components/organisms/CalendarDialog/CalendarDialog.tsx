@@ -14,15 +14,15 @@ export type CalendarDialogProps = {
   className?: string;
 };
 
-export function CalendarDialog({
+export const CalendarDialog = ({
   className,
   maxDate,
   onClose,
   onSelect,
   open,
   selectedDate,
-}: CalendarDialogProps) {
-  const [value, setValue] = useState(toISODate(selectedDate));
+}: CalendarDialogProps) => {
+  const [value, setValue] = useState<string>(toISODate(selectedDate));
 
   useEffect(() => {
     setValue(toISODate(selectedDate));
@@ -75,4 +75,4 @@ export function CalendarDialog({
       </div>
     </div>
   );
-}
+};

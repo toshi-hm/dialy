@@ -10,7 +10,7 @@ export type PastEntriesListProps = {
   className?: string;
 };
 
-export function PastEntriesList({ className, entries }: PastEntriesListProps) {
+export const PastEntriesList = ({ className, entries }: PastEntriesListProps) => {
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
 
   const sortedEntries = useMemo(
@@ -43,4 +43,4 @@ export function PastEntriesList({ className, entries }: PastEntriesListProps) {
       ))}
     </section>
   );
-}
+};

@@ -8,12 +8,12 @@ export type CharacterCountProps = {
   className?: string;
 };
 
-export function CharacterCount({
+export const CharacterCount = ({
   className,
   content,
   maxLength = 10_000,
   warningThreshold = 0.95,
-}: CharacterCountProps) {
+}: CharacterCountProps) => {
   const count = content.length;
   const ratio = count / maxLength;
   const isOverLimit = count > maxLength;
@@ -33,4 +33,4 @@ export function CharacterCount({
       {isOverLimit && <Badge variant="error">上限超過</Badge>}
     </div>
   );
-}
+};

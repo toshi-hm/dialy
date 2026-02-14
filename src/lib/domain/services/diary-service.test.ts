@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import { DiaryService } from './diary-service';
 
-function createEntry(id: string, date: string): DiaryEntry {
+const createEntry = (id: string, date: string): DiaryEntry => {
   return DiaryEntry.reconstruct(
     id,
     new Date(date),
@@ -10,7 +10,7 @@ function createEntry(id: string, date: string): DiaryEntry {
     new Date('2026-02-08T00:00:00.000Z'),
     new Date('2026-02-08T00:00:00.000Z'),
   );
-}
+};
 
 describe('DiaryService', () => {
   it('filters entries by same month/day in past years and sorts desc', () => {

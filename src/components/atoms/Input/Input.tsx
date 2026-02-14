@@ -5,7 +5,7 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   hasError?: boolean;
 };
 
-export function Input({ className, hasError = false, ...props }: InputProps) {
+export const Input = ({ className, hasError = false, ...props }: InputProps) => {
   const ariaInvalid = hasError ? true : props['aria-invalid'];
 
   return (
@@ -20,4 +20,4 @@ export function Input({ className, hasError = false, ...props }: InputProps) {
       )}
     />
   );
-}
+};

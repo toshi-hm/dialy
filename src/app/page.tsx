@@ -30,13 +30,13 @@ import {
 
 const RETRY_DELAYS_MS = [250, 500, 1000];
 
-function sleep(ms: number): Promise<void> {
+const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
-}
+};
 
-function detectDialSize(width: number): number {
+const detectDialSize = (width: number): number => {
   if (width < 768) {
     return 80;
   }
@@ -46,9 +46,9 @@ function detectDialSize(width: number): number {
   }
 
   return 180;
-}
+};
 
-export default function Home() {
+const Home = () => {
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
   const [currentEntry, setCurrentEntry] = useState<DiaryEntry | null>(null);
   const [pastEntries, setPastEntries] = useState<DiaryEntry[]>([]);
@@ -239,4 +239,6 @@ export default function Home() {
       />
     </MainLayout>
   );
-}
+};
+
+export default Home;

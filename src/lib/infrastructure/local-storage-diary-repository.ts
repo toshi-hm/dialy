@@ -7,14 +7,14 @@ import { DuplicateDateEntryError } from '@/types/errors';
 export const STORAGE_KEY = 'dialy_entries';
 export const STORAGE_VERSION = '1.0.0';
 
-function createEmptyStorage(): DiaryStorage {
+const createEmptyStorage = (): DiaryStorage => {
   return {
     version: STORAGE_VERSION,
     entries: [],
   };
-}
+};
 
-function isStoredDiaryEntry(value: unknown): value is StoredDiaryEntry {
+const isStoredDiaryEntry = (value: unknown): value is StoredDiaryEntry => {
   if (!value || typeof value !== 'object') {
     return false;
   }
@@ -27,9 +27,9 @@ function isStoredDiaryEntry(value: unknown): value is StoredDiaryEntry {
     typeof candidate.createdAt === 'string' &&
     typeof candidate.updatedAt === 'string'
   );
-}
+};
 
-function isDiaryStorage(value: unknown): value is DiaryStorage {
+const isDiaryStorage = (value: unknown): value is DiaryStorage => {
   if (!value || typeof value !== 'object') {
     return false;
   }
@@ -40,7 +40,7 @@ function isDiaryStorage(value: unknown): value is DiaryStorage {
     Array.isArray(candidate.entries) &&
     candidate.entries.every((entry) => isStoredDiaryEntry(entry))
   );
-}
+};
 
 export class LocalStorageDiaryRepository implements DiaryRepository {
   private cache: DiaryStorage | null = null;

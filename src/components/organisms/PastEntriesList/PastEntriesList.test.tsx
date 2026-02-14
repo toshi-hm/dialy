@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import { PastEntriesList } from './PastEntriesList';
 
-function entry(id: string, date: string, content: string): DiaryEntry {
+const entry = (id: string, date: string, content: string): DiaryEntry => {
   return DiaryEntry.reconstruct(
     id,
     new Date(`${date}T00:00:00.000Z`),
@@ -11,7 +11,7 @@ function entry(id: string, date: string, content: string): DiaryEntry {
     new Date(`${date}T00:00:00.000Z`),
     new Date(`${date}T00:00:00.000Z`),
   );
-}
+};
 
 describe('PastEntriesList', () => {
   it('renders empty message when no entries', () => {

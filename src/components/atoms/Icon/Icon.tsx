@@ -1,4 +1,4 @@
-import type { SVGProps } from 'react';
+import type { ReactElement, SVGProps } from 'react';
 import { cn } from '@/lib/utils/cn';
 
 export type IconName = 'alert' | 'calendar' | 'check' | 'clock' | 'trash';
@@ -9,7 +9,7 @@ export type IconProps = Omit<SVGProps<SVGSVGElement>, 'name'> & {
   size?: number;
 };
 
-const iconPaths: Record<IconName, JSX.Element> = {
+const iconPaths: Record<IconName, ReactElement> = {
   calendar: (
     <>
       <rect x="3" y="5" width="18" height="16" rx="2" />
@@ -39,7 +39,7 @@ const iconPaths: Record<IconName, JSX.Element> = {
   ),
 };
 
-export function Icon({ className, label, name, size = 16, ...props }: IconProps) {
+export const Icon = ({ className, label, name, size = 16, ...props }: IconProps) => {
   return (
     <svg
       {...props}
@@ -59,4 +59,4 @@ export function Icon({ className, label, name, size = 16, ...props }: IconProps)
       {iconPaths[name]}
     </svg>
   );
-}
+};

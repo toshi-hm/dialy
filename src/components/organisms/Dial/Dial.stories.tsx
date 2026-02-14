@@ -13,9 +13,10 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+const demoDate = new Date('2026-02-08T00:00:00.000Z');
 
-function StatefulDial() {
-  const [selectedDate, setSelectedDate] = useState(new Date('2026-02-08T00:00:00.000Z'));
+const StatefulDial = () => {
+  const [selectedDate, setSelectedDate] = useState(demoDate);
 
   return (
     <Dial
@@ -24,15 +25,23 @@ function StatefulDial() {
       maxDate={new Date('2026-02-10T00:00:00.000Z')}
     />
   );
-}
+};
 
 export const Default: Story = {
+  args: {
+    selectedDate: demoDate,
+    onDateChange: () => undefined,
+  },
   render: () => <StatefulDial />,
 };
 
 export const Small: Story = {
+  args: {
+    selectedDate: demoDate,
+    onDateChange: () => undefined,
+  },
   render: () => {
-    const [selectedDate, setSelectedDate] = useState(new Date('2026-02-08T00:00:00.000Z'));
+    const [selectedDate, setSelectedDate] = useState(demoDate);
     return (
       <Dial
         size={80}

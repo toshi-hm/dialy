@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import { DiaryPreview } from './DiaryPreview';
 
-function createEntry(content: string): DiaryEntry {
+const createEntry = (content: string): DiaryEntry => {
   return DiaryEntry.reconstruct(
     '550e8400-e29b-41d4-a716-446655440000',
     new Date('2025-02-08T00:00:00.000Z'),
@@ -11,7 +11,7 @@ function createEntry(content: string): DiaryEntry {
     new Date('2025-02-08T00:00:00.000Z'),
     new Date('2025-02-08T00:00:00.000Z'),
   );
-}
+};
 
 describe('DiaryPreview', () => {
   it('shows year, preview text and character count', () => {

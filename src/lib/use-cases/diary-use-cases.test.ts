@@ -8,7 +8,7 @@ import { GetDiaryEntryUseCase } from './get-diary-entry';
 import { GetEntriesBySameDateUseCase } from './get-entries-by-same-date';
 import { UpdateDiaryEntryUseCase } from './update-diary-entry';
 
-function createRepositoryMock(): DiaryRepository {
+const createRepositoryMock = (): DiaryRepository => {
   return {
     save: vi.fn(),
     findById: vi.fn(),
@@ -17,7 +17,7 @@ function createRepositoryMock(): DiaryRepository {
     delete: vi.fn(),
     findAll: vi.fn(),
   };
-}
+};
 
 describe('diary use cases', () => {
   it('creates a diary entry and saves it', async () => {

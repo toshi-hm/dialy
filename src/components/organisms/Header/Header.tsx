@@ -6,7 +6,7 @@ export type HeaderProps = {
   className?: string;
 };
 
-export function Header({ actions, className }: HeaderProps) {
+export const Header = ({ actions, className }: HeaderProps) => {
   return (
     <header
       className={cn(
@@ -18,4 +18,4 @@ export function Header({ actions, className }: HeaderProps) {
       {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
     </header>
   );
-}
+};

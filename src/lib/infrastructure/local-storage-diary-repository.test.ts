@@ -8,7 +8,7 @@ import {
   STORAGE_VERSION,
 } from './local-storage-diary-repository';
 
-function reconstructEntry(id: string, date: string, content: string): DiaryEntry {
+const reconstructEntry = (id: string, date: string, content: string): DiaryEntry => {
   return DiaryEntry.reconstruct(
     id,
     parseISODate(date),
@@ -16,7 +16,7 @@ function reconstructEntry(id: string, date: string, content: string): DiaryEntry
     parseISODate('2026-02-08'),
     parseISODate('2026-02-08'),
   );
-}
+};
 
 describe('LocalStorageDiaryRepository', () => {
   beforeEach(() => {

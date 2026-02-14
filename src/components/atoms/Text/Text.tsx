@@ -27,7 +27,7 @@ const weightClasses = {
   bold: 'font-bold',
 };
 
-export function Text({
+export const Text = ({
   as: Component = 'p',
   children,
   className,
@@ -35,7 +35,7 @@ export function Text({
   size = 'md',
   weight = 'normal',
   ...props
-}: TextProps) {
+}: TextProps) => {
   return (
     <Component
       {...props}
@@ -44,4 +44,4 @@ export function Text({
       {children}
     </Component>
   );
-}
+};

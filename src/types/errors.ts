@@ -67,6 +67,6 @@ export class DuplicateDateEntryError extends AppError {
   }
 }
 
-export function isAppError(error: unknown): error is AppError {
+export const isAppError = (error: unknown): error is AppError => {
   return error instanceof AppError;
-}
+};

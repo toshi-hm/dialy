@@ -13,13 +13,14 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+const demoDate = new Date('2026-02-08T00:00:00.000Z');
 
-function StatefulDiaryEditor() {
+const StatefulDiaryEditor = () => {
   const [content, setContent] = useState('今日は設計書を更新した。');
 
   return (
     <DiaryEditor
-      date={new Date('2026-02-08T00:00:00.000Z')}
+      date={demoDate}
       initialContent={content}
       onSave={async (value) => {
         setContent(value);
@@ -27,8 +28,12 @@ function StatefulDiaryEditor() {
       onRequestDelete={() => setContent('')}
     />
   );
-}
+};
 
 export const Default: Story = {
+  args: {
+    date: demoDate,
+    onSave: async () => undefined,
+  },
   render: () => <StatefulDiaryEditor />,
 };

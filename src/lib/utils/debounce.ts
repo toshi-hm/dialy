@@ -3,10 +3,10 @@ export type DebouncedFunction<TArgs extends unknown[]> = ((...args: TArgs) => vo
   flush: () => void;
 };
 
-export function debounce<TArgs extends unknown[]>(
+export const debounce = <TArgs extends unknown[]>(
   callback: (...args: TArgs) => void,
   delayMs: number,
-): DebouncedFunction<TArgs> {
+): DebouncedFunction<TArgs> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   let lastArgs: TArgs | undefined;
 
@@ -53,4 +53,4 @@ export function debounce<TArgs extends unknown[]>(
   };
 
   return debounced;
-}
+};

@@ -17,7 +17,7 @@ export type DialProps = {
   size?: number;
 };
 
-export function Dial({
+export const Dial = ({
   className,
   maxDate = new Date(),
   minDate,
@@ -26,7 +26,7 @@ export function Dial({
   onOpenCalendar,
   selectedDate,
   size = 180,
-}: DialProps) {
+}: DialProps) => {
   const dialRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ active: boolean; lastAngle: number; pointerId: number | null }>({
     active: false,
@@ -192,4 +192,4 @@ export function Dial({
       </div>
     </div>
   );
-}
+};

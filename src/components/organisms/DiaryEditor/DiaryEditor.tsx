@@ -16,14 +16,14 @@ export type DiaryEditorProps = {
   className?: string;
 };
 
-export function DiaryEditor({
+export const DiaryEditor = ({
   className,
   date,
   initialContent = '',
   maxLength = 10_000,
   onRequestDelete,
   onSave,
-}: DiaryEditorProps) {
+}: DiaryEditorProps) => {
   const [content, setContent] = useState(initialContent);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
@@ -135,4 +135,4 @@ export function DiaryEditor({
       <SaveStatusIndicator status={saveStatus} errorMessage={errorMessage} />
     </section>
   );
-}
+};

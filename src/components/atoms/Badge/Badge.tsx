@@ -13,7 +13,7 @@ const variantClasses = {
   error: 'bg-red-100 text-red-700',
 };
 
-export function Badge({ children, className, variant = 'default', ...props }: BadgeProps) {
+export const Badge = ({ children, className, variant = 'default', ...props }: BadgeProps) => {
   return (
     <span
       {...props}
@@ -26,4 +26,4 @@ export function Badge({ children, className, variant = 'default', ...props }: Ba
       {children}
     </span>
   );
-}
+};
