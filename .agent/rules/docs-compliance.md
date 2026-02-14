@@ -53,7 +53,7 @@ await createDiaryAction(formData);
 'use client';
 
 // ❌ Bad - Server Componentは使わない（MVP版）
-export default async function DiaryPage() { /* ... */ }
+const DiaryPage = async () => { /* ... */ }
 ```
 
 ## チェックリスト

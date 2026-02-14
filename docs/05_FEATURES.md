@@ -113,7 +113,7 @@ type DialProps = {
   maxDate?: Date; // デフォルト: 今日
 };
 
-function Dial({ selectedDate, onDateChange, maxDate = new Date() }: DialProps) {
+const Dial = ({ selectedDate, onDateChange, maxDate = new Date() }: DialProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [startAngle, setStartAngle] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -203,7 +203,7 @@ function Dial({ selectedDate, onDateChange, maxDate = new Date() }: DialProps) {
       )}
     </>
   );
-}
+};
 ```
 
 ### 1.5 将来的な拡張
@@ -639,10 +639,10 @@ export class GetEntriesBySameDateUseCase {
 
 ```typescript
 // デバウンスフック
-function useDebouncedSave(
+const useDebouncedSave = (
   saveFunction: (content: string) => Promise<void>,
   delay: number = 1000
-) {
+) => {
   const [isSaving, setIsSaving] = useState(false);
 
   const debouncedSave = useMemo(
@@ -662,10 +662,10 @@ function useDebouncedSave(
   );
 
   return { debouncedSave, isSaving };
-}
+};
 
 // 使用例
-function DiaryEditor({ date, initialContent }: DiaryEditorProps) {
+const DiaryEditor = ({ date, initialContent }: DiaryEditorProps) => {
   const [content, setContent] = useState(initialContent);
 
   const { debouncedSave, isSaving } = useDebouncedSave(
@@ -687,7 +687,7 @@ function DiaryEditor({ date, initialContent }: DiaryEditorProps) {
   }, [content]);
 
   // ...
-}
+};
 ```
 
 ## 7. 文字数カウント
@@ -738,7 +738,7 @@ function DiaryEditor({ date, initialContent }: DiaryEditorProps) {
 ### 7.4 実装例
 
 ```typescript
-function CharacterCount({ content, maxLength = 10000 }: CharacterCountProps) {
+const CharacterCount = ({ content, maxLength = 10000 }: CharacterCountProps) => {
   const count = content.length;
   const isOverLimit = count > maxLength;
 
@@ -749,7 +749,7 @@ function CharacterCount({ content, maxLength = 10000 }: CharacterCountProps) {
       {isOverLimit && <span> （上限超過）</span>}
     </div>
   );
-}
+};
 ```
 
 ## 8. エラーハンドリング
@@ -795,10 +795,10 @@ function CharacterCount({ content, maxLength = 10000 }: CharacterCountProps) {
 
 ```typescript
 // エラーハンドリング付き保存
-async function saveDiaryWithErrorHandling(
+const saveDiaryWithErrorHandling = async (
   entry: DiaryEntry,
   maxRetries: number = 3
-): Promise<void> {
+): Promise<void> => {
   let retries = 0;
 
   while (retries < maxRetries) {
@@ -818,7 +818,7 @@ async function saveDiaryWithErrorHandling(
       await sleep(Math.pow(2, retries) * 1000);
     }
   }
-}
+};
 ```
 
 ## まとめ

@@ -109,7 +109,7 @@ import { Auth0Provider } from '@auth0/auth0-react';
 
 ```typescript
 // ミドルウェアでアクセスチェック
-export async function middleware(request: NextRequest) {
+export const middleware = async (request: NextRequest) => {
   const session = await getSession(request);
 
   if (!session) {
@@ -125,7 +125,7 @@ export async function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
-}
+};
 ```
 
 ## 3. データ保護
@@ -159,7 +159,7 @@ const nextConfig = {
 
 ```typescript
 // middleware.ts
-export function middleware(request: NextRequest) {
+export const middleware = (request: NextRequest) => {
   // HTTP → HTTPS リダイレクト（本番環境のみ）
   if (
     process.env.NODE_ENV === 'production' &&
@@ -220,7 +220,7 @@ import crypto from 'crypto';
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY!; // 32バイトのキー
 const IV_LENGTH = 16;
 
-export function encrypt(text: string): string {
+export const encrypt = (text: string): string => {
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(
     'aes-256-gcm',
@@ -236,7 +236,7 @@ export function encrypt(text: string): string {
   return `${iv.toString('hex')}:${authTag}:${encrypted}`;
 }
 
-export function decrypt(encryptedData: string): string {
+export const decrypt = (encryptedData: string): string => {
   const [ivHex, authTagHex, encrypted] = encryptedData.split(':');
 
   const iv = Buffer.from(ivHex, 'hex');
@@ -268,7 +268,7 @@ MVP版ではLocalStorageを使用するが、以下の点に注意:
 
 ```typescript
 // Web Crypto APIを使用した暗号化
-async function encryptForStorage(data: string, password: string): Promise<string> {
+const encryptForStorage = async (data: string, password: string): Promise<string> => {
   const encoder = new TextEncoder();
   const data = encoder.encode(data);
 
@@ -306,7 +306,7 @@ async function encryptForStorage(data: string, password: string): Promise<string
   result.set(encryptedArray, iv.length);
 
   return btoa(String.fromCharCode(...result));
-}
+};
 ```
 
 ## 4. プライバシー保護
@@ -337,14 +337,14 @@ async function encryptForStorage(data: string, password: string): Promise<string
 
 ```typescript
 // すべてのデータを削除
-export async function deleteAllUserDataUseCase(userId: string): Promise<void> {
+export const deleteAllUserDataUseCase = async (userId: string): Promise<void> => {
   await prisma.$transaction([
     // すべての日記を削除
     prisma.diaryEntry.deleteMany({ where: { userId } }),
     // ユーザーアカウントを削除
     prisma.user.delete({ where: { id: userId } }),
   ]);
-}
+};
 ```
 
 ### 4.3 プライバシーポリシー
@@ -381,7 +381,7 @@ Server Actionsでも再検証（クライアント側検証を信用しない）
 
 import { DiaryEntrySchema } from '@/lib/validations/diary';
 
-export async function createDiaryAction(formData: FormData) {
+export const createDiaryAction = async (formData: FormData) => {
   const rawData = {
     date: new Date(formData.get('date') as string),
     content: formData.get('content') as string,
@@ -392,7 +392,7 @@ export async function createDiaryAction(formData: FormData) {
 
   // ユースケース実行
   await createDiaryEntryUseCase.execute(validated);
-}
+};
 ```
 
 ### 5.3 XSS対策

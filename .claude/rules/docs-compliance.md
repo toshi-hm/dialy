@@ -74,7 +74,7 @@ await createDiaryAction(formData);
 
 import { useState, useEffect } from 'react';
 
-export default function DiaryPage() {
+const DiaryPage = () => {
   const [entries, setEntries] = useState([]);
 
   useEffect(() => {
@@ -86,7 +86,7 @@ export default function DiaryPage() {
 }
 
 // ❌ Bad - Server Componentは使わない（MVP版）
-export default async function DiaryPage() {
+const DiaryPage = async () => {
   const entries = await getDiaryEntries();
   return (/* ... */);
 }
@@ -380,13 +380,13 @@ private cache: DiaryEntry[] | null = null;
 ```typescript
 // ❌ Bad
 'use server';
-export async function createDiaryAction(formData: FormData) {
+export const createDiaryAction = async (formData: FormData) => {
   // Server Actionsを使用している
 }
 
 // ✅ Good
 'use client';
-export function createDiary(date: Date, content: string) {
+export const createDiary = (date: Date, content: string) => {
   const repository = new LocalStorageDiaryRepository();
   const entry = DiaryEntry.create(date, content);
   await repository.save(entry);

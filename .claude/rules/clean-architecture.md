@@ -151,7 +151,7 @@ export class CreateDiaryEntryUseCase {
 import { createDiaryEntryUseCase } from '@/lib/use-cases/create-diary-entry';
 import { prismaRepository } from '@/lib/infrastructure/prisma-repository';
 
-export async function createDiaryAction(formData: FormData) {
+export const createDiaryAction = async (formData: FormData) => {
   const title = formData.get('title') as string;
   const content = formData.get('content') as string;
 
@@ -253,7 +253,7 @@ export type DiaryEntryInput = z.infer<typeof DiaryEntrySchema>;
 
 import { DiaryEntrySchema } from '@/lib/validations/diary';
 
-export default function NewDiaryPage() {
+const NewDiaryPage = () => {
   const handleSubmit = (formData: FormData) => {
     const input = {
       title: formData.get('title'),

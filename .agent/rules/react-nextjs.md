@@ -16,7 +16,7 @@ React 19 と Next.js 16 の開発ガイドライン。
 'use client';
 import { useActionState } from 'react';
 
-export function DiaryForm() {
+export const DiaryForm = () => {
   const [state, formAction, isPending] = useActionState(createDiaryEntry, null);
   return (
     <form action={formAction}>
@@ -26,7 +26,7 @@ export function DiaryForm() {
       </button>
     </form>
   );
-}
+};
 ```
 
 ### 2. useOptimistic（楽観的UI更新）
@@ -43,19 +43,19 @@ const [optimisticTodos, addOptimisticTodo] = useOptimistic(
 ```typescript
 import { use } from 'react';
 
-export function DiaryEntry({ entryPromise }: { entryPromise: Promise<DiaryEntry> }) {
+export const DiaryEntry = ({ entryPromise }: { entryPromise: Promise<DiaryEntry> }) => {
   const entry = use(entryPromise);
   return <article><h1>{entry.title}</h1></article>;
-}
+};
 ```
 
 ### 4. ref as prop（forwardRef不要）
 
 ```typescript
 // ✅ Good - React 19: 直接refをpropとして受け取る
-export function Button({ children, ref, ...props }: ButtonProps) {
+export const Button = ({ children, ref, ...props }: ButtonProps) => {
   return <button ref={ref} {...props}>{children}</button>;
-}
+};
 
 // ❌ Old - forwardRefは不要
 ```
@@ -68,7 +68,7 @@ export function Button({ children, ref, ...props }: ButtonProps) {
 
 ```typescript
 // app/diary/page.tsx - デフォルトでServer Component
-export default async function DiaryPage() {
+const DiaryPage = async () => {
   const entries = await getDiaryEntries();
   return (
     <div>
@@ -88,7 +88,7 @@ export default async function DiaryPage() {
 ```typescript
 // ✅ Good - Client Componentを最小限に
 // Server Componentの中でClient Componentを使用
-export default async function DiaryPage() {
+const DiaryPage = async () => {
   const entries = await getDiaryEntries();
   return (
     <div>
@@ -119,7 +119,7 @@ const [user, entries, stats] = await Promise.all([
 'use server';
 import { revalidatePath } from 'next/cache';
 
-export async function createDiaryEntry(formData: FormData) {
+export const createDiaryEntry = async (formData: FormData) => {
   const title = formData.get('title') as string;
   await db.diary.create({ data: { title } });
   revalidatePath('/diary');

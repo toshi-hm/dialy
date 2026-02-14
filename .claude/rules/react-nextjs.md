@@ -17,7 +17,7 @@ React 19.2.4 と Next.js 16.1.5 の開発ガイドライン。
 // ✅ Good - Server Actionsを使用
 'use server';
 
-export async function createDiaryEntry(formData: FormData) {
+export const createDiaryEntry = async (formData: FormData) => {
   const title = formData.get('title') as string;
   const content = formData.get('content') as string;
 
@@ -39,7 +39,7 @@ export async function createDiaryEntry(formData: FormData) {
 import { useActionState } from 'react';
 import { createDiaryEntry } from './actions';
 
-export function DiaryForm() {
+export const DiaryForm = () => {
   const [state, formAction, isPending] = useActionState(createDiaryEntry, null);
 
   return (
@@ -62,13 +62,13 @@ export function DiaryForm() {
 
 import { useOptimistic } from 'react';
 
-export function TodoList({ todos }: { todos: Todo[] }) {
+export const TodoList = ({ todos }: { todos: Todo[] }) => {
   const [optimisticTodos, addOptimisticTodo] = useOptimistic(
     todos,
     (state, newTodo: Todo) => [...state, { ...newTodo, pending: true }]
   );
 
-  async function handleSubmit(formData: FormData) {
+  const handleSubmit = async (formData: FormData) => {
     const title = formData.get('title') as string;
     const newTodo = { id: Date.now(), title, completed: false };
 
@@ -100,7 +100,7 @@ export function TodoList({ todos }: { todos: Todo[] }) {
 import { use } from 'react';
 
 // Promiseの読み取り
-export function DiaryEntry({ entryPromise }: { entryPromise: Promise<DiaryEntry> }) {
+export const DiaryEntry = ({ entryPromise }: { entryPromise: Promise<DiaryEntry> }) => {
   const entry = use(entryPromise);
 
   return (
@@ -112,7 +112,7 @@ export function DiaryEntry({ entryPromise }: { entryPromise: Promise<DiaryEntry>
 }
 
 // Contextの読み取り（条件付きでも可）
-export function ConditionalTheme({ useTheme }: { useTheme: boolean }) {
+export const ConditionalTheme = ({ useTheme }: { useTheme: boolean }) => {
   const theme = useTheme ? use(ThemeContext) : 'light';
   return <div className={theme}>Content</div>;
 }
@@ -129,7 +129,7 @@ type ButtonProps = {
   ref?: React.Ref<HTMLButtonElement>;
 };
 
-export function Button({ children, ref, ...props }: ButtonProps) {
+export const Button = ({ children, ref, ...props }: ButtonProps) => {
   return (
     <button ref={ref} {...props}>
       {children}
@@ -181,7 +181,7 @@ src/app/
 import { getDiaryEntries } from '@/lib/api';
 
 // デフォルトでServer Component
-export default async function DiaryPage() {
+const DiaryPage = async () => {
   // サーバーで直接データ取得
   const entries = await getDiaryEntries();
 
@@ -212,7 +212,7 @@ export default async function DiaryPage() {
 
 import { useState } from 'react';
 
-export function DiaryForm() {
+export const DiaryForm = () => {
   const [title, setTitle] = useState('');
 
   return (
@@ -240,7 +240,7 @@ export function DiaryForm() {
 import { getDiaryEntries } from '@/lib/api';
 import { DiaryForm } from '@/components/organisms/DiaryForm'; // Client Component
 
-export default async function DiaryPage() {
+const DiaryPage = async () => {
   const entries = await getDiaryEntries();
 
   return (
@@ -262,7 +262,7 @@ export default async function DiaryPage() {
 // ❌ Bad - ページ全体をClient Component化
 'use client';
 
-export default function DiaryPage() {
+const DiaryPage = () => {
   const [entries, setEntries] = useState([]);
 
   useEffect(() => {
@@ -280,11 +280,11 @@ export default function DiaryPage() {
 
 ```typescript
 // app/diary/[id]/page.tsx
-export default async function DiaryDetailPage({
+const DiaryDetailPage = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
-}) {
+}) => {
   const { id } = await params;
   const entry = await db.diary.findUnique({ where: { id } });
 
@@ -305,7 +305,7 @@ export default async function DiaryDetailPage({
 
 ```typescript
 // 複数のデータを並列で取得
-export default async function DashboardPage() {
+const DashboardPage = async () => {
   // Promise.allで並列実行
   const [user, entries, stats] = await Promise.all([
     getUser(),
@@ -329,7 +329,7 @@ export default async function DashboardPage() {
 // app/diary/page.tsx
 import { Suspense } from 'react';
 
-export default function DiaryPage() {
+const DiaryPage = () => {
   return (
     <div>
       <h1>My Diary</h1>
@@ -344,7 +344,7 @@ export default function DiaryPage() {
 }
 
 // 遅いデータ取得を含むコンポーネント
-async function DiaryList() {
+const DiaryList = async () => {
   const entries = await getDiaryEntries(); // 時間がかかる可能性
 
   return (
@@ -368,7 +368,7 @@ async function DiaryList() {
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-export async function createDiaryEntry(formData: FormData) {
+export const createDiaryEntry = async (formData: FormData) => {
   const title = formData.get('title') as string;
   const content = formData.get('content') as string;
 
@@ -396,7 +396,7 @@ export async function createDiaryEntry(formData: FormData) {
 // app/diary/new/page.tsx
 import { createDiaryEntry } from '../actions';
 
-export default function NewDiaryPage() {
+const NewDiaryPage = () => {
   return (
     <form action={createDiaryEntry}>
       <input name="title" placeholder="タイトル" required />
@@ -416,7 +416,7 @@ export default function NewDiaryPage() {
 import { useActionState } from 'react';
 import { createDiaryEntry } from '@/app/diary/actions';
 
-export function DiaryForm() {
+export const DiaryForm = () => {
   const [state, formAction, isPending] = useActionState(
     createDiaryEntry,
     { error: null }
@@ -450,7 +450,7 @@ export const metadata: Metadata = {
   description: 'View your diary entry',
 };
 
-export default function DiaryDetailPage() {
+const DiaryDetailPage = () => {
   // ...
 }
 ```
@@ -458,11 +458,11 @@ export default function DiaryDetailPage() {
 #### 動的メタデータ
 
 ```typescript
-export async function generateMetadata({
+export const generateMetadata = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
-}): Promise<Metadata> {
+}): Promise<Metadata> => {
   const { id } = await params;
   const entry = await db.diary.findUnique({ where: { id } });
 
@@ -475,7 +475,7 @@ export async function generateMetadata({
       images: ['/og-image.png'],
     },
   };
-}
+};
 ```
 
 ### キャッシングとデータ再検証
@@ -484,13 +484,13 @@ export async function generateMetadata({
 
 ```typescript
 // デフォルトでキャッシュされる
-async function getDiaryEntries() {
+const getDiaryEntries = async () => {
   const res = await fetch('https://api.example.com/entries');
   return res.json();
 }
 
 // キャッシュを無効化
-async function getDiaryEntries() {
+const getDiaryEntries = async () => {
   const res = await fetch('https://api.example.com/entries', {
     cache: 'no-store',
   });
@@ -498,7 +498,7 @@ async function getDiaryEntries() {
 }
 
 // 定期的に再検証
-async function getDiaryEntries() {
+const getDiaryEntries = async () => {
   const res = await fetch('https://api.example.com/entries', {
     next: { revalidate: 3600 }, // 1時間ごとに再検証
   });
@@ -513,7 +513,7 @@ async function getDiaryEntries() {
 
 import { revalidatePath, revalidateTag } from 'next/cache';
 
-export async function createEntry(formData: FormData) {
+export const createEntry = async (formData: FormData) => {
   // データ作成
   await db.diary.create({ /* ... */ });
 
@@ -525,7 +525,7 @@ export async function createEntry(formData: FormData) {
 }
 
 // タグ付きfetch
-async function getDiaryEntries() {
+const getDiaryEntries = async () => {
   const res = await fetch('https://api.example.com/entries', {
     next: { tags: ['diary-entries'] },
   });
@@ -539,7 +539,7 @@ async function getDiaryEntries() {
 
 ```typescript
 // ✅ Good - 単一責任の原則
-export function DiaryCard({ entry }: { entry: DiaryEntry }) {
+export const DiaryCard = ({ entry }: { entry: DiaryEntry }) => {
   return (
     <article className="p-4 border rounded">
       <h2>{entry.title}</h2>
@@ -549,7 +549,7 @@ export function DiaryCard({ entry }: { entry: DiaryEntry }) {
   );
 }
 
-export function DiaryList({ entries }: { entries: DiaryEntry[] }) {
+export const DiaryList = ({ entries }: { entries: DiaryEntry[] }) => {
   return (
     <div className="space-y-4">
       {entries.map((entry) => (
@@ -560,7 +560,7 @@ export function DiaryList({ entries }: { entries: DiaryEntry[] }) {
 }
 
 // ❌ Bad - 複数の責任が混在
-export function DiaryComponent() {
+export const DiaryComponent = () => {
   const [entries, setEntries] = useState([]);
   const [filter, setFilter] = useState('');
   const [sortOrder, setSortOrder] = useState('asc');
@@ -607,7 +607,7 @@ export const Button: FC<ButtonProps> = ({
 
 ```typescript
 // ✅ Good - Hooksはトップレベルで呼び出す
-export function DiaryForm() {
+export const DiaryForm = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
@@ -619,7 +619,7 @@ export function DiaryForm() {
 }
 
 // ❌ Bad - 条件付きでHooksを呼び出す
-export function DiaryForm({ showContent }: { showContent: boolean }) {
+export const DiaryForm = ({ showContent }: { showContent: boolean }) => {
   const [title, setTitle] = useState('');
 
   if (showContent) {
@@ -675,7 +675,7 @@ export const DiaryCard = React.memo<DiaryCardProps>(({ entry }) => {
 });
 
 // useCallbackでコールバックをメモ化
-export function DiaryList() {
+export const DiaryList = () => {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
 
   const handleDelete = useCallback((id: string) => {

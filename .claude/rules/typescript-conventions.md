@@ -35,7 +35,6 @@ function add(a: number, b: number): number {
 export default function MyComponent({ title }: Props) {
   return <h1>{title}</h1>;
 }
-```
 
 **例外**: クラスメソッドは通常のメソッド構文を使用する。
 
