@@ -19,7 +19,14 @@ export default defineConfig({
         '**/*.config.{ts,js}',
         '**/*.d.ts',
         '**/types/**',
+        '**/index.ts', // re-export files
       ],
+      thresholds: {
+        lines: 85,
+        functions: 80,
+        branches: 75,
+        statements: 85,
+      },
     },
   },
   resolve: {
