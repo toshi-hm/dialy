@@ -1,14 +1,9 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DateDisplay } from '@/components/molecules';
-import {
-  CalendarDialog,
-  DeleteConfirmDialog,
-  Dial,
-  DiaryEditor,
-  PastEntriesList,
-} from '@/components/organisms';
+import { Dial, DiaryEditor, PastEntriesList } from '@/components/organisms';
 import { MainLayout } from '@/components/templates';
 import type { DiaryEntry } from '@/lib/domain/diary-entry';
 import { LocalStorageDiaryRepository } from '@/lib/infrastructure/local-storage-diary-repository';
@@ -27,6 +22,23 @@ import {
   SaveFailedError,
   ValidationError,
 } from '@/types/errors';
+
+// Dynamic imports for dialogs (only loaded when needed)
+const CalendarDialog = dynamic(
+  () =>
+    import('@/components/organisms/CalendarDialog').then((mod) => ({
+      default: mod.CalendarDialog,
+    })),
+  { ssr: false },
+);
+
+const DeleteConfirmDialog = dynamic(
+  () =>
+    import('@/components/organisms/DeleteConfirmDialog').then((mod) => ({
+      default: mod.DeleteConfirmDialog,
+    })),
+  { ssr: false },
+);
 
 const RETRY_DELAYS_MS = [250, 500, 1000];
 

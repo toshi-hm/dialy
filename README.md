@@ -103,6 +103,38 @@ The project includes GitHub Actions workflows that run on all pull requests:
 - **Unit Tests**: Runs all Vitest tests
 - **Visual Regression Testing**: Compares Storybook screenshots
 
+## Security
+
+### Data Storage
+
+Dialy uses **LocalStorage** for data persistence in the MVP version. Please be aware of the following:
+
+- **Data is stored locally**: All diary entries are stored in your browser's LocalStorage
+- **No server-side backup**: Data is not backed up to a server
+- **Browser-specific**: Data is tied to your browser and cannot be synced across devices
+- **Clear cache warning**: Clearing browser data will delete all diary entries permanently
+- **Privacy**: Your data never leaves your device in the MVP version
+
+### Security Headers
+
+The application implements the following security measures:
+
+- **HSTS**: HTTP Strict Transport Security to enforce HTTPS connections
+- **X-Frame-Options**: Prevents clickjacking attacks by disallowing iframe embedding
+- **X-Content-Type-Options**: Prevents MIME type sniffing
+- **X-XSS-Protection**: Enables browser XSS filter
+- **CSP**: Content Security Policy to prevent XSS and data injection attacks
+- **Referrer-Policy**: Controls referrer information sent with requests
+
+### Environment Variables
+
+This project does not currently use environment variables in the MVP version. When environment variables are introduced in future versions:
+
+1. Create a `.env.local` file (already in `.gitignore`)
+2. Never commit `.env.local` or any file containing secrets to git
+3. Use the provided `.env.example` as a template
+4. Document all required environment variables in this README
+
 ## Atomic Design Pattern
 
 Components are organized following the Atomic Design methodology:

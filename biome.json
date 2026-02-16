@@ -33,7 +33,8 @@
         "recommended": true
       },
       "complexity": {
-        "recommended": true
+        "recommended": true,
+        "noImportantStyles": "off"
       },
       "correctness": {
         "recommended": true
