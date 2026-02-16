@@ -40,6 +40,9 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
+              // Note: 'unsafe-inline' and 'unsafe-eval' are required for Next.js development and some runtime features.
+              // In production, consider implementing nonces or hashes for inline scripts/styles.
+              // TODO: Remove 'unsafe-eval' and 'unsafe-inline' when possible by using nonces/hashes
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
