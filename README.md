@@ -145,6 +145,24 @@ Components are organized following the Atomic Design methodology:
 - **Templates**: Page-level layouts
 - **Pages**: Specific instances of templates (in `src/app/`)
 
+See [docs/COMPONENT_DESIGN_GUIDE.md](./docs/COMPONENT_DESIGN_GUIDE.md) for detailed component design guidelines.
+
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[00_INDEX.md](./docs/00_INDEX.md)**: Documentation index
+- **[01_REQUIREMENTS.md](./docs/01_REQUIREMENTS.md)**: Functional and non-functional requirements
+- **[02_ARCHITECTURE.md](./docs/02_ARCHITECTURE.md)**: System architecture and design patterns
+- **[03_DATA_MODEL.md](./docs/03_DATA_MODEL.md)**: Data models and schemas
+- **[04_UI_UX_DESIGN.md](./docs/04_UI_UX_DESIGN.md)**: UI/UX design specifications
+- **[05_FEATURES.md](./docs/05_FEATURES.md)**: Feature specifications
+- **[06_SECURITY.md](./docs/06_SECURITY.md)**: Security design and checklist
+- **[07_PERFORMANCE.md](./docs/07_PERFORMANCE.md)**: Performance optimization strategies
+- **[DOMAIN_GLOSSARY.md](./docs/DOMAIN_GLOSSARY.md)**: Ubiquitous language dictionary
+- **[COMPONENT_DESIGN_GUIDE.md](./docs/COMPONENT_DESIGN_GUIDE.md)**: Component design guidelines
+- **[SPEC_SYNC_RULES.md](./docs/SPEC_SYNC_RULES.md)**: Rules for keeping specs and code in sync
+
 ## Contributing
 
 1. Create a feature branch from `main`
