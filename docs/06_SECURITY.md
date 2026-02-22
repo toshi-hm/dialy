@@ -470,7 +470,7 @@ const nextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.jsの要件
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
-              "font-src 'self'",
+              "font-src 'self' data:",
               "connect-src 'self'",
             ].join('; '),
           },
@@ -500,7 +500,7 @@ default-src 'self';
 script-src 'self' 'unsafe-eval' 'unsafe-inline';
 style-src 'self' 'unsafe-inline';
 img-src 'self' data: https:;
-font-src 'self';
+font-src 'self' data:;
 connect-src 'self';
 ```
 

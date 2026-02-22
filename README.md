@@ -132,8 +132,7 @@ This project does not currently use environment variables in the MVP version. Wh
 
 1. Create a `.env.local` file (already in `.gitignore`)
 2. Never commit `.env.local` or any file containing secrets to git
-3. Use the provided `.env.example` as a template
-4. Document all required environment variables in this README
+3. Document all required environment variables (names, purpose, and example values) in this README and/or dedicated documentation under `docs/`
 
 ## Atomic Design Pattern
 

@@ -33,8 +33,7 @@
         "recommended": true
       },
       "complexity": {
-        "recommended": true,
-        "noImportantStyles": "off"
+        "recommended": true
       },
       "correctness": {
         "recommended": true
@@ -54,6 +53,18 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["src/app/globals.css"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
