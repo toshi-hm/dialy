@@ -48,7 +48,9 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: https:",
               "font-src 'self' data:",
               "connect-src 'self'",
-              "frame-ancestors 'self'",
+              // Note: 'frame-ancestors none' matches X-Frame-Options: DENY intent.
+              // Modern browsers prioritize CSP frame-ancestors over X-Frame-Options.
+              "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
             ].join('; '),

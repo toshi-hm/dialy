@@ -24,10 +24,10 @@ export default defineConfig({
       thresholds: {
         // Global thresholds (based on PLANS.md MVP-TEST-02 requirements)
         // Note: Vitest v8 provider doesn't support per-directory thresholds natively.
-        // Layer-specific goals documented here for manual verification:
-        //   - Domain layer (lib/domain): Target 100% (Current: ~87%)
-        //   - Application layer (lib/use-cases): Target 90% (Current: ~86%)
-        //   - Presentation layer (components): Target 60% (Current: ~87%)
+        // Layer-specific goals (see scripts/check-coverage-thresholds.mjs for current values):
+        //   - Domain layer (lib/domain): Target 100%
+        //   - Application layer (lib/use-cases): Target 90%
+        //   - Presentation layer (components): Target 60%
         // Global thresholds set to ensure minimum quality across all layers
         lines: 85,
         functions: 80,

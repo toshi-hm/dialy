@@ -472,6 +472,8 @@ const nextConfig = {
               "img-src 'self' data: https:",
               "font-src 'self' data:",
               "connect-src 'self'",
+              // frame-ancestors 'none': CSP優先ルールに従い X-Frame-Options: DENY と整合させる
+              "frame-ancestors 'none'",
             ].join('; '),
           },
           // Referrer Policy
@@ -502,7 +504,10 @@ style-src 'self' 'unsafe-inline';
 img-src 'self' data: https:;
 font-src 'self' data:;
 connect-src 'self';
+frame-ancestors 'none';
 ```
+
+> **Note**: モダンブラウザはCSPの`frame-ancestors`を`X-Frame-Options`より優先するため、両方を整合させる必要がある。
 
 将来的にはNonceベースのCSPに移行を検討。
 

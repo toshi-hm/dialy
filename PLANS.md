@@ -134,17 +134,17 @@
 - [x] `MVP-UX-04` キーボード操作対応（Tab移動、Enter/Space展開、Cmd/Ctrl+S）
 - [x] `MVP-UX-05` ARIA属性実装（slider/textarea/button、`aria-live`通知）
 - [ ] `MVP-UX-06` コントラスト要件（WCAG 2.1 AA）検証
-- [ ] `MVP-UX-07` アニメーション実装（Dial 100ms、カード300ms、保存フィードバック）
-- [ ] `MVP-UX-08` `prefers-reduced-motion` 対応
+- [x] `MVP-UX-07` アニメーション実装（Dial 100ms、カード300ms、保存フィードバック）
+- [x] `MVP-UX-08` `prefers-reduced-motion` 対応
 
 ### 1.9 セキュリティ（MVP）
 
 - [x] `MVP-SEC-01` Reactエスケープ前提を維持し `dangerouslySetInnerHTML` を禁止
 - [x] `MVP-SEC-02` 入力検証をZod経由で統一（UI層直保存を禁止）
-- [ ] `MVP-SEC-03` `next.config.ts` にセキュリティヘッダー設定（HSTS, CSP, X-Frame-Options等）
-- [ ] `MVP-SEC-04` `.env.local` 管理ルールをREADMEに明記し `.gitignore` を確認
-- [ ] `MVP-SEC-05` LocalStorage利用のセキュリティ注意点をユーザー向けに明記
-- [ ] `MVP-SEC-06` MVPセキュリティチェックリスト（`docs/06_SECURITY.md`）を完了
+- [x] `MVP-SEC-03` `next.config.ts` にセキュリティヘッダー設定（HSTS, CSP, X-Frame-Options等）
+- [x] `MVP-SEC-04` `.env.local` 管理ルールをREADMEに明記し `.gitignore` を確認
+- [x] `MVP-SEC-05` LocalStorage利用のセキュリティ注意点をユーザー向けに明記
+- [x] `MVP-SEC-06` MVPセキュリティチェックリスト（`docs/06_SECURITY.md`）を完了
 
 ### 1.10 パフォーマンス（MVP）
 
@@ -153,7 +153,7 @@
 - [x] `MVP-PERF-03` `React.memo`/`useMemo`/`useCallback` を適用
 - [x] `MVP-PERF-04` 自動保存デバウンス1秒を共通utilで統一
 - [x] `MVP-PERF-05` LocalStorageリポジトリにキャッシュ戦略を導入
-- [ ] `MVP-PERF-06` Dynamic Importを重いUI（確認ダイアログ等）へ適用
+- [x] `MVP-PERF-06` Dynamic Importを重いUI（確認ダイアログ等）へ適用
 - [ ] `MVP-PERF-07` Lighthouse目標（Performance 80+）のCI計測導入
 
 ### 1.11 統合テスト・Storybook・E2E
@@ -177,12 +177,12 @@
 
 ### 1.12 CI / ドキュメント整備
 
-- [ ] `MVP-CI-01` CIにカバレッジ閾値チェックを追加
+- [x] `MVP-CI-01` CIにカバレッジ閾値チェックを追加
 - [ ] `MVP-CI-02` Lighthouse CIワークフロー追加
 - [ ] `MVP-CI-03` E2Eジョブ（PR時または夜間）追加
-- [ ] `MVP-DOC-01` READMEを実装状態に合わせて更新（起動/構成/テスト手順）
-- [ ] `MVP-DOC-02` コンポーネント設計ガイド（Atomic Design運用）追記
-- [ ] `MVP-DOC-03` 仕様差分管理ルール（設計書と実装の同期手順）を追加
+- [x] `MVP-DOC-01` READMEを実装状態に合わせて更新（起動/構成/テスト手順）
+- [x] `MVP-DOC-02` コンポーネント設計ガイド（Atomic Design運用）追記
+- [x] `MVP-DOC-03` 仕様差分管理ルール（設計書と実装の同期手順）を追加
 - [x] `MVP-DOC-04` ユビキタス言語辞書とコード命名の差分レビューを定例化
 
 ## Phase 2: サーバー移行・機能拡張
