@@ -12,12 +12,12 @@ describe('SaveStatusIndicator', () => {
   it('renders saved status', () => {
     render(<SaveStatusIndicator status="saved" />);
 
-    expect(screen.getByRole('status')).toHaveTextContent('✓ 保存しました');
+    expect(screen.getByRole('status')).toHaveTextContent('保存しました');
   });
 
   it('renders error status with retry message', () => {
     render(<SaveStatusIndicator status="error" errorMessage="保存に失敗しました" />);
 
-    expect(screen.getByRole('status')).toHaveTextContent('⚠ 保存に失敗しました');
+    expect(screen.getByRole('status')).toHaveTextContent('保存に失敗しました');
   });
 });

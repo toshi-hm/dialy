@@ -89,7 +89,7 @@ describe('DiaryEditor', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('⚠ 文字数が上限を超えています')).toBeInTheDocument();
+      expect(screen.getByText('文字数が上限を超えています')).toBeInTheDocument();
     });
   });
 });
