@@ -24,12 +24,14 @@ export const SaveStatusIndicator = ({
     ),
     saved: (
       <span className="inline-flex items-center gap-1 text-green-700 transition-opacity duration-300 animate-save-feedback">
-        <Icon name="check" label="保存完了" size={14} />✓ 保存しました
+        <Icon name="check" label="保存完了" size={14} />
+        保存しました
       </span>
     ),
     error: (
       <span className="inline-flex items-center gap-1 text-red-600 transition-opacity duration-300">
-        <Icon name="alert" label="保存エラー" size={14} />⚠ {errorMessage}
+        <Icon name="alert" label="保存エラー" size={14} />
+        {errorMessage}
       </span>
     ),
   };
