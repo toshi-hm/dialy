@@ -24,20 +24,16 @@ import {
 } from '@/types/errors';
 
 // Dynamic imports for dialogs (only loaded when needed)
-const CalendarDialog = dynamic(
-  () =>
-    import('@/components/organisms/CalendarDialog').then((mod) => ({
-      default: mod.CalendarDialog,
-    })),
-  { ssr: false },
+const CalendarDialog = dynamic(() =>
+  import('@/components/organisms/CalendarDialog').then((mod) => ({
+    default: mod.CalendarDialog,
+  })),
 );
 
-const DeleteConfirmDialog = dynamic(
-  () =>
-    import('@/components/organisms/DeleteConfirmDialog').then((mod) => ({
-      default: mod.DeleteConfirmDialog,
-    })),
-  { ssr: false },
+const DeleteConfirmDialog = dynamic(() =>
+  import('@/components/organisms/DeleteConfirmDialog').then((mod) => ({
+    default: mod.DeleteConfirmDialog,
+  })),
 );
 
 const RETRY_DELAYS_MS = [250, 500, 1000];
@@ -90,10 +86,6 @@ const Home = () => {
   );
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
     const applyDialSize = () => {
       setDialSize(detectDialSize(window.innerWidth));
     };
