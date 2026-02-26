@@ -17,19 +17,21 @@ export const SaveStatusIndicator = ({
   const contentByStatus: Record<SaveStatus, ReactElement | null> = {
     idle: null,
     saving: (
-      <span className="inline-flex items-center gap-1 text-gray-600">
+      <span className="inline-flex items-center gap-1 text-gray-600 transition-opacity duration-300">
         <Icon name="clock" label="保存中" size={14} />
         保存中...
       </span>
     ),
     saved: (
-      <span className="inline-flex items-center gap-1 text-green-700">
-        <Icon name="check" label="保存完了" size={14} />✓ 保存しました
+      <span className="inline-flex items-center gap-1 text-green-700 transition-opacity duration-300 animate-save-feedback">
+        <Icon name="check" label="保存完了" size={14} />
+        保存しました
       </span>
     ),
     error: (
-      <span className="inline-flex items-center gap-1 text-red-600">
-        <Icon name="alert" label="保存エラー" size={14} />⚠ {errorMessage}
+      <span className="inline-flex items-center gap-1 text-red-600 transition-opacity duration-300">
+        <Icon name="alert" label="保存エラー" size={14} />
+        {errorMessage}
       </span>
     ),
   };

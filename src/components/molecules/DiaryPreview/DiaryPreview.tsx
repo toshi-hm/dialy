@@ -20,7 +20,13 @@ export const DiaryPreview = ({
   const toggleLabel = expanded ? '閉じる' : '展開';
 
   return (
-    <article className={cn('rounded-md border border-gray-200 bg-white p-4 shadow-sm', className)}>
+    <article
+      className={cn(
+        'rounded-md border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300',
+        expanded && 'shadow-md',
+        className,
+      )}
+    >
       <header className="mb-2 flex items-center justify-between gap-2">
         <h3 className="text-base font-semibold text-gray-900">{entry.getYear()}年</h3>
         {onToggle && (
@@ -35,7 +41,12 @@ export const DiaryPreview = ({
           </Button>
         )}
       </header>
-      <p className="mb-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700">
+      <p
+        className={cn(
+          'mb-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700 transition-all duration-300',
+          !expanded && 'max-h-24 overflow-hidden',
+        )}
+      >
         {text}
       </p>
       <Badge variant="default">文字数: {entry.getCharacterCount().toLocaleString()}</Badge>

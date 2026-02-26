@@ -103,6 +103,37 @@ The project includes GitHub Actions workflows that run on all pull requests:
 - **Unit Tests**: Runs all Vitest tests
 - **Visual Regression Testing**: Compares Storybook screenshots
 
+## Security
+
+### Data Storage
+
+Dialy uses **LocalStorage** for data persistence in the MVP version. Please be aware of the following:
+
+- **Data is stored locally**: All diary entries are stored in your browser's LocalStorage
+- **No server-side backup**: Data is not backed up to a server
+- **Browser-specific**: Data is tied to your browser and cannot be synced across devices
+- **Clear cache warning**: Clearing browser data will delete all diary entries permanently
+- **Privacy**: Your data never leaves your device in the MVP version
+
+### Security Headers
+
+The application implements the following security measures:
+
+- **HSTS**: HTTP Strict Transport Security to enforce HTTPS connections
+- **X-Frame-Options**: Prevents clickjacking attacks by disallowing iframe embedding
+- **X-Content-Type-Options**: Prevents MIME type sniffing
+- **X-XSS-Protection**: Enables browser XSS filter
+- **CSP**: Content Security Policy to prevent XSS and data injection attacks
+- **Referrer-Policy**: Controls referrer information sent with requests
+
+### Environment Variables
+
+This project does not currently use environment variables in the MVP version. When environment variables are introduced in future versions:
+
+1. Create a `.env.local` file (already in `.gitignore`)
+2. Never commit `.env.local` or any file containing secrets to git
+3. Document all required environment variables (names, purpose, and example values) in this README and/or dedicated documentation under `docs/`
+
 ## Atomic Design Pattern
 
 Components are organized following the Atomic Design methodology:
@@ -112,6 +143,24 @@ Components are organized following the Atomic Design methodology:
 - **Organisms**: Complex UI components
 - **Templates**: Page-level layouts
 - **Pages**: Specific instances of templates (in `src/app/`)
+
+See [docs/COMPONENT_DESIGN_GUIDE.md](./docs/COMPONENT_DESIGN_GUIDE.md) for detailed component design guidelines.
+
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[00_INDEX.md](./docs/00_INDEX.md)**: Documentation index
+- **[01_REQUIREMENTS.md](./docs/01_REQUIREMENTS.md)**: Functional and non-functional requirements
+- **[02_ARCHITECTURE.md](./docs/02_ARCHITECTURE.md)**: System architecture and design patterns
+- **[03_DATA_MODEL.md](./docs/03_DATA_MODEL.md)**: Data models and schemas
+- **[04_UI_UX_DESIGN.md](./docs/04_UI_UX_DESIGN.md)**: UI/UX design specifications
+- **[05_FEATURES.md](./docs/05_FEATURES.md)**: Feature specifications
+- **[06_SECURITY.md](./docs/06_SECURITY.md)**: Security design and checklist
+- **[07_PERFORMANCE.md](./docs/07_PERFORMANCE.md)**: Performance optimization strategies
+- **[DOMAIN_GLOSSARY.md](./docs/DOMAIN_GLOSSARY.md)**: Ubiquitous language dictionary
+- **[COMPONENT_DESIGN_GUIDE.md](./docs/COMPONENT_DESIGN_GUIDE.md)**: Component design guidelines
+- **[SPEC_SYNC_RULES.md](./docs/SPEC_SYNC_RULES.md)**: Rules for keeping specs and code in sync
 
 ## Contributing
 

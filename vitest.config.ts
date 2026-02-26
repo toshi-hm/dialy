@@ -19,7 +19,21 @@ export default defineConfig({
         '**/*.config.{ts,js}',
         '**/*.d.ts',
         '**/types/**',
+        '**/index.ts', // re-export files
       ],
+      thresholds: {
+        // Global thresholds (based on PLANS.md MVP-TEST-02 requirements)
+        // Note: Vitest v8 provider doesn't support per-directory thresholds natively.
+        // Layer-specific goals (see scripts/check-coverage-thresholds.mjs for current values):
+        //   - Domain layer (lib/domain): Target 100%
+        //   - Application layer (lib/use-cases): Target 90%
+        //   - Presentation layer (components): Target 60%
+        // Global thresholds set to ensure minimum quality across all layers
+        lines: 85,
+        functions: 80,
+        branches: 75,
+        statements: 85,
+      },
     },
   },
   resolve: {

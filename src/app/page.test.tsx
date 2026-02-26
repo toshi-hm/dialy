@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import Home from './page';
+import HomeContent from './HomeContent';
 
 const STORAGE_KEY = 'dialy_entries';
 
@@ -10,13 +10,13 @@ describe('Home page integration', () => {
   });
 
   it('shows today date by default', async () => {
-    render(<Home />);
+    render(<HomeContent />);
 
     expect(await screen.findByText(/\d+月\d+日（[日月火水木金土]）/)).toBeInTheDocument();
   });
 
   it('auto saves content to localStorage after 1 second debounce', async () => {
-    render(<Home />);
+    render(<HomeContent />);
 
     const textarea = await screen.findByRole('textbox', { name: '日記本文' });
     fireEvent.change(textarea, { target: { value: '今日は統合テストを書いた' } });
@@ -31,7 +31,7 @@ describe('Home page integration', () => {
   });
 
   it('shows error when trying to move dial to future date', async () => {
-    render(<Home />);
+    render(<HomeContent />);
 
     const dial = await screen.findByRole('slider', { name: '日付選択' });
     fireEvent.keyDown(dial, { key: 'ArrowRight' });
@@ -62,7 +62,7 @@ describe('Home page integration', () => {
       }),
     );
 
-    render(<Home />);
+    render(<HomeContent />);
 
     expect(await screen.findByText(`${previousYear}年`)).toBeInTheDocument();
     expect(screen.getByText('過去の同じ日の日記')).toBeInTheDocument();

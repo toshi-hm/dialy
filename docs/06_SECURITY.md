@@ -470,8 +470,10 @@ const nextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.jsの要件
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
-              "font-src 'self'",
+              "font-src 'self' data:",
               "connect-src 'self'",
+              // frame-ancestors 'none': CSP優先ルールに従い X-Frame-Options: DENY と整合させる
+              "frame-ancestors 'none'",
             ].join('; '),
           },
           // Referrer Policy
@@ -500,9 +502,12 @@ default-src 'self';
 script-src 'self' 'unsafe-eval' 'unsafe-inline';
 style-src 'self' 'unsafe-inline';
 img-src 'self' data: https:;
-font-src 'self';
+font-src 'self' data:;
 connect-src 'self';
+frame-ancestors 'none';
 ```
+
+> **Note**: モダンブラウザはCSPの`frame-ancestors`を`X-Frame-Options`より優先するため、両方を整合させる必要がある。
 
 将来的にはNonceベースのCSPに移行を検討。
 
@@ -553,13 +558,18 @@ connect-src 'self';
 
 ### 8.1 MVP版チェックリスト
 
-- [ ] XSS対策: Reactのデフォルトエスケープを使用
-- [ ] CSRF対策: MVPは適用対象外であることを明記（Phase 2で適用）
-- [ ] 入力検証: Zodスキーマで検証
-- [ ] HTTPS強制: セキュリティヘッダー設定
-- [ ] CSP設定: Content Security Policyヘッダー
-- [ ] 環境変数: 機密情報を.env.localで管理
-- [ ] .gitignore: .env.localを除外
+- [x] XSS対策: Reactのデフォルトエスケープを使用
+- [x] CSRF対策: MVPは適用対象外であることを明記（Phase 2で適用）
+- [x] 入力検証: Zodスキーマで検証
+- [x] HTTPS強制: セキュリティヘッダー設定（HSTS）
+- [x] CSP設定: Content Security Policyヘッダー
+- [x] X-Frame-Options: クリックジャッキング対策
+- [x] X-Content-Type-Options: MIMEタイプスニッフィング対策
+- [x] X-XSS-Protection: ブラウザのXSSフィルター有効化
+- [x] Referrer-Policy: リファラー情報制御
+- [x] Permissions-Policy: 不要な機能の無効化
+- [x] 環境変数: .gitignoreに.env.localを追加済み（現在未使用）
+- [x] LocalStorageセキュリティ: READMEに注意事項を明記
 
 ### 8.2 将来実装チェックリスト
 
