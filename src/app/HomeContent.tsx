@@ -15,6 +15,7 @@ import {
   UpdateDiaryEntryUseCase,
 } from '@/lib/use-cases';
 import { startOfDay } from '@/lib/utils/date';
+import { reportWebVitals } from '@/lib/utils/performance';
 import {
   ContentTooLongError,
   DuplicateDateEntryError,
@@ -84,6 +85,10 @@ const Home = () => {
     () => new GetEntriesBySameDateUseCase(repository),
     [repository],
   );
+
+  useEffect(() => {
+    reportWebVitals();
+  }, []);
 
   useEffect(() => {
     const applyDialSize = () => {
