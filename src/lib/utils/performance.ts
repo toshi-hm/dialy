@@ -32,17 +32,24 @@ const getRating = (name: string, value: number): WebVitalMetric['rating'] => {
   return 'poor';
 };
 
+const ratingIcons: Record<WebVitalMetric['rating'], string> = {
+  good: '✅',
+  'needs-improvement': '⚠️',
+  poor: '❌',
+};
+
+const isDev = process.env.NODE_ENV === 'development';
+
 const noopCallback = (_metric: WebVitalMetric): void => {};
 
 const logMetric = (metric: WebVitalMetric): void => {
-  const icon = metric.rating === 'good' ? '✅' : metric.rating === 'needs-improvement' ? '⚠️' : '❌';
+  const icon = ratingIcons[metric.rating];
   console.log(`[Web Vitals] ${icon} ${metric.name}: ${metric.value.toFixed(2)} (${metric.rating})`);
 };
 
 export const reportWebVitals = (onReport?: (metric: WebVitalMetric) => void): void => {
   if (typeof window === 'undefined' || !('PerformanceObserver' in window)) return;
 
-  const isDev = process.env.NODE_ENV === 'development';
   const callback = onReport ?? (isDev ? logMetric : noopCallback);
 
   // LCP

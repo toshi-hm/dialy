@@ -22,11 +22,9 @@ test.describe('FR-01: 日付選択機能', () => {
     await dial.focus();
     await page.keyboard.press('ArrowRight');
 
-    // Wait briefly for any potential state change
-    await page.waitForTimeout(500);
-
-    // Verify: either an error alert is shown, or the date has not changed
+    // Wait for any potential error alert or date change to occur
     const errorMessage = page.locator('[role="alert"]');
+    await errorMessage.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
     const errorVisible = await errorMessage.isVisible();
 
     if (errorVisible) {
