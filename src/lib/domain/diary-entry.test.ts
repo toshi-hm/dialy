@@ -89,4 +89,50 @@ describe('DiaryEntry', () => {
       );
     }).toThrow(ValidationError);
   });
+
+  it('compares same date correctly via isSameDate', () => {
+    const entry = DiaryEntry.reconstruct(
+      '550e8400-e29b-41d4-a716-446655440000',
+      new Date('2026-02-08T00:00:00.000Z'),
+      'content',
+      new Date('2026-02-08T00:00:00.000Z'),
+      new Date('2026-02-08T00:00:00.000Z'),
+    );
+
+    expect(entry.isSameDate(new Date('2026-02-08T12:00:00.000Z'))).toBe(true);
+    expect(entry.isSameDate(new Date('2026-02-09T00:00:00.000Z'))).toBe(false);
+  });
+
+  it('throws ValidationError when id is empty', () => {
+    expect(() => {
+      DiaryEntry.reconstruct(
+        '  ',
+        new Date('2026-02-08T00:00:00.000Z'),
+        'content',
+        new Date('2026-02-08T00:00:00.000Z'),
+        new Date('2026-02-08T00:00:00.000Z'),
+      );
+    }).toThrow(ValidationError);
+  });
+
+  it('returns preview text correctly', () => {
+    const short = DiaryEntry.reconstruct(
+      '550e8400-e29b-41d4-a716-446655440000',
+      new Date('2026-02-08T00:00:00.000Z'),
+      'short text',
+      new Date('2026-02-08T00:00:00.000Z'),
+      new Date('2026-02-08T00:00:00.000Z'),
+    );
+    expect(short.getPreviewText()).toBe('short text');
+
+    const longContent = 'a'.repeat(150);
+    const long = DiaryEntry.reconstruct(
+      '550e8400-e29b-41d4-a716-446655440001',
+      new Date('2026-02-08T00:00:00.000Z'),
+      longContent,
+      new Date('2026-02-08T00:00:00.000Z'),
+      new Date('2026-02-08T00:00:00.000Z'),
+    );
+    expect(long.getPreviewText()).toBe(`${'a'.repeat(100)}...`);
+  });
 });

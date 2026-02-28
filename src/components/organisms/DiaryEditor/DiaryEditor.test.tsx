@@ -92,4 +92,54 @@ describe('DiaryEditor', () => {
       expect(screen.getByText('文字数が上限を超えています')).toBeInTheDocument();
     });
   });
+
+  it('shows fallback message when non-AppError is thrown on save', async () => {
+    const handleSave = vi.fn().mockRejectedValue(new Error('network failure'));
+
+    render(
+      <DiaryEditor
+        date={new Date('2026-02-08T00:00:00.000Z')}
+        initialContent=""
+        onSave={handleSave}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: '日記本文' }), {
+      target: { value: 'new content' },
+    });
+    fireEvent.keyDown(screen.getByRole('textbox', { name: '日記本文' }), {
+      key: 's',
+      ctrlKey: true,
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('保存に失敗しました')).toBeInTheDocument();
+    });
+  });
+
+  it('shows error when content exceeds maxLength without calling onSave', async () => {
+    vi.useFakeTimers();
+    const handleSave = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <DiaryEditor
+        date={new Date('2026-02-08T00:00:00.000Z')}
+        initialContent=""
+        onSave={handleSave}
+        maxLength={10}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole('textbox', { name: '日記本文' }), {
+      target: { value: '12345678901' },
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1100);
+      await vi.runOnlyPendingTimersAsync();
+    });
+
+    expect(handleSave).not.toHaveBeenCalled();
+    expect(screen.getByText('文字数が上限を超えています')).toBeInTheDocument();
+  });
 });

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import HomeContent from './HomeContent';
 
@@ -66,5 +66,57 @@ describe('Home page integration', () => {
 
     expect(await screen.findByText(`${previousYear}年`)).toBeInTheDocument();
     expect(screen.getByText('過去の同じ日の日記')).toBeInTheDocument();
+  });
+
+  it('deletes entry via delete confirm dialog', async () => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const date = `${now.getFullYear()}-${month}-${day}`;
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: '1.0.0',
+        entries: [
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            date,
+            content: '削除する日記',
+            createdAt: `${date}T00:00:00.000Z`,
+            updatedAt: `${date}T00:00:00.000Z`,
+          },
+        ],
+      }),
+    );
+
+    render(<HomeContent />);
+
+    const textarea = await screen.findByRole('textbox', { name: '日記本文' });
+    expect(textarea).toHaveValue('削除する日記');
+
+    const deleteButton = await screen.findByRole('button', { name: '削除' });
+    fireEvent.click(deleteButton);
+
+    const confirmButton = await screen.findByRole('button', { name: '削除する' });
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: '日記本文' })).toHaveValue('');
+    });
+  });
+
+  it('adjusts dial size on window resize', async () => {
+    render(<HomeContent />);
+
+    await screen.findByRole('slider', { name: '日付選択' });
+
+    act(() => {
+      Object.defineProperty(window, 'innerWidth', { value: 375, configurable: true });
+      window.dispatchEvent(new Event('resize'));
+    });
+
+    const dial = screen.getByRole('slider', { name: '日付選択' });
+    expect(dial).toBeInTheDocument();
   });
 });
