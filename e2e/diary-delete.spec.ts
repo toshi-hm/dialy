@@ -17,8 +17,7 @@ test.describe('FR-05: 日記削除機能', () => {
     // Create a diary entry first
     const textarea = page.locator('textarea');
     await textarea.fill('削除テスト用の日記');
-    await page.waitForTimeout(2000);
-    await page.waitForSelector('text=/保存しました/', { timeout: 5000 });
+    await page.waitForSelector('text=/保存しました/', { timeout: 10000 });
 
     // Click delete button
     const deleteButton = page.locator('button', { hasText: '削除' });
@@ -40,8 +39,7 @@ test.describe('FR-05: 日記削除機能', () => {
   test('AT-05-04: キャンセルで日記が保持される', async ({ page }) => {
     const textarea = page.locator('textarea');
     await textarea.fill('キャンセルテスト用の日記');
-    await page.waitForTimeout(2000);
-    await page.waitForSelector('text=/保存しました/', { timeout: 5000 });
+    await page.waitForSelector('text=/保存しました/', { timeout: 10000 });
 
     const deleteButton = page.locator('button', { hasText: '削除' });
     await deleteButton.click();
