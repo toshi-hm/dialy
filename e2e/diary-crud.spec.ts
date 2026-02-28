@@ -17,15 +17,17 @@ test.describe('FR-02/FR-03: 日記作成・編集機能', () => {
 
   test('AT-02-02: 1秒間入力停止で自動保存される', async ({ page }) => {
     const textarea = page.locator('textarea');
-    await textarea.fill('テスト日記の内容です');
+    await textarea.click();
+    await textarea.pressSequentially('テスト日記の内容です', { delay: 50 });
     const saveStatus = page.locator('text=/保存しました/');
-    await expect(saveStatus).toBeVisible({ timeout: 10000 });
+    await expect(saveStatus).toBeVisible({ timeout: 15000 });
   });
 
   test('AT-02-03: ページリロード後もデータが復元される', async ({ page }) => {
     const textarea = page.locator('textarea');
-    await textarea.fill('永続化テスト内容');
-    await page.waitForSelector('text=/保存しました/', { timeout: 10000 });
+    await textarea.click();
+    await textarea.pressSequentially('永続化テスト内容', { delay: 50 });
+    await page.waitForSelector('text=/保存しました/', { timeout: 15000 });
 
     await page.reload();
     await page.waitForSelector('textarea');

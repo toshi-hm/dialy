@@ -21,6 +21,7 @@ export default defineConfig({
         '**/*.d.ts',
         '**/types/**',
         '**/index.ts', // re-export files
+        '**/utils/performance.ts', // runtime-only Web Vitals monitoring
       ],
       thresholds: {
         // Global thresholds (based on PLANS.md MVP-TEST-02 requirements)

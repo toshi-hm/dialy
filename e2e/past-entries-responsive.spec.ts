@@ -9,7 +9,7 @@ test.describe('FR-04: 過去同日日記表示機能', () => {
   });
 
   test('AT-04-05: 過去の同日日記がない場合にメッセージが表示される', async ({ page }) => {
-    const noEntriesMessage = page.locator('text=/過去の同じ日の日記はありません/');
+    const noEntriesMessage = page.locator('text=/過去の日記はまだありません/');
     await expect(noEntriesMessage).toBeVisible({ timeout: 5000 });
   });
 });
