@@ -15,7 +15,7 @@ test.describe('FR-04: 過去同日日記表示機能', () => {
 });
 
 test.describe('レスポンシブ表示', () => {
-  test('AT-NF-05: デスクトップ表示が適切', async ({ page }) => {
+  test('AT-NF-05-desktop: デスクトップ表示が適切', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/');
     await page.waitForSelector('[role="slider"]');
@@ -27,7 +27,7 @@ test.describe('レスポンシブ表示', () => {
     await expect(textarea).toBeVisible();
   });
 
-  test('AT-NF-05: モバイル表示が適切', async ({ page }) => {
+  test('AT-NF-05-mobile: モバイル表示が適切', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/');
     await page.waitForSelector('[role="slider"]');

@@ -38,7 +38,7 @@ test.describe('FR-02/FR-03: 日記作成・編集機能', () => {
   test('AT-02-04: 文字数カウントがリアルタイムで表示される', async ({ page }) => {
     const textarea = page.locator('textarea');
     await textarea.fill('あいうえお');
-    const charCount = page.locator('text=/5/');
+    const charCount = page.locator('text=/文字数: 5/');
     await expect(charCount).toBeVisible({ timeout: 3000 });
   });
 });

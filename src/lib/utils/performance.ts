@@ -34,10 +34,16 @@ const getRating = (name: string, value: number): WebVitalMetric['rating'] => {
 
 const noopCallback = (_metric: WebVitalMetric): void => {};
 
+const logMetric = (metric: WebVitalMetric): void => {
+  const icon = metric.rating === 'good' ? '✅' : metric.rating === 'needs-improvement' ? '⚠️' : '❌';
+  console.log(`[Web Vitals] ${icon} ${metric.name}: ${metric.value.toFixed(2)} (${metric.rating})`);
+};
+
 export const reportWebVitals = (onReport?: (metric: WebVitalMetric) => void): void => {
   if (typeof window === 'undefined' || !('PerformanceObserver' in window)) return;
 
-  const callback = onReport ?? noopCallback;
+  const isDev = process.env.NODE_ENV === 'development';
+  const callback = onReport ?? (isDev ? logMetric : noopCallback);
 
   // LCP
   try {
@@ -104,8 +110,14 @@ export const reportWebVitals = (onReport?: (metric: WebVitalMetric) => void): vo
  * Measure interaction performance (e.g., Dial operation latency).
  * Target: < 100ms for Dial interactions.
  */
-export const measureInteraction = (_label: string, fn: () => void): number => {
+export const measureInteraction = (label: string, fn: () => void): number => {
   const start = performance.now();
   fn();
-  return performance.now() - start;
+  const duration = performance.now() - start;
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Interaction] ${label}: ${duration.toFixed(2)}ms`);
+  }
+
+  return duration;
 };
