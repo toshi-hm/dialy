@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DateValue } from './date-value';
 
 describe('DateValue', () => {
@@ -32,12 +32,13 @@ describe('DateValue', () => {
   });
 
   it('creates today DateValue', () => {
-    const today = DateValue.today();
-    const now = new Date();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-15T12:00:00.000Z'));
 
-    expect(today.formatISO()).toBe(
-      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
-    );
+    const today = DateValue.today();
+    expect(today.formatISO()).toBe('2026-03-15');
+
+    vi.useRealTimers();
   });
 
   it('returns a Date copy via toDate()', () => {

@@ -3,25 +3,22 @@
  *
  * Targets (from docs/07_PERFORMANCE.md):
  * - LCP (Largest Contentful Paint): < 2.5s
- * - FID (First Input Delay): < 100ms
+ * - FCP (First Contentful Paint): < 1.8s
  * - CLS (Cumulative Layout Shift): < 0.1
  * - Initial page load: < 3s
  * - Dial response: < 100ms
  */
 
 export type WebVitalMetric = {
-  name: 'LCP' | 'FID' | 'CLS' | 'FCP' | 'TTFB' | 'INP';
+  name: 'LCP' | 'FCP' | 'CLS';
   value: number;
   rating: 'good' | 'needs-improvement' | 'poor';
 };
 
 const thresholds: Record<string, { good: number; poor: number }> = {
   LCP: { good: 2500, poor: 4000 },
-  FID: { good: 100, poor: 300 },
   CLS: { good: 0.1, poor: 0.25 },
   FCP: { good: 1800, poor: 3000 },
-  TTFB: { good: 800, poor: 1800 },
-  INP: { good: 200, poor: 500 },
 };
 
 const getRating = (name: string, value: number): WebVitalMetric['rating'] => {
@@ -47,8 +44,12 @@ const logMetric = (metric: WebVitalMetric): void => {
   console.log(`[Web Vitals] ${icon} ${metric.name}: ${metric.value.toFixed(2)} (${metric.rating})`);
 };
 
-export const reportWebVitals = (onReport?: (metric: WebVitalMetric) => void): void => {
-  if (typeof window === 'undefined' || !('PerformanceObserver' in window)) return;
+export const reportWebVitals = (onReport?: (metric: WebVitalMetric) => void): (() => void) => {
+  const observers: PerformanceObserver[] = [];
+
+  if (typeof window === 'undefined' || !('PerformanceObserver' in window)) {
+    return () => {};
+  }
 
   const callback = onReport ?? (isDev ? logMetric : noopCallback);
 
@@ -66,6 +67,7 @@ export const reportWebVitals = (onReport?: (metric: WebVitalMetric) => void): vo
       }
     });
     lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+    observers.push(lcpObserver);
   } catch {
     // PerformanceObserver not supported for this entry type
   }
@@ -84,6 +86,7 @@ export const reportWebVitals = (onReport?: (metric: WebVitalMetric) => void): vo
       }
     });
     fcpObserver.observe({ type: 'paint', buffered: true });
+    observers.push(fcpObserver);
   } catch {
     // PerformanceObserver not supported for this entry type
   }
@@ -108,9 +111,16 @@ export const reportWebVitals = (onReport?: (metric: WebVitalMetric) => void): vo
       });
     });
     clsObserver.observe({ type: 'layout-shift', buffered: true });
+    observers.push(clsObserver);
   } catch {
     // PerformanceObserver not supported for this entry type
   }
+
+  return () => {
+    for (const observer of observers) {
+      observer.disconnect();
+    }
+  };
 };
 
 /**
