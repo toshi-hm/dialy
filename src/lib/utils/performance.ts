@@ -44,6 +44,10 @@ const logMetric = (metric: WebVitalMetric): void => {
   console.log(`[Web Vitals] ${icon} ${metric.name}: ${metric.value.toFixed(2)} (${metric.rating})`);
 };
 
+/**
+ * Register PerformanceObservers for Core Web Vitals (LCP, FCP, CLS).
+ * Returns a cleanup function that disconnects all observers.
+ */
 export const reportWebVitals = (onReport?: (metric: WebVitalMetric) => void): (() => void) => {
   const observers: PerformanceObserver[] = [];
 

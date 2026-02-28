@@ -87,8 +87,7 @@ const Home = () => {
   );
 
   useEffect(() => {
-    const cleanup = reportWebVitals();
-    return cleanup;
+    return reportWebVitals();
   }, []);
 
   useEffect(() => {
