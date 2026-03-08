@@ -58,6 +58,7 @@ export const TagInput = ({ className, onTagsChange, tags }: TagInputProps) => {
       ))}
       <input
         type="text"
+        aria-label="タグを追加"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
