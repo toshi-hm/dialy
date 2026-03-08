@@ -96,6 +96,13 @@ export const DiaryEditor = ({
     [saveNow],
   );
 
+  // Keep a stable ref to the latest debouncedSave so the date-reset effect
+  // can cancel pending debounces without taking debouncedSave as a dependency.
+  // This prevents the effect from firing every time a save completes (which
+  // would immediately reset 'saved' → 'idle', hiding the status indicator).
+  const debouncedSaveRef = useRef(debouncedSave);
+  debouncedSaveRef.current = debouncedSave;
+
   useEffect(() => {
     if (Number.isNaN(dateKey)) {
       return;
@@ -105,9 +112,9 @@ export const DiaryEditor = ({
     lastSavedContentRef.current = initialContent;
     setSaveStatus('idle');
     setErrorMessage(undefined);
-    debouncedSave.cancel();
+    debouncedSaveRef.current.cancel();
     clearResetStatusTimer();
-  }, [dateKey, initialContent, debouncedSave, clearResetStatusTimer]);
+  }, [dateKey, initialContent, clearResetStatusTimer]);
 
   useEffect(() => {
     if (content === lastSavedContentRef.current) {
