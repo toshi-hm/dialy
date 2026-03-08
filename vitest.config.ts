@@ -8,6 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/.next/**', '**/storybook-static/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -20,6 +21,7 @@ export default defineConfig({
         '**/*.d.ts',
         '**/types/**',
         '**/index.ts', // re-export files
+        '**/utils/performance.ts', // runtime-only Web Vitals monitoring
       ],
       thresholds: {
         // Global thresholds (based on PLANS.md MVP-TEST-02 requirements)

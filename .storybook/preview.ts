@@ -9,6 +9,16 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    a11y: {
+      // axe-core configuration for WCAG 2.1 AA
+      config: {
+        rules: [
+          { id: 'color-contrast', enabled: true },
+          { id: 'label', enabled: true },
+          { id: 'aria-roles', enabled: true },
+        ],
+      },
+    },
   },
 };
 

@@ -4,7 +4,9 @@ import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
 import {
   ContentTooLongError,
   DuplicateDateEntryError,
+  FetchFailedError,
   FutureDateError,
+  SaveFailedError,
   ValidationError,
 } from '@/types/errors';
 import { CreateDiaryEntryUseCase } from './create-diary-entry';
@@ -181,6 +183,84 @@ describe('diary use cases', () => {
 
     await expect(useCase.execute(new Date('2026-02-08T00:00:00.000Z'), 0)).rejects.toThrow(
       ValidationError,
+    );
+  });
+
+  it('wraps repository error in SaveFailedError on create', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new CreateDiaryEntryUseCase(repository);
+    vi.mocked(repository.findByDate).mockResolvedValue(null);
+    vi.mocked(repository.save).mockRejectedValue(new Error('disk full'));
+
+    await expect(
+      useCase.execute({
+        date: new Date('2026-02-08T00:00:00.000Z'),
+        content: 'test',
+      }),
+    ).rejects.toThrow(SaveFailedError);
+  });
+
+  it('wraps repository error in FetchFailedError on update when entry not found', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new UpdateDiaryEntryUseCase(repository);
+    vi.mocked(repository.findById).mockResolvedValue(null);
+
+    await expect(
+      useCase.execute({
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        content: 'after',
+      }),
+    ).rejects.toThrow(FetchFailedError);
+  });
+
+  it('wraps repository save error in SaveFailedError on update', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new UpdateDiaryEntryUseCase(repository);
+    const existing = DiaryEntry.reconstruct(
+      '550e8400-e29b-41d4-a716-446655440000',
+      new Date('2026-02-08T00:00:00.000Z'),
+      'before',
+      new Date('2026-02-08T00:00:00.000Z'),
+      new Date('2026-02-08T00:00:00.000Z'),
+    );
+    vi.mocked(repository.findById).mockResolvedValue(existing);
+    vi.mocked(repository.save).mockRejectedValue(new Error('disk full'));
+
+    await expect(
+      useCase.execute({
+        id: '550e8400-e29b-41d4-a716-446655440000',
+        content: 'after',
+      }),
+    ).rejects.toThrow(SaveFailedError);
+  });
+
+  it('wraps repository error in SaveFailedError on delete', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new DeleteDiaryEntryUseCase(repository);
+    vi.mocked(repository.delete).mockRejectedValue(new Error('disk full'));
+
+    await expect(useCase.execute({ id: '550e8400-e29b-41d4-a716-446655440000' })).rejects.toThrow(
+      SaveFailedError,
+    );
+  });
+
+  it('wraps repository error in FetchFailedError on get', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new GetDiaryEntryUseCase(repository);
+    vi.mocked(repository.findByDate).mockRejectedValue(new Error('network'));
+
+    await expect(useCase.execute(new Date('2026-02-08T00:00:00.000Z'))).rejects.toThrow(
+      FetchFailedError,
+    );
+  });
+
+  it('wraps repository error in FetchFailedError on get entries by same date', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new GetEntriesBySameDateUseCase(repository);
+    vi.mocked(repository.findBySameDate).mockRejectedValue(new Error('network'));
+
+    await expect(useCase.execute(new Date('2026-02-08T00:00:00.000Z'), 5)).rejects.toThrow(
+      FetchFailedError,
     );
   });
 });

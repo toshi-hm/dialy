@@ -44,5 +44,14 @@ storybook-static
 # vitest
 coverage
 
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# lighthouse
+/.lighthouseci/
+
 .gemini/
 gha-creds-*.json

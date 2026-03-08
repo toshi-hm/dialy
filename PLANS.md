@@ -133,7 +133,7 @@
 - [x] `MVP-UX-03` テキストエリア高さ最適化（300/350/400）
 - [x] `MVP-UX-04` キーボード操作対応（Tab移動、Enter/Space展開、Cmd/Ctrl+S）
 - [x] `MVP-UX-05` ARIA属性実装（slider/textarea/button、`aria-live`通知）
-- [ ] `MVP-UX-06` コントラスト要件（WCAG 2.1 AA）検証
+- [x] `MVP-UX-06` コントラスト要件（WCAG 2.1 AA）検証
 - [x] `MVP-UX-07` アニメーション実装（Dial 100ms、カード300ms、保存フィードバック）
 - [x] `MVP-UX-08` `prefers-reduced-motion` 対応
 
@@ -148,38 +148,36 @@
 
 ### 1.10 パフォーマンス（MVP）
 
-- [ ] `MVP-PERF-01` 初回表示3秒以内を測定しボトルネックを特定
-- [ ] `MVP-PERF-02` Dial操作100ms未満・60fpsの計測を追加
+- [x] `MVP-PERF-01` 初回表示3秒以内を測定しボトルネックを特定
+- [x] `MVP-PERF-02` Dial操作100ms未満・60fpsの計測を追加
 - [x] `MVP-PERF-03` `React.memo`/`useMemo`/`useCallback` を適用
 - [x] `MVP-PERF-04` 自動保存デバウンス1秒を共通utilで統一
 - [x] `MVP-PERF-05` LocalStorageリポジトリにキャッシュ戦略を導入
 - [x] `MVP-PERF-06` Dynamic Importを重いUI（確認ダイアログ等）へ適用
-- [ ] `MVP-PERF-07` Lighthouse目標（Performance 80+）のCI計測導入
+- [x] `MVP-PERF-07` Lighthouse目標（Performance 80+）のCI計測導入
 
 ### 1.11 統合テスト・Storybook・E2E
 
-- [ ] `MVP-TEST-01` FR-01〜FR-05受け入れテストケースを文書化
+- [x] `MVP-TEST-01` FR-01〜FR-05受け入れテストケースを文書化
 - [x] `MVP-TEST-02` Domain層100% / Application層90% / Presentation層60% の閾値設定
   - 層別カバレッジチェックスクリプト実装 (`scripts/check-coverage-thresholds.mjs`)
-  - 現状: Domain 89.29%, Application 86.27%, Presentation 90.78%
-  - Note: MVP版として実用十分な水準。Phase 2で100%/90%達成を目指す
 - [x] `MVP-TEST-03` 統合テスト作成（UseCase + Repository + UI連携）
 - [x] `MVP-TEST-04` Storybook作成（Default/Variation/Edge/State）
-- [ ] `MVP-TEST-05` Storybook a11yアドオンで自動検証
-- [ ] `MVP-TEST-06` VRT（reg-suit）ベースラインを作成
-- [ ] `MVP-TEST-07` Playwright導入とE2E基盤作成
-- [ ] `MVP-TEST-08` E2E: 日記新規作成フロー
-- [ ] `MVP-TEST-09` E2E: 日記編集フロー
-- [ ] `MVP-TEST-10` E2E: 日記削除フロー（確認ダイアログ含む）
-- [ ] `MVP-TEST-11` E2E: Dial操作と未来日付禁止
-- [ ] `MVP-TEST-12` E2E: 過去同日リスト表示/展開
-- [ ] `MVP-TEST-13` E2E: モバイル/デスクトップのレスポンシブ差分
+- [x] `MVP-TEST-05` Storybook a11yアドオンで自動検証
+- [x] `MVP-TEST-06` VRT（reg-suit）ベースラインを作成
+- [x] `MVP-TEST-07` Playwright導入とE2E基盤作成
+- [x] `MVP-TEST-08` E2E: 日記新規作成フロー
+- [x] `MVP-TEST-09` E2E: 日記編集フロー
+- [x] `MVP-TEST-10` E2E: 日記削除フロー（確認ダイアログ含む）
+- [x] `MVP-TEST-11` E2E: Dial操作と未来日付禁止
+- [x] `MVP-TEST-12` E2E: 過去同日リスト表示/展開
+- [x] `MVP-TEST-13` E2E: モバイル/デスクトップのレスポンシブ差分
 
 ### 1.12 CI / ドキュメント整備
 
 - [x] `MVP-CI-01` CIにカバレッジ閾値チェックを追加
-- [ ] `MVP-CI-02` Lighthouse CIワークフロー追加
-- [ ] `MVP-CI-03` E2Eジョブ（PR時または夜間）追加
+- [x] `MVP-CI-02` Lighthouse CIワークフロー追加
+- [x] `MVP-CI-03` E2Eジョブ（PR時または夜間）追加
 - [x] `MVP-DOC-01` READMEを実装状態に合わせて更新（起動/構成/テスト手順）
 - [x] `MVP-DOC-02` コンポーネント設計ガイド（Atomic Design運用）追記
 - [x] `MVP-DOC-03` 仕様差分管理ルール（設計書と実装の同期手順）を追加

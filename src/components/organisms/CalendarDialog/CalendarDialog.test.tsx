@@ -59,4 +59,18 @@ describe('CalendarDialog', () => {
     fireEvent.click(applyButton);
     expect(handleSelect).not.toHaveBeenCalled();
   });
+
+  it('returns null when dialog is not open', () => {
+    const { container } = render(
+      <CalendarDialog
+        open={false}
+        selectedDate={new Date(2026, 1, 8)}
+        maxDate={new Date(2026, 1, 8)}
+        onClose={() => {}}
+        onSelect={() => {}}
+      />,
+    );
+
+    expect(container.querySelector('[role="dialog"]')).toBeNull();
+  });
 });

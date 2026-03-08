@@ -84,4 +84,125 @@ describe('Dial', () => {
     const changedDate = handleDateChange.mock.calls[0][0] as Date;
     expect(changedDate.getTime()).toBe(new Date(2026, 1, 10).getTime());
   });
+
+  it('changes date backward with ArrowDown key', () => {
+    const handleDateChange = vi.fn();
+    render(
+      <Dial
+        selectedDate={new Date(2026, 1, 8)}
+        onDateChange={handleDateChange}
+        maxDate={new Date(2026, 1, 10)}
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByRole('slider', { name: '日付選択' }), { key: 'ArrowDown' });
+
+    expect(handleDateChange).toHaveBeenCalledTimes(1);
+    const changedDate = handleDateChange.mock.calls[0][0] as Date;
+    expect(changedDate.getDate()).toBe(7);
+  });
+
+  it('changes date forward with ArrowUp key', () => {
+    const handleDateChange = vi.fn();
+    render(
+      <Dial
+        selectedDate={new Date(2026, 1, 8)}
+        onDateChange={handleDateChange}
+        maxDate={new Date(2026, 1, 10)}
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByRole('slider', { name: '日付選択' }), { key: 'ArrowUp' });
+
+    expect(handleDateChange).toHaveBeenCalledTimes(1);
+    const changedDate = handleDateChange.mock.calls[0][0] as Date;
+    expect(changedDate.getDate()).toBe(9);
+  });
+
+  it('calls onOpenCalendar when dial is clicked', () => {
+    const handleOpenCalendar = vi.fn();
+    render(
+      <Dial
+        selectedDate={new Date(2026, 1, 8)}
+        onDateChange={() => {}}
+        maxDate={new Date(2026, 1, 10)}
+        onOpenCalendar={handleOpenCalendar}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('slider', { name: '日付選択' }));
+    expect(handleOpenCalendar).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not move date below minDate', () => {
+    const handleDateChange = vi.fn();
+    render(
+      <Dial
+        selectedDate={new Date(2026, 1, 8)}
+        onDateChange={handleDateChange}
+        maxDate={new Date(2026, 1, 10)}
+        minDate={new Date(2026, 1, 8)}
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByRole('slider', { name: '日付選択' }), { key: 'ArrowLeft' });
+    expect(handleDateChange).not.toHaveBeenCalled();
+  });
+
+  it('releases pointer capture on pointerUp', () => {
+    const handleDateChange = vi.fn();
+    render(
+      <Dial
+        selectedDate={new Date(2026, 1, 8)}
+        onDateChange={handleDateChange}
+        maxDate={new Date(2026, 1, 20)}
+      />,
+    );
+
+    const slider = screen.getByRole('slider', { name: '日付選択' });
+    Object.defineProperty(slider, 'setPointerCapture', {
+      value: vi.fn(),
+      configurable: true,
+    });
+
+    fireEvent.pointerDown(slider, { pointerId: 1, clientX: 100, clientY: 50 });
+    fireEvent.pointerUp(slider, { pointerId: 1 });
+
+    // After pointerUp, pointerMove should not trigger date change
+    fireEvent.pointerMove(slider, { pointerId: 1, clientX: 50, clientY: 100 });
+    expect(handleDateChange).not.toHaveBeenCalled();
+  });
+
+  it('ignores pointerMove with different pointerId', () => {
+    const handleDateChange = vi.fn();
+    render(
+      <Dial
+        selectedDate={new Date(2026, 1, 8)}
+        onDateChange={handleDateChange}
+        maxDate={new Date(2026, 1, 20)}
+      />,
+    );
+
+    const slider = screen.getByRole('slider', { name: '日付選択' });
+    Object.defineProperty(slider, 'setPointerCapture', {
+      value: vi.fn(),
+      configurable: true,
+    });
+    vi.spyOn(slider, 'getBoundingClientRect').mockReturnValue({
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      top: 0,
+      left: 0,
+      right: 100,
+      bottom: 100,
+      toJSON: () => ({}),
+    } as DOMRect);
+
+    fireEvent.pointerDown(slider, { pointerId: 1, clientX: 100, clientY: 50 });
+    fireEvent.pointerMove(slider, { pointerId: 2, clientX: 82, clientY: 88 });
+
+    expect(handleDateChange).not.toHaveBeenCalled();
+  });
 });
