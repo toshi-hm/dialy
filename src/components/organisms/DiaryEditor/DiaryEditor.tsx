@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/atoms/Button';
+import { TagInput } from '@/components/atoms/TagInput';
 import { CharacterCount, SaveStatusIndicator } from '@/components/molecules';
 import { cn } from '@/lib/utils/cn';
 import { debounce } from '@/lib/utils/debounce';
@@ -12,7 +13,8 @@ import { isAppError } from '@/types/errors';
 export type DiaryEditorProps = {
   date: Date;
   initialContent?: string;
-  onSave: (content: string) => Promise<void>;
+  initialTags?: readonly string[];
+  onSave: (content: string, tags: string[]) => Promise<void>;
   onRequestDelete?: () => void;
   maxLength?: number;
   className?: string;
@@ -28,6 +30,16 @@ const SAVE_ERROR_MESSAGE_BY_CODE: Record<AppErrorCode, string> = {
   DUPLICATE_DATE_ENTRY: '同じ日付の日記は既に存在します',
 };
 
+const EMPTY_TAGS: readonly string[] = [];
+
+const areTagsEqual = (left: readonly string[], right: readonly string[]): boolean => {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((tag, index) => tag === right[index]);
+};
+
 const toSaveErrorMessage = (error: unknown): string => {
   if (isAppError(error)) {
     return SAVE_ERROR_MESSAGE_BY_CODE[error.code];
@@ -40,16 +52,20 @@ export const DiaryEditor = ({
   className,
   date,
   initialContent = '',
+  initialTags = EMPTY_TAGS,
   maxLength = 10_000,
   onRequestDelete,
   onSave,
 }: DiaryEditorProps) => {
   const [content, setContent] = useState(initialContent);
+  const [tags, setTags] = useState<string[]>(() => [...initialTags]);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const lastSavedContentRef = useRef(initialContent);
   const resetStatusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dateKey = date.getTime();
+  const tagsRef = useRef(tags);
+  tagsRef.current = tags;
 
   const clearResetStatusTimer = useCallback(() => {
     if (!resetStatusTimeoutRef.current) {
@@ -61,7 +77,7 @@ export const DiaryEditor = ({
   }, []);
 
   const saveNow = useCallback(
-    async (value: string) => {
+    async (value: string, currentTags: readonly string[]) => {
       if (value.length > maxLength) {
         clearResetStatusTimer();
         setSaveStatus('error');
@@ -73,7 +89,7 @@ export const DiaryEditor = ({
       setErrorMessage(undefined);
 
       try {
-        await onSave(value);
+        await onSave(value, [...currentTags]);
         lastSavedContentRef.current = value;
         setSaveStatus('saved');
         clearResetStatusTimer();
@@ -91,7 +107,7 @@ export const DiaryEditor = ({
   const debouncedSave = useMemo(
     () =>
       debounce((value: string) => {
-        void saveNow(value);
+        void saveNow(value, tagsRef.current);
       }, 1000),
     [saveNow],
   );
@@ -117,13 +133,22 @@ export const DiaryEditor = ({
     clearResetStatusTimer();
   }, [dateKey, clearResetStatusTimer]);
 
-  // Sync content state when initialContent changes (date navigation loads new entry,
-  // save updates currentEntry, or delete clears the entry) — without touching saveStatus.
+  // Sync content and tags state when initialContent/initialTags changes.
   useEffect(() => {
     setContent(initialContent);
     lastSavedContentRef.current = initialContent;
     debouncedSaveRef.current.cancel();
   }, [initialContent]);
+
+  useEffect(() => {
+    setTags((previousTags) => {
+      if (areTagsEqual(previousTags, initialTags)) {
+        return previousTags;
+      }
+
+      return [...initialTags];
+    });
+  }, [initialTags]);
 
   useEffect(() => {
     if (content === lastSavedContentRef.current) {
@@ -141,11 +166,19 @@ export const DiaryEditor = ({
     [clearResetStatusTimer, debouncedSave],
   );
 
+  const handleTagsChange = useCallback(
+    (newTags: string[]) => {
+      setTags(newTags);
+      void saveNow(content, newTags);
+    },
+    [content, saveNow],
+  );
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
       event.preventDefault();
       debouncedSave.cancel();
-      void saveNow(content);
+      void saveNow(content, tags);
     }
   };
 
@@ -160,6 +193,10 @@ export const DiaryEditor = ({
         placeholder="今日の日記を書く..."
         className="h-[300px] w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500 md:h-[350px] lg:h-[400px]"
       />
+      <div className="rounded-md border border-gray-200 px-3 py-2">
+        <p className="mb-1 text-xs text-gray-500">タグ（Enterで追加）</p>
+        <TagInput tags={tags} onTagsChange={handleTagsChange} />
+      </div>
       <div className="flex items-center justify-between gap-3">
         <CharacterCount content={content} maxLength={maxLength} />
         {onRequestDelete && (

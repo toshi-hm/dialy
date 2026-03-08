@@ -36,11 +36,13 @@ describe('diary use cases', () => {
     const result = await useCase.execute({
       date: inputDate,
       content: 'new diary entry',
+      tags: ['仕事', '勉強'],
     });
 
     expect(repository.findByDate).toHaveBeenCalledWith(inputDate);
     expect(repository.save).toHaveBeenCalledWith(expect.any(DiaryEntry));
     expect(result.content).toBe('new diary entry');
+    expect(result.tags).toEqual(['仕事', '勉強']);
   });
 
   it('throws ValidationError when creating duplicate date entry', async () => {
@@ -87,6 +89,7 @@ describe('diary use cases', () => {
       'before',
       new Date('2026-02-08T00:00:00.000Z'),
       new Date('2026-02-08T00:00:00.000Z'),
+      ['仕事'],
     );
     vi.mocked(repository.findById).mockResolvedValue(existing);
 
@@ -98,9 +101,32 @@ describe('diary use cases', () => {
 
     expect(repository.save).toHaveBeenCalledWith(expect.any(DiaryEntry));
     expect(result.content).toBe('after');
+    expect(result.tags).toEqual(['仕事']);
     expect(result.updatedAt.toISOString()).toBe('2026-02-08T11:00:00.000Z');
 
     vi.useRealTimers();
+  });
+
+  it('updates tags when tags are provided', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new UpdateDiaryEntryUseCase(repository);
+    const existing = DiaryEntry.reconstruct(
+      '550e8400-e29b-41d4-a716-446655440000',
+      new Date('2026-02-08T00:00:00.000Z'),
+      'before',
+      new Date('2026-02-08T00:00:00.000Z'),
+      new Date('2026-02-08T00:00:00.000Z'),
+      ['仕事'],
+    );
+    vi.mocked(repository.findById).mockResolvedValue(existing);
+
+    const result = await useCase.execute({
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      content: 'after',
+      tags: ['勉強', '読書'],
+    });
+
+    expect(result.tags).toEqual(['勉強', '読書']);
   });
 
   it('throws ValidationError when updating with invalid id', async () => {

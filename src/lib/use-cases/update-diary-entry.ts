@@ -15,7 +15,9 @@ export class UpdateDiaryEntryUseCase {
       throw new FetchFailedError('Diary entry not found');
     }
 
-    const updated = existing.update(validated.content);
+    const withContent = existing.update(validated.content);
+    const updated =
+      validated.tags !== undefined ? withContent.updateTags(validated.tags) : withContent;
 
     try {
       await this.repository.save(updated);

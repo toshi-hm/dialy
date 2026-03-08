@@ -38,6 +38,7 @@ const DeleteConfirmDialog = dynamic(() =>
 );
 
 const RETRY_DELAYS_MS = [250, 500, 1000];
+const EMPTY_TAGS: readonly string[] = [];
 
 const sleep = (ms: number): Promise<void> => {
   return new Promise((resolve) => {
@@ -132,12 +133,12 @@ const Home = () => {
   }, [loadEntriesByDate, selectedDate]);
 
   const saveContent = useCallback(
-    async (content: string) => {
+    async (content: string, tags: string[] = []) => {
       for (let attempt = 0; ; attempt += 1) {
         try {
           const savedEntry = currentEntry
-            ? await updateDiaryEntryUseCase.execute({ id: currentEntry.id, content })
-            : await createDiaryEntryUseCase.execute({ date: selectedDate, content });
+            ? await updateDiaryEntryUseCase.execute({ id: currentEntry.id, content, tags })
+            : await createDiaryEntryUseCase.execute({ date: selectedDate, content, tags });
 
           setCurrentEntry(savedEntry);
           const sameDateEntries = await getEntriesBySameDateUseCase.execute(selectedDate, 5);
@@ -224,6 +225,7 @@ const Home = () => {
             <DiaryEditor
               date={selectedDate}
               initialContent={currentEntry?.content ?? ''}
+              initialTags={currentEntry?.tags ?? EMPTY_TAGS}
               onSave={saveContent}
               onRequestDelete={currentEntry ? () => setIsDeleteDialogOpen(true) : undefined}
             />

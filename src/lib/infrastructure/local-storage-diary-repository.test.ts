@@ -8,13 +8,19 @@ import {
   STORAGE_VERSION,
 } from './local-storage-diary-repository';
 
-const reconstructEntry = (id: string, date: string, content: string): DiaryEntry => {
+const reconstructEntry = (
+  id: string,
+  date: string,
+  content: string,
+  tags: string[] = [],
+): DiaryEntry => {
   return DiaryEntry.reconstruct(
     id,
     parseISODate(date),
     content,
     parseISODate('2026-02-08'),
     parseISODate('2026-02-08'),
+    tags,
   );
 };
 
@@ -35,6 +41,19 @@ describe('LocalStorageDiaryRepository', () => {
     expect(byId?.content).toBe('entry');
     expect(byDate?.id).toBe(entry.id);
     expect(localStorage.getItem(STORAGE_KEY)).toContain(STORAGE_VERSION);
+  });
+
+  it('saves and restores tags', async () => {
+    const repository = new LocalStorageDiaryRepository();
+    const entry = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'entry', [
+      '仕事',
+      '勉強',
+    ]);
+
+    await repository.save(entry);
+    const byId = await repository.findById(entry.id);
+
+    expect(byId?.tags).toEqual(['仕事', '勉強']);
   });
 
   it('deserializes stored ISO date as local date', async () => {
@@ -110,6 +129,30 @@ describe('LocalStorageDiaryRepository', () => {
     const repository = new LocalStorageDiaryRepository();
 
     await expect(repository.findAll()).resolves.toEqual([]);
+  });
+
+  it('sanitizes invalid stored tags when loading', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: STORAGE_VERSION,
+        entries: [
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            date: '2026-02-08',
+            content: 'entry',
+            createdAt: '2026-02-08T00:00:00.000Z',
+            updatedAt: '2026-02-08T00:00:00.000Z',
+            tags: ['  仕事  ', '', 1, 'a'.repeat(21), '仕事', '勉強'],
+          },
+        ],
+      }),
+    );
+
+    const repository = new LocalStorageDiaryRepository();
+    const entry = await repository.findById('550e8400-e29b-41d4-a716-446655440000');
+
+    expect(entry?.tags).toEqual(['仕事', '勉強']);
   });
 
   it('keeps memory cache until invalidated', async () => {

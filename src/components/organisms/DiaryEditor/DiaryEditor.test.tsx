@@ -30,7 +30,7 @@ describe('DiaryEditor', () => {
       await vi.advanceTimersByTimeAsync(1000);
       await vi.runOnlyPendingTimersAsync();
     });
-    expect(handleSave).toHaveBeenCalledWith('new content');
+    expect(handleSave).toHaveBeenCalledWith('new content', []);
   });
 
   it('triggers save immediately with cmd/ctrl+s', async () => {
@@ -49,7 +49,47 @@ describe('DiaryEditor', () => {
     fireEvent.keyDown(textarea, { key: 's', ctrlKey: true });
 
     await waitFor(() => {
-      expect(handleSave).toHaveBeenCalledWith('shortcut');
+      expect(handleSave).toHaveBeenCalledWith('shortcut', []);
+    });
+  });
+
+  it('saves with tags when tags are changed', async () => {
+    const handleSave = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <DiaryEditor
+        date={new Date('2026-02-08T00:00:00.000Z')}
+        initialContent="hello"
+        initialTags={['仕事']}
+        onSave={handleSave}
+      />,
+    );
+
+    const tagInput = screen.getByPlaceholderText('タグを追加...');
+    fireEvent.change(tagInput, { target: { value: '勉強' } });
+    fireEvent.keyDown(tagInput, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(handleSave).toHaveBeenCalledWith('hello', ['仕事', '勉強']);
+    });
+  });
+
+  it('saves with remaining tags when tag is removed', async () => {
+    const handleSave = vi.fn().mockResolvedValue(undefined);
+
+    render(
+      <DiaryEditor
+        date={new Date('2026-02-08T00:00:00.000Z')}
+        initialContent="hello"
+        initialTags={['仕事', '勉強']}
+        onSave={handleSave}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '仕事を削除' }));
+
+    await waitFor(() => {
+      expect(handleSave).toHaveBeenCalledWith('hello', ['勉強']);
     });
   });
 

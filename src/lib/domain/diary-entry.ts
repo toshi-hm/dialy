@@ -2,20 +2,33 @@ import { isFutureDate, isSameDate } from '@/lib/utils/date';
 import { ContentTooLongError, FutureDateError, ValidationError } from '@/types/errors';
 
 const MAX_CONTENT_LENGTH = 10_000;
+const MAX_TAG_LENGTH = 20;
+const MAX_TAGS_COUNT = 10;
 
 export class DiaryEntry {
+  public readonly tags: readonly string[];
+
   private constructor(
     public readonly id: string,
     public readonly date: Date,
     public readonly content: string,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    tags: readonly string[],
   ) {
+    this.tags = Object.freeze(tags.map((tag) => tag.trim()));
     this.validate();
   }
 
-  static create(date: Date, content: string): DiaryEntry {
-    return new DiaryEntry(crypto.randomUUID(), new Date(date), content, new Date(), new Date());
+  static create(date: Date, content: string, tags: string[] = []): DiaryEntry {
+    return new DiaryEntry(
+      crypto.randomUUID(),
+      new Date(date),
+      content,
+      new Date(),
+      new Date(),
+      tags,
+    );
   }
 
   static reconstruct(
@@ -24,12 +37,24 @@ export class DiaryEntry {
     content: string,
     createdAt: Date,
     updatedAt: Date,
+    tags: string[] = [],
   ): DiaryEntry {
-    return new DiaryEntry(id, new Date(date), content, new Date(createdAt), new Date(updatedAt));
+    return new DiaryEntry(
+      id,
+      new Date(date),
+      content,
+      new Date(createdAt),
+      new Date(updatedAt),
+      tags,
+    );
   }
 
   update(newContent: string): DiaryEntry {
-    return new DiaryEntry(this.id, this.date, newContent, this.createdAt, new Date());
+    return new DiaryEntry(this.id, this.date, newContent, this.createdAt, new Date(), this.tags);
+  }
+
+  updateTags(newTags: string[]): DiaryEntry {
+    return new DiaryEntry(this.id, this.date, this.content, this.createdAt, new Date(), newTags);
   }
 
   isSameDate(other: Date): boolean {
@@ -75,6 +100,20 @@ export class DiaryEntry {
 
     if (this.content.length > MAX_CONTENT_LENGTH) {
       throw new ContentTooLongError('Content exceeds maximum length (10,000 characters)');
+    }
+
+    if (this.tags.length > MAX_TAGS_COUNT) {
+      throw new ValidationError(`Tags must not exceed ${MAX_TAGS_COUNT} items`);
+    }
+
+    for (const tag of this.tags) {
+      if (!tag) {
+        throw new ValidationError('Tag must not be empty');
+      }
+
+      if (tag.length > MAX_TAG_LENGTH) {
+        throw new ValidationError(`Each tag must not exceed ${MAX_TAG_LENGTH} characters`);
+      }
     }
   }
 }

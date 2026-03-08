@@ -30,6 +30,24 @@ describe('Home page integration', () => {
     );
   });
 
+  it('saves tags and restores them after remount', async () => {
+    const { unmount } = render(<HomeContent />);
+
+    const tagInput = await screen.findByPlaceholderText('タグを追加...');
+    fireEvent.change(tagInput, { target: { value: '仕事' } });
+    fireEvent.keyDown(tagInput, { key: 'Enter' });
+
+    await waitFor(() => {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      expect(raw).toContain('"tags":["仕事"]');
+    });
+
+    unmount();
+    render(<HomeContent />);
+
+    expect(await screen.findByRole('button', { name: '仕事を削除' })).toBeInTheDocument();
+  });
+
   it('shows error when trying to move dial to future date', async () => {
     render(<HomeContent />);
 
