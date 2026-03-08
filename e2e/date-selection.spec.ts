@@ -23,9 +23,12 @@ test.describe('FR-01: 日付選択機能', () => {
     await page.keyboard.press('ArrowRight');
 
     // Wait for any potential error alert or date change to occur
-    const errorMessage = page.locator('[role="alert"]');
-    await errorMessage.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
-    const errorVisible = await errorMessage.isVisible();
+    // Use filter to avoid strict mode violation with Next.js route announcer (#__next-route-announcer__)
+    const errorMessage = page.getByRole('alert').filter({ hasText: '未来' });
+    const errorVisible = await errorMessage
+      .waitFor({ state: 'visible', timeout: 2000 })
+      .then(() => true)
+      .catch(() => false);
 
     if (errorVisible) {
       await expect(errorMessage).toContainText('未来');

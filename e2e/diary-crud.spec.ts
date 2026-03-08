@@ -19,7 +19,7 @@ test.describe('FR-02/FR-03: 日記作成・編集機能', () => {
     const textarea = page.locator('textarea');
     await textarea.click();
     await textarea.pressSequentially('テスト日記の内容です', { delay: 50 });
-    const saveStatus = page.locator('text=/保存しました/');
+    const saveStatus = page.getByText('保存しました');
     await expect(saveStatus).toBeVisible({ timeout: 15000 });
   });
 
@@ -27,7 +27,7 @@ test.describe('FR-02/FR-03: 日記作成・編集機能', () => {
     const textarea = page.locator('textarea');
     await textarea.click();
     await textarea.pressSequentially('永続化テスト内容', { delay: 50 });
-    await page.waitForSelector('text=/保存しました/', { timeout: 15000 });
+    await expect(page.getByText('保存しました')).toBeVisible({ timeout: 15000 });
 
     await page.reload();
     await page.waitForSelector('textarea');
