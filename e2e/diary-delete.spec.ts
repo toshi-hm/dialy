@@ -9,7 +9,7 @@ test.describe('FR-05: 日記削除機能', () => {
   });
 
   test('AT-05-01: 日記がない場合は削除ボタンが表示されない', async ({ page }) => {
-    const deleteButton = page.locator('button', { hasText: '削除' });
+    const deleteButton = page.getByRole('button', { name: '削除' });
     await expect(deleteButton).not.toBeVisible();
   });
 
@@ -21,7 +21,7 @@ test.describe('FR-05: 日記削除機能', () => {
     await expect(page.getByText('保存しました')).toBeVisible({ timeout: 15000 });
 
     // Click delete button
-    const deleteButton = page.locator('button', { hasText: '削除' });
+    const deleteButton = page.getByRole('button', { name: '削除' });
     await expect(deleteButton).toBeVisible({ timeout: 3000 });
     await deleteButton.click();
 
@@ -30,7 +30,7 @@ test.describe('FR-05: 日記削除機能', () => {
     await expect(dialog).toBeVisible({ timeout: 3000 });
 
     // Confirm deletion
-    const confirmButton = dialog.locator('button', { hasText: '削除' });
+    const confirmButton = dialog.getByRole('button', { name: '削除' });
     await confirmButton.click();
 
     // Textarea should be cleared
@@ -43,13 +43,13 @@ test.describe('FR-05: 日記削除機能', () => {
     await textarea.pressSequentially('キャンセルテスト用の日記', { delay: 50 });
     await expect(page.getByText('保存しました')).toBeVisible({ timeout: 15000 });
 
-    const deleteButton = page.locator('button', { hasText: '削除' });
+    const deleteButton = page.getByRole('button', { name: '削除' });
     await deleteButton.click();
 
     const dialog = page.locator('[role="dialog"]');
     await expect(dialog).toBeVisible({ timeout: 3000 });
 
-    const cancelButton = dialog.locator('button', { hasText: 'キャンセル' });
+    const cancelButton = dialog.getByRole('button', { name: 'キャンセル' });
     await cancelButton.click();
 
     await expect(textarea).toHaveValue('キャンセルテスト用の日記');
