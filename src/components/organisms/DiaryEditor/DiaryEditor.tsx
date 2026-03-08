@@ -103,18 +103,27 @@ export const DiaryEditor = ({
   const debouncedSaveRef = useRef(debouncedSave);
   debouncedSaveRef.current = debouncedSave;
 
+  // Reset status and cancel pending saves when the date changes.
+  // Does NOT depend on initialContent so that a save completing on the same date
+  // (which updates initialContent) doesn't trigger an immediate 'idle' reset.
   useEffect(() => {
     if (Number.isNaN(dateKey)) {
       return;
     }
 
-    setContent(initialContent);
-    lastSavedContentRef.current = initialContent;
     setSaveStatus('idle');
     setErrorMessage(undefined);
     debouncedSaveRef.current.cancel();
     clearResetStatusTimer();
-  }, [dateKey, initialContent, clearResetStatusTimer]);
+  }, [dateKey, clearResetStatusTimer]);
+
+  // Sync content state when initialContent changes (date navigation loads new entry,
+  // save updates currentEntry, or delete clears the entry) — without touching saveStatus.
+  useEffect(() => {
+    setContent(initialContent);
+    lastSavedContentRef.current = initialContent;
+    debouncedSaveRef.current.cancel();
+  }, [initialContent]);
 
   useEffect(() => {
     if (content === lastSavedContentRef.current) {
