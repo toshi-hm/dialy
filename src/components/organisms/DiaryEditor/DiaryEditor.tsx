@@ -169,9 +169,10 @@ export const DiaryEditor = ({
   const handleTagsChange = useCallback(
     (newTags: string[]) => {
       setTags(newTags);
+      debouncedSave.cancel();
       void saveNow(content, newTags);
     },
-    [content, saveNow],
+    [content, debouncedSave, saveNow],
   );
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
