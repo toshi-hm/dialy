@@ -1,0 +1,9 @@
+ignoredBuiltDependencies:
+  - '@prisma/engines'
+  - core-js-pure
+  - esbuild
+  - prisma
+  - sharp
+
+onlyBuiltDependencies:
+  - better-sqlite3

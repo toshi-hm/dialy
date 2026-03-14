@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// 日記エントリーテーブル
+model DiaryEntry {
+  id        String   @id @default(uuid())
+  date      DateTime
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  userId    String?  @map("user_id")
+
+  tags DiaryEntryTag[]
+
+  @@unique([date, userId])
+  @@index([date])
+  @@index([userId])
+  @@map("diary_entries")
+}
+
+/// 日記エントリータグテーブル
+model DiaryEntryTag {
+  id      String @id @default(uuid())
+  name    String
+  entryId String @map("entry_id")
+
+  entry DiaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, name])
+  @@index([entryId])
+  @@map("diary_entry_tags")
+}
