@@ -5,6 +5,7 @@
   "description": "A diary app that lets you see past entries for the same day at a glance",
   "scripts": {
     "prepare": "husky",
+    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
