@@ -65,10 +65,7 @@ export class PrismaDiaryRepository implements DiaryRepository {
           createdAt: entry.createdAt,
           updatedAt: entry.updatedAt,
           tags: {
-            create: entry.tags.map((name) => ({
-              id: crypto.randomUUID(),
-              name,
-            })),
+            create: entry.tags.map((name) => ({ name })),
           },
         },
       });
@@ -83,10 +80,7 @@ export class PrismaDiaryRepository implements DiaryRepository {
           content: entry.content,
           updatedAt: entry.updatedAt,
           tags: {
-            create: entry.tags.map((name) => ({
-              id: crypto.randomUUID(),
-              name,
-            })),
+            create: entry.tags.map((name) => ({ name })),
           },
         },
       });
@@ -122,23 +116,24 @@ export class PrismaDiaryRepository implements DiaryRepository {
     const currentYear = date.getFullYear();
     const minYear = currentYear - years;
 
-    const allEntries = await this.prisma.diaryEntry.findMany({
+    const targetDates: Date[] = [];
+    for (let y = currentYear - 1; y >= minYear; y--) {
+      targetDates.push(toStartOfDay(new Date(y, month, day)));
+    }
+
+    if (targetDates.length === 0) {
+      return [];
+    }
+
+    const entries = await this.prisma.diaryEntry.findMany({
+      where: {
+        date: { in: targetDates },
+      },
       include: { tags: true },
       orderBy: { date: 'desc' },
     });
 
-    return allEntries
-      .filter((record) => {
-        const entryDate = new Date(record.date);
-        const entryYear = entryDate.getFullYear();
-        return (
-          entryDate.getMonth() === month &&
-          entryDate.getDate() === day &&
-          entryYear < currentYear &&
-          entryYear >= minYear
-        );
-      })
-      .map(toDomainEntry);
+    return entries.map(toDomainEntry);
   }
 
   async delete(id: string): Promise<void> {

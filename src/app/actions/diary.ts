@@ -36,7 +36,7 @@ const handleError = (error: unknown): ActionResult<never> => {
   return {
     success: false,
     error: {
-      code: 'SAVE_FAILED' as AppErrorCode,
+      code: 'INTERNAL_ERROR' as AppErrorCode,
       message: 'An unexpected error occurred',
     },
   };

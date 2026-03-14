@@ -28,6 +28,7 @@ const SAVE_ERROR_MESSAGE_BY_CODE: Record<AppErrorCode, string> = {
   CONTENT_TOO_LONG: '文字数が上限を超えています',
   LOAD_FAILED: 'データの読み込みに失敗しました',
   DUPLICATE_DATE_ENTRY: '同じ日付の日記は既に存在します',
+  INTERNAL_ERROR: '予期しないエラーが発生しました',
 };
 
 const EMPTY_TAGS: readonly string[] = [];

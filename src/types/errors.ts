@@ -5,7 +5,8 @@ export type AppErrorCode =
   | 'FETCH_FAILED'
   | 'CONTENT_TOO_LONG'
   | 'LOAD_FAILED'
-  | 'DUPLICATE_DATE_ENTRY';
+  | 'DUPLICATE_DATE_ENTRY'
+  | 'INTERNAL_ERROR';
 
 export class AppError extends Error {
   constructor(
