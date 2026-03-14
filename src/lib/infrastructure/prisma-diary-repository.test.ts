@@ -3,7 +3,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import { parseISODate } from '@/lib/utils/date';
-import { DuplicateDateEntryError } from '@/types/errors';
+import { DuplicateDateEntryError, NotFoundError } from '@/types/errors';
 import { PrismaDiaryRepository } from './prisma-diary-repository';
 import { createTestPrismaClient, setupTestDatabase } from './prisma-test-setup';
 
@@ -208,5 +208,11 @@ describe('PrismaDiaryRepository', () => {
     const result = await repository.findBySameDate(parseISODate('2026-02-08'), 5);
 
     expect(result).toEqual([]);
+  });
+
+  it('throws NotFoundError when deleting non-existent id', async () => {
+    const repository = new PrismaDiaryRepository(prisma);
+
+    await expect(repository.delete('non-existent-id')).rejects.toThrow(NotFoundError);
   });
 });

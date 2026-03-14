@@ -1,7 +1,7 @@
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
-import { DuplicateDateEntryError } from '@/types/errors';
-import type { PrismaClient } from '../../generated/prisma/client';
+import { DuplicateDateEntryError, NotFoundError } from '@/types/errors';
+import { Prisma, type PrismaClient } from '../../generated/prisma/client';
 
 type PrismaEntryWithTags = {
   id: string;
@@ -139,9 +139,16 @@ export class PrismaDiaryRepository implements DiaryRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.diaryEntry.delete({
-      where: { id },
-    });
+    try {
+      await this.prisma.diaryEntry.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundError('Diary entry not found');
+      }
+      throw error;
+    }
   }
 
   async findAll(): Promise<DiaryEntry[]> {
