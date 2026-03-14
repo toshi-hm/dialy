@@ -25,12 +25,14 @@ const toDomainEntry = (record: PrismaEntryWithTags): DiaryEntry => {
 
 /** UTC の 00:00:00.000 に正規化する（タイムゾーン非依存） */
 const toStartOfDayUTC = (date: Date): Date => {
-  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 };
 
 /** UTC の 23:59:59.999 に正規化する（タイムゾーン非依存） */
 const toEndOfDayUTC = (date: Date): Date => {
-  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999));
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999),
+  );
 };
 
 export class PrismaDiaryRepository implements DiaryRepository {
@@ -111,9 +113,9 @@ export class PrismaDiaryRepository implements DiaryRepository {
   }
 
   async findBySameDate(date: Date, years: number = 5): Promise<DiaryEntry[]> {
-    const month = date.getMonth();
-    const day = date.getDate();
-    const currentYear = date.getFullYear();
+    const month = date.getUTCMonth();
+    const day = date.getUTCDate();
+    const currentYear = date.getUTCFullYear();
     const minYear = currentYear - years;
 
     const targetDates: Date[] = [];

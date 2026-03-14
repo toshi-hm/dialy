@@ -14,6 +14,7 @@ import {
 import {
   CreateDiaryEntrySchema,
   DeleteDiaryEntrySchema,
+  ServerActionDateSchema,
   UpdateDiaryEntrySchema,
 } from '@/lib/validations/diary';
 import type { AppErrorCode } from '@/types/errors';
@@ -115,13 +116,13 @@ export const getDiaryEntry = async (
   date: string,
 ): Promise<ActionResult<SerializedDiaryEntry | null>> => {
   try {
-    const parsedDate = new Date(date);
-    if (Number.isNaN(parsedDate.getTime())) {
-      throw new ValidationError('Invalid date format');
+    const parsed = ServerActionDateSchema.safeParse(date);
+    if (!parsed.success) {
+      throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid date format');
     }
 
     const useCase = new GetDiaryEntryUseCase(repository);
-    const entry = await useCase.execute(parsedDate);
+    const entry = await useCase.execute(parsed.data);
 
     return {
       success: true,
@@ -137,13 +138,13 @@ export const getEntriesBySameDate = async (
   years: number = 5,
 ): Promise<ActionResult<SerializedDiaryEntry[]>> => {
   try {
-    const parsedDate = new Date(date);
-    if (Number.isNaN(parsedDate.getTime())) {
-      throw new ValidationError('Invalid date format');
+    const parsed = ServerActionDateSchema.safeParse(date);
+    if (!parsed.success) {
+      throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid date format');
     }
 
     const useCase = new GetEntriesBySameDateUseCase(repository);
-    const entries = await useCase.execute(parsedDate, years);
+    const entries = await useCase.execute(parsed.data, years);
 
     return {
       success: true,
