@@ -143,7 +143,9 @@ describe('Server Actions', () => {
       const result = await deleteDiaryEntry(VALID_UUID);
 
       expect(result.success).toBe(true);
-      expect(result.success && result.data).toBeNull();
+      if (result.success) {
+        expect(result.data).toBeNull();
+      }
     });
 
     it('returns failure with VALIDATION_ERROR for invalid UUID', async () => {
