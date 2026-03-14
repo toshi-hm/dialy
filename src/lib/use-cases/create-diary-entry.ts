@@ -15,7 +15,7 @@ export class CreateDiaryEntryUseCase {
       throw new DuplicateDateEntryError('An entry for this date already exists');
     }
 
-    const entry = DiaryEntry.create(validated.date, validated.content);
+    const entry = DiaryEntry.create(validated.date, validated.content, validated.tags);
 
     try {
       await this.repository.save(entry);

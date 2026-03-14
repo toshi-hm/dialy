@@ -42,6 +42,37 @@ const isDiaryStorage = (value: unknown): value is DiaryStorage => {
   );
 };
 
+const normalizeStoredTags = (tags: unknown): string[] => {
+  if (!Array.isArray(tags)) {
+    return [];
+  }
+
+  const normalized: string[] = [];
+
+  for (const tag of tags) {
+    if (typeof tag !== 'string') {
+      continue;
+    }
+
+    const trimmed = tag.trim();
+    if (!trimmed || trimmed.length > 20) {
+      continue;
+    }
+
+    if (normalized.includes(trimmed)) {
+      continue;
+    }
+
+    normalized.push(trimmed);
+
+    if (normalized.length >= 10) {
+      break;
+    }
+  }
+
+  return normalized;
+};
+
 export class LocalStorageDiaryRepository implements DiaryRepository {
   private cache: DiaryStorage | null = null;
   private readonly storage: Storage | null;
@@ -193,6 +224,7 @@ export class LocalStorageDiaryRepository implements DiaryRepository {
       content: entry.content,
       createdAt: entry.createdAt.toISOString(),
       updatedAt: entry.updatedAt.toISOString(),
+      tags: [...entry.tags],
     };
   }
 
@@ -203,6 +235,7 @@ export class LocalStorageDiaryRepository implements DiaryRepository {
       entry.content,
       new Date(entry.createdAt),
       new Date(entry.updatedAt),
+      normalizeStoredTags(entry.tags),
     );
   }
 }

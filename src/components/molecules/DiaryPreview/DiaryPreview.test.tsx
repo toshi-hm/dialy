@@ -3,13 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import { DiaryPreview } from './DiaryPreview';
 
-const createEntry = (content: string): DiaryEntry => {
+const createEntry = (content: string, tags: string[] = []): DiaryEntry => {
   return DiaryEntry.reconstruct(
     '550e8400-e29b-41d4-a716-446655440000',
     new Date('2025-02-08T00:00:00.000Z'),
     content,
     new Date('2025-02-08T00:00:00.000Z'),
     new Date('2025-02-08T00:00:00.000Z'),
+    tags,
   );
 };
 
@@ -39,5 +40,14 @@ describe('DiaryPreview', () => {
 
     expect(screen.getByText('full content')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '閉じる' })).toBeInTheDocument();
+  });
+
+  it('shows tags when entry has tags', () => {
+    const entry = createEntry('content', ['仕事', '勉強']);
+    render(<DiaryPreview entry={entry} />);
+
+    expect(screen.getByRole('list', { name: 'タグ一覧' })).toBeInTheDocument();
+    expect(screen.getByText('#仕事')).toBeInTheDocument();
+    expect(screen.getByText('#勉強')).toBeInTheDocument();
   });
 });

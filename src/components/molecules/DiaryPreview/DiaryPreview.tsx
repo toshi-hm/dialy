@@ -49,6 +49,15 @@ export const DiaryPreview = ({
       >
         {text}
       </p>
+      {entry.tags.length > 0 && (
+        <ul aria-label="タグ一覧" className="mb-3 flex flex-wrap gap-1">
+          {entry.tags.map((tag) => (
+            <li key={tag}>
+              <Badge variant="warning">#{tag}</Badge>
+            </li>
+          ))}
+        </ul>
+      )}
       <Badge variant="default">文字数: {entry.getCharacterCount().toLocaleString()}</Badge>
     </article>
   );

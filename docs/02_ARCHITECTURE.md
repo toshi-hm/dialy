@@ -259,6 +259,7 @@ dialy/
     - id: 一意識別子
     - date: 日付
     - content: 本文
+    - tags: タグ一覧（最大10件・各20文字以内）
     - createdAt: 作成日時
     - updatedAt: 更新日時
 
@@ -568,8 +569,9 @@ export const Dial: FC<DialProps> = ({
 type DiaryEditorProps = {
   date: Date;
   initialContent?: string;
-  onSave: (content: string) => Promise<void>;
-  onDelete?: () => Promise<void>;
+  initialTags?: readonly string[];
+  onSave: (content: string, tags: string[]) => Promise<void>;
+  onRequestDelete?: () => void;
 };
 
 // 実装イメージ

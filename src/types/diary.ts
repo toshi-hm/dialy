@@ -4,16 +4,19 @@ export type DiaryEntryData = {
   content: string;
   createdAt: Date;
   updatedAt: Date;
+  tags: string[];
 };
 
 export type CreateDiaryEntryInput = {
   date: Date;
   content: string;
+  tags?: string[];
 };
 
 export type UpdateDiaryEntryInput = {
   id: string;
   content: string;
+  tags?: string[];
 };
 
 export type DeleteDiaryEntryInput = {
@@ -26,6 +29,7 @@ export type StoredDiaryEntry = {
   content: string;
   createdAt: string;
   updatedAt: string;
+  tags?: string[];
 };
 
 export type DiaryStorage = {

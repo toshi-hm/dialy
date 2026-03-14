@@ -21,6 +21,7 @@
 | id | string | ✓ | 一意識別子 | UUID v4形式 |
 | date | Date | ✓ | 日記の日付 | 未来の日付は不可 |
 | content | string | ✓ | 日記の本文 | 最大10,000文字 |
+| tags | string[] | - | タグ一覧 | 最大10件・各20文字以内、前後空白はtrim |
 | createdAt | Date | ✓ | 作成日時 | 自動生成 |
 | updatedAt | Date | ✓ | 更新日時 | 自動更新 |
 
@@ -33,6 +34,7 @@ export class DiaryEntry {
     public readonly id: string,
     public readonly date: Date,
     public readonly content: string,
+    public readonly tags: readonly string[],
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
   ) {
@@ -40,11 +42,12 @@ export class DiaryEntry {
   }
 
   // ファクトリーメソッド: 新規作成
-  static create(date: Date, content: string): DiaryEntry {
+  static create(date: Date, content: string, tags: string[] = []): DiaryEntry {
     return new DiaryEntry(
       crypto.randomUUID(),
       date,
       content,
+      tags,
       new Date(),
       new Date(),
     );
@@ -55,10 +58,11 @@ export class DiaryEntry {
     id: string,
     date: Date,
     content: string,
+    tags: string[],
     createdAt: Date,
     updatedAt: Date,
   ): DiaryEntry {
-    return new DiaryEntry(id, date, content, createdAt, updatedAt);
+    return new DiaryEntry(id, date, content, tags, createdAt, updatedAt);
   }
 
   // バリデーション
@@ -74,14 +78,25 @@ export class DiaryEntry {
     if (this.content.length > 10000) {
       throw new Error('Content exceeds maximum length (10,000 characters)');
     }
+
+    if (this.tags.length > 10) {
+      throw new Error('Tags exceed maximum count (10)');
+    }
+
+    for (const tag of this.tags) {
+      if (tag.length > 20) {
+        throw new Error('Tag exceeds maximum length (20 characters)');
+      }
+    }
   }
 
-  // ドメインロジック: 内容更新
-  update(newContent: string): DiaryEntry {
+  // ドメインロジック: 内容とタグの更新
+  update(newContent: string, newTags?: string[]): DiaryEntry {
     return new DiaryEntry(
       this.id,
       this.date,
       newContent,
+      newTags ?? this.tags,
       this.createdAt,
       new Date(), // updatedAtを現在時刻に更新
     );
@@ -306,6 +321,7 @@ type StoredDiaryEntry = {
   id: string;
   date: string;  // ISO 8601形式: YYYY-MM-DD
   content: string;
+  tags: string[];  // タグ一覧（最大10件・各20文字以内）
   createdAt: string;  // ISO 8601形式: YYYY-MM-DDTHH:mm:ss.sssZ
   updatedAt: string;  // ISO 8601形式: YYYY-MM-DDTHH:mm:ss.sssZ
 };
@@ -327,6 +343,7 @@ type DiaryStorage = {
       "id": "550e8400-e29b-41d4-a716-446655440000",
       "date": "2026-02-08",
       "content": "今日は設計書を作成した。過去の同じ日の日記を見ながら書けるアプリは面白そう。",
+      "tags": ["設計", "開発"],
       "createdAt": "2026-02-08T10:30:00.000Z",
       "updatedAt": "2026-02-08T10:35:00.000Z"
     },
@@ -334,6 +351,7 @@ type DiaryStorage = {
       "id": "660e8400-e29b-41d4-a716-446655440001",
       "date": "2025-02-08",
       "content": "1年前の今日。まだこのアプリのアイデアはなかった。",
+      "tags": [],
       "createdAt": "2025-02-08T09:00:00.000Z",
       "updatedAt": "2025-02-08T09:00:00.000Z"
     }
@@ -349,6 +367,11 @@ type DiaryStorage = {
 // src/lib/validations/diary.ts
 import { z } from 'zod';
 
+// タグのバリデーションスキーマ
+export const TagSchema = z.string().max(20, 'Tag exceeds maximum length (20 characters)').trim();
+
+export const TagsSchema = z.array(TagSchema).max(10, 'Tags exceed maximum count (10)').default([]);
+
 // 日記エントリーのバリデーションスキーマ
 export const DiaryEntrySchema = z.object({
   date: z.date().refine(
@@ -357,6 +380,7 @@ export const DiaryEntrySchema = z.object({
   ),
   content: z.string()
     .max(10000, 'Content exceeds maximum length (10,000 characters)'),
+  tags: TagsSchema,
 });
 
 export type DiaryEntryInput = z.infer<typeof DiaryEntrySchema>;
@@ -369,6 +393,7 @@ export const UpdateDiaryEntrySchema = z.object({
   id: z.string().uuid(),
   content: z.string()
     .max(10000, 'Content exceeds maximum length (10,000 characters)'),
+  tags: TagsSchema.optional(),
 });
 
 export type UpdateDiaryEntryInput = z.infer<typeof UpdateDiaryEntrySchema>;
@@ -389,6 +414,8 @@ export type DeleteDiaryEntryInput = z.infer<typeof DeleteDiaryEntrySchema>;
 | content | 10,000文字超過 | "Content exceeds maximum length (10,000 characters)" |
 | content | 空文字（将来的に必須にする場合） | "Content is required" |
 | id | UUID形式でない | "Invalid ID format" |
+| tags | 11件以上 | "Tags exceed maximum count (10)" |
+| tags[n] | 21文字以上 | "Tag exceeds maximum length (20 characters)" |
 
 ## 6. データ操作インターフェース
 

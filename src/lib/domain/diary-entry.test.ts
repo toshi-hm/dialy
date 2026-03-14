@@ -115,6 +115,73 @@ describe('DiaryEntry', () => {
     }).toThrow(ValidationError);
   });
 
+  it('creates entry with tags', () => {
+    const entry = DiaryEntry.create(new Date('2026-02-08T00:00:00.000Z'), 'content', [
+      '仕事',
+      '勉強',
+    ]);
+    expect(entry.tags).toEqual(['仕事', '勉強']);
+  });
+
+  it('normalizes tags by trimming surrounding whitespace', () => {
+    const entry = DiaryEntry.create(new Date('2026-02-08T00:00:00.000Z'), 'content', [
+      '  仕事  ',
+      '\t勉強',
+    ]);
+
+    expect(entry.tags).toEqual(['仕事', '勉強']);
+  });
+
+  it('creates entry with empty tags by default', () => {
+    const entry = DiaryEntry.create(new Date('2026-02-08T00:00:00.000Z'), 'content');
+    expect(entry.tags).toEqual([]);
+  });
+
+  it('updates tags while preserving other fields', () => {
+    const entry = DiaryEntry.create(new Date('2026-02-08T00:00:00.000Z'), 'content', ['仕事']);
+    const updated = entry.updateTags(['勉強', '読書']);
+    expect(updated.id).toBe(entry.id);
+    expect(updated.content).toBe('content');
+    expect(updated.tags).toEqual(['勉強', '読書']);
+  });
+
+  it('update() preserves existing tags', () => {
+    const entry = DiaryEntry.create(new Date('2026-02-08T00:00:00.000Z'), 'before', ['仕事']);
+    const updated = entry.update('after');
+    expect(updated.tags).toEqual(['仕事']);
+  });
+
+  it('throws ValidationError when a tag exceeds 20 characters', () => {
+    expect(() => {
+      DiaryEntry.create(new Date('2026-02-08T00:00:00.000Z'), 'content', ['a'.repeat(21)]);
+    }).toThrow(ValidationError);
+  });
+
+  it('throws ValidationError when a tag is empty after trim', () => {
+    expect(() => {
+      DiaryEntry.create(new Date('2026-02-08T00:00:00.000Z'), 'content', ['   ']);
+    }).toThrow(ValidationError);
+  });
+
+  it('throws ValidationError when tags exceed 10 items', () => {
+    expect(() => {
+      DiaryEntry.create(
+        new Date('2026-02-08T00:00:00.000Z'),
+        'content',
+        Array.from({ length: 11 }, (_, i) => `tag${i}`),
+      );
+    }).toThrow(ValidationError);
+  });
+
+  it('does not mutate tags when source array is modified later', () => {
+    const sourceTags = ['仕事'];
+    const entry = DiaryEntry.create(new Date('2026-02-08T00:00:00.000Z'), 'content', sourceTags);
+
+    sourceTags.push('勉強');
+
+    expect(entry.tags).toEqual(['仕事']);
+  });
+
   it('returns preview text correctly', () => {
     const short = DiaryEntry.reconstruct(
       '550e8400-e29b-41d4-a716-446655440000',
