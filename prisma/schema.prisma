@@ -5,6 +5,9 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  // url はドライバアダプター（@prisma/adapter-better-sqlite3）経由で
+  // ランタイムに指定するため、スキーマでは省略しています。
+  // 詳細: src/lib/infrastructure/prisma.ts
 }
 
 /// 日記エントリーテーブル

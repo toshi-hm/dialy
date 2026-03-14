@@ -23,68 +23,68 @@ const toDomainEntry = (record: PrismaEntryWithTags): DiaryEntry => {
   );
 };
 
-const toStartOfDay = (date: Date): Date => {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
+/** UTC の 00:00:00.000 に正規化する（タイムゾーン非依存） */
+const toStartOfDayUTC = (date: Date): Date => {
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 };
 
-const toEndOfDay = (date: Date): Date => {
-  const d = new Date(date);
-  d.setHours(23, 59, 59, 999);
-  return d;
+/** UTC の 23:59:59.999 に正規化する（タイムゾーン非依存） */
+const toEndOfDayUTC = (date: Date): Date => {
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999));
 };
 
 export class PrismaDiaryRepository implements DiaryRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async save(entry: DiaryEntry): Promise<void> {
-    const dateForDb = toStartOfDay(entry.date);
+    const dateForDb = toStartOfDayUTC(entry.date);
 
-    const existing = await this.prisma.diaryEntry.findUnique({
-      where: { id: entry.id },
-    });
-
-    if (!existing) {
-      const duplicate = await this.prisma.diaryEntry.findFirst({
-        where: {
-          date: dateForDb,
-          id: { not: entry.id },
-        },
-      });
-
-      if (duplicate) {
-        throw new DuplicateDateEntryError('An entry for this date already exists');
-      }
-
-      await this.prisma.diaryEntry.create({
-        data: {
-          id: entry.id,
-          date: dateForDb,
-          content: entry.content,
-          createdAt: entry.createdAt,
-          updatedAt: entry.updatedAt,
-          tags: {
-            create: entry.tags.map((name) => ({ name })),
-          },
-        },
-      });
-    } else {
-      await this.prisma.diaryEntryTag.deleteMany({
-        where: { entryId: entry.id },
-      });
-
-      await this.prisma.diaryEntry.update({
+    await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.diaryEntry.findUnique({
         where: { id: entry.id },
-        data: {
-          content: entry.content,
-          updatedAt: entry.updatedAt,
-          tags: {
-            create: entry.tags.map((name) => ({ name })),
-          },
-        },
       });
-    }
+
+      if (!existing) {
+        const duplicate = await tx.diaryEntry.findFirst({
+          where: {
+            date: dateForDb,
+            id: { not: entry.id },
+          },
+        });
+
+        if (duplicate) {
+          throw new DuplicateDateEntryError('An entry for this date already exists');
+        }
+
+        await tx.diaryEntry.create({
+          data: {
+            id: entry.id,
+            date: dateForDb,
+            content: entry.content,
+            createdAt: entry.createdAt,
+            updatedAt: entry.updatedAt,
+            tags: {
+              create: entry.tags.map((name) => ({ name })),
+            },
+          },
+        });
+      } else {
+        await tx.diaryEntryTag.deleteMany({
+          where: { entryId: entry.id },
+        });
+
+        await tx.diaryEntry.update({
+          where: { id: entry.id },
+          data: {
+            content: entry.content,
+            updatedAt: entry.updatedAt,
+            tags: {
+              create: entry.tags.map((name) => ({ name })),
+            },
+          },
+        });
+      }
+    });
   }
 
   async findById(id: string): Promise<DiaryEntry | null> {
@@ -97,8 +97,8 @@ export class PrismaDiaryRepository implements DiaryRepository {
   }
 
   async findByDate(date: Date): Promise<DiaryEntry | null> {
-    const start = toStartOfDay(date);
-    const end = toEndOfDay(date);
+    const start = toStartOfDayUTC(date);
+    const end = toEndOfDayUTC(date);
 
     const record = await this.prisma.diaryEntry.findFirst({
       where: {
@@ -118,7 +118,7 @@ export class PrismaDiaryRepository implements DiaryRepository {
 
     const targetDates: Date[] = [];
     for (let y = currentYear - 1; y >= minYear; y--) {
-      targetDates.push(toStartOfDay(new Date(y, month, day)));
+      targetDates.push(new Date(Date.UTC(y, month, day)));
     }
 
     if (targetDates.length === 0) {
@@ -145,6 +145,7 @@ export class PrismaDiaryRepository implements DiaryRepository {
   async findAll(): Promise<DiaryEntry[]> {
     const records = await this.prisma.diaryEntry.findMany({
       include: { tags: true },
+      orderBy: { date: 'desc' },
     });
 
     return records.map(toDomainEntry);

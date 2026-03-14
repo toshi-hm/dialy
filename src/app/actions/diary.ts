@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import type { DiaryEntry } from '@/lib/domain/diary-entry';
 import { prisma } from '@/lib/infrastructure/prisma';
 import { PrismaDiaryRepository } from '@/lib/infrastructure/prisma-diary-repository';
@@ -10,8 +11,13 @@ import {
   GetEntriesBySameDateUseCase,
   UpdateDiaryEntryUseCase,
 } from '@/lib/use-cases';
+import {
+  CreateDiaryEntrySchema,
+  DeleteDiaryEntrySchema,
+  UpdateDiaryEntrySchema,
+} from '@/lib/validations/diary';
 import type { AppErrorCode } from '@/types/errors';
-import { isAppError } from '@/types/errors';
+import { isAppError, ValidationError } from '@/types/errors';
 import type { ActionResult, SerializedDiaryEntry } from './types';
 
 const repository = new PrismaDiaryRepository(prisma);
@@ -48,13 +54,19 @@ export const createDiaryEntry = async (
   tags: string[] = [],
 ): Promise<ActionResult<SerializedDiaryEntry>> => {
   try {
-    const useCase = new CreateDiaryEntryUseCase(repository);
-    const entry = await useCase.execute({
+    const parsed = CreateDiaryEntrySchema.safeParse({
       date: new Date(date),
       content,
       tags,
     });
+    if (!parsed.success) {
+      throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
+    }
 
+    const useCase = new CreateDiaryEntryUseCase(repository);
+    const entry = await useCase.execute(parsed.data);
+
+    revalidatePath('/');
     return { success: true, data: serializeEntry(entry) };
   } catch (error) {
     return handleError(error);
@@ -67,9 +79,15 @@ export const updateDiaryEntry = async (
   tags?: string[],
 ): Promise<ActionResult<SerializedDiaryEntry>> => {
   try {
-    const useCase = new UpdateDiaryEntryUseCase(repository);
-    const entry = await useCase.execute({ id, content, tags });
+    const parsed = UpdateDiaryEntrySchema.safeParse({ id, content, tags });
+    if (!parsed.success) {
+      throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
+    }
 
+    const useCase = new UpdateDiaryEntryUseCase(repository);
+    const entry = await useCase.execute(parsed.data);
+
+    revalidatePath('/');
     return { success: true, data: serializeEntry(entry) };
   } catch (error) {
     return handleError(error);
@@ -78,9 +96,15 @@ export const updateDiaryEntry = async (
 
 export const deleteDiaryEntry = async (id: string): Promise<ActionResult<null>> => {
   try {
-    const useCase = new DeleteDiaryEntryUseCase(repository);
-    await useCase.execute({ id });
+    const parsed = DeleteDiaryEntrySchema.safeParse({ id });
+    if (!parsed.success) {
+      throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
+    }
 
+    const useCase = new DeleteDiaryEntryUseCase(repository);
+    await useCase.execute(parsed.data);
+
+    revalidatePath('/');
     return { success: true, data: null };
   } catch (error) {
     return handleError(error);
@@ -91,8 +115,13 @@ export const getDiaryEntry = async (
   date: string,
 ): Promise<ActionResult<SerializedDiaryEntry | null>> => {
   try {
+    const parsedDate = new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) {
+      throw new ValidationError('Invalid date format');
+    }
+
     const useCase = new GetDiaryEntryUseCase(repository);
-    const entry = await useCase.execute(new Date(date));
+    const entry = await useCase.execute(parsedDate);
 
     return {
       success: true,
@@ -108,8 +137,13 @@ export const getEntriesBySameDate = async (
   years: number = 5,
 ): Promise<ActionResult<SerializedDiaryEntry[]>> => {
   try {
+    const parsedDate = new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) {
+      throw new ValidationError('Invalid date format');
+    }
+
     const useCase = new GetEntriesBySameDateUseCase(repository);
-    const entries = await useCase.execute(new Date(date), years);
+    const entries = await useCase.execute(parsedDate, years);
 
     return {
       success: true,
