@@ -1,6 +1,5 @@
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
-import { toISODate } from '@/lib/utils/date';
 import { DuplicateDateEntryError } from '@/types/errors';
 import type { PrismaClient } from '../../generated/prisma/client';
 
