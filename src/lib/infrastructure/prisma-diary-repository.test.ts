@@ -1,13 +1,30 @@
-// @vitest-environment node
-
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import { parseISODate } from '@/lib/utils/date';
 import { DuplicateDateEntryError, NotFoundError } from '@/types/errors';
+import { Prisma, type PrismaClient } from '../../generated/prisma/client';
 import { PrismaDiaryRepository } from './prisma-diary-repository';
-import { createTestPrismaClient, setupTestDatabase } from './prisma-test-setup';
 
-const prisma = createTestPrismaClient();
+type MockPrismaEntry = {
+  id: string;
+  date: Date;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+  tags: { name: string }[];
+  userId: string | null;
+};
+
+const makePrismaEntry = (overrides: Partial<MockPrismaEntry> = {}): MockPrismaEntry => ({
+  id: '550e8400-e29b-41d4-a716-446655440000',
+  date: new Date('2026-02-08T00:00:00.000Z'),
+  content: 'test content',
+  createdAt: new Date('2026-02-08T00:00:00.000Z'),
+  updatedAt: new Date('2026-02-08T00:00:00.000Z'),
+  tags: [],
+  userId: null,
+  ...overrides,
+});
 
 const reconstructEntry = (
   id: string,
@@ -25,194 +42,261 @@ const reconstructEntry = (
   );
 };
 
+const makeMockTx = () => ({
+  diaryEntry: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+  },
+  diaryEntryTag: {
+    deleteMany: vi.fn(),
+  },
+});
+
+const makeMockPrisma = (mockTx: ReturnType<typeof makeMockTx>) => ({
+  $transaction: vi.fn().mockImplementation((fn: (tx: unknown) => Promise<unknown>) => fn(mockTx)),
+  diaryEntry: {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    delete: vi.fn(),
+  },
+  diaryEntryTag: {
+    count: vi.fn(),
+  },
+});
+
 describe('PrismaDiaryRepository', () => {
-  beforeAll(() => {
-    setupTestDatabase();
+  let mockTx: ReturnType<typeof makeMockTx>;
+  let mockPrisma: ReturnType<typeof makeMockPrisma>;
+  let repository: PrismaDiaryRepository;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockTx = makeMockTx();
+    mockPrisma = makeMockPrisma(mockTx);
+    repository = new PrismaDiaryRepository(mockPrisma as unknown as PrismaClient);
   });
 
-  beforeEach(async () => {
-    await prisma.$executeRawUnsafe('DELETE FROM diary_entry_tags');
-    await prisma.$executeRawUnsafe('DELETE FROM diary_entries');
+  describe('save()', () => {
+    it('creates new entry when no existing entry exists', async () => {
+      const entry = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'entry');
+      mockTx.diaryEntry.findUnique.mockResolvedValue(null);
+      mockTx.diaryEntry.findFirst.mockResolvedValue(null);
+      mockTx.diaryEntry.create.mockResolvedValue(undefined);
+
+      await expect(repository.save(entry)).resolves.not.toThrow();
+
+      expect(mockTx.diaryEntry.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('creates new entry with tags', async () => {
+      const entry = reconstructEntry(
+        '550e8400-e29b-41d4-a716-446655440000',
+        '2026-02-08',
+        'entry',
+        ['仕事', '勉強'],
+      );
+      mockTx.diaryEntry.findUnique.mockResolvedValue(null);
+      mockTx.diaryEntry.findFirst.mockResolvedValue(null);
+      mockTx.diaryEntry.create.mockResolvedValue(undefined);
+
+      await repository.save(entry);
+
+      expect(mockTx.diaryEntry.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            tags: { create: [{ name: '仕事' }, { name: '勉強' }] },
+          }),
+        }),
+      );
+    });
+
+    it('throws DuplicateDateEntryError when duplicate date entry exists', async () => {
+      const entry = reconstructEntry(
+        '550e8400-e29b-41d4-a716-446655440001',
+        '2026-02-08',
+        'second',
+      );
+      const duplicate = makePrismaEntry({ id: '550e8400-e29b-41d4-a716-446655440000' });
+      mockTx.diaryEntry.findUnique.mockResolvedValue(null);
+      mockTx.diaryEntry.findFirst.mockResolvedValue(duplicate);
+
+      await expect(repository.save(entry)).rejects.toThrow(DuplicateDateEntryError);
+    });
+
+    it('updates existing entry content and replaces tags', async () => {
+      const existing = makePrismaEntry({ content: 'original' });
+      const entry = reconstructEntry(
+        '550e8400-e29b-41d4-a716-446655440000',
+        '2026-02-08',
+        'updated content',
+        ['new-tag'],
+      );
+      mockTx.diaryEntry.findUnique.mockResolvedValue(existing);
+      mockTx.diaryEntryTag.deleteMany.mockResolvedValue({ count: 1 });
+      mockTx.diaryEntry.update.mockResolvedValue(undefined);
+
+      await repository.save(entry);
+
+      expect(mockTx.diaryEntryTag.deleteMany).toHaveBeenCalledTimes(1);
+      expect(mockTx.diaryEntry.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            content: 'updated content',
+            tags: { create: [{ name: 'new-tag' }] },
+          }),
+        }),
+      );
+    });
   });
 
-  afterAll(async () => {
-    await prisma.$disconnect();
+  describe('findById()', () => {
+    it('returns DiaryEntry when found', async () => {
+      const record = makePrismaEntry({ content: 'entry', tags: [{ name: '仕事' }] });
+      mockPrisma.diaryEntry.findUnique.mockResolvedValue(record);
+
+      const result = await repository.findById('550e8400-e29b-41d4-a716-446655440000');
+
+      expect(result).not.toBeNull();
+      expect(result?.content).toBe('entry');
+      expect(result?.id).toBe('550e8400-e29b-41d4-a716-446655440000');
+      expect(result?.tags).toEqual(['仕事']);
+    });
+
+    it('returns null for non-existent id', async () => {
+      mockPrisma.diaryEntry.findUnique.mockResolvedValue(null);
+
+      const result = await repository.findById('non-existent-id');
+
+      expect(result).toBeNull();
+    });
   });
 
-  it('saves and retrieves entries by id', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-    const entry = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'entry');
+  describe('findByDate()', () => {
+    it('returns DiaryEntry when found', async () => {
+      const record = makePrismaEntry({ content: 'entry' });
+      mockPrisma.diaryEntry.findFirst.mockResolvedValue(record);
 
-    await repository.save(entry);
+      const result = await repository.findByDate(parseISODate('2026-02-08'));
 
-    const byId = await repository.findById(entry.id);
+      expect(result).not.toBeNull();
+      expect(result?.content).toBe('entry');
+    });
 
-    expect(byId).not.toBeNull();
-    expect(byId?.content).toBe('entry');
-    expect(byId?.id).toBe(entry.id);
+    it('returns null for non-existent date', async () => {
+      mockPrisma.diaryEntry.findFirst.mockResolvedValue(null);
+
+      const result = await repository.findByDate(parseISODate('2026-01-01'));
+
+      expect(result).toBeNull();
+    });
   });
 
-  it('saves and retrieves entries by date', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-    const entry = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'entry');
+  describe('findBySameDate()', () => {
+    it('returns entries sorted by date descending', async () => {
+      const records = [
+        makePrismaEntry({
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          date: new Date('2025-02-08T00:00:00.000Z'),
+          content: '2025',
+        }),
+        makePrismaEntry({
+          id: '550e8400-e29b-41d4-a716-446655440001',
+          date: new Date('2024-02-08T00:00:00.000Z'),
+          content: '2024',
+        }),
+        makePrismaEntry({
+          id: '550e8400-e29b-41d4-a716-446655440002',
+          date: new Date('2023-02-08T00:00:00.000Z'),
+          content: '2023',
+        }),
+      ];
+      mockPrisma.diaryEntry.findMany.mockResolvedValue(records);
 
-    await repository.save(entry);
+      const result = await repository.findBySameDate(parseISODate('2026-02-08'), 3);
 
-    const byDate = await repository.findByDate(parseISODate('2026-02-08'));
+      expect(result).toHaveLength(3);
+      expect(result.map((e) => e.content)).toEqual(['2025', '2024', '2023']);
+    });
 
-    expect(byDate).not.toBeNull();
-    expect(byDate?.id).toBe(entry.id);
-    expect(byDate?.content).toBe('entry');
+    it('returns empty array when no same-date entries exist', async () => {
+      mockPrisma.diaryEntry.findMany.mockResolvedValue([]);
+
+      const result = await repository.findBySameDate(parseISODate('2026-02-08'), 5);
+
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array when years is 0', async () => {
+      const result = await repository.findBySameDate(parseISODate('2026-02-08'), 0);
+
+      expect(result).toEqual([]);
+      expect(mockPrisma.diaryEntry.findMany).not.toHaveBeenCalled();
+    });
   });
 
-  it('saves and restores tags', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-    const entry = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'entry', [
-      '仕事',
-      '勉強',
-    ]);
+  describe('delete()', () => {
+    it('deletes entry successfully', async () => {
+      mockPrisma.diaryEntry.delete.mockResolvedValue(undefined);
 
-    await repository.save(entry);
-    const byId = await repository.findById(entry.id);
+      await expect(
+        repository.delete('550e8400-e29b-41d4-a716-446655440000'),
+      ).resolves.not.toThrow();
 
-    expect(byId?.tags).toEqual(['仕事', '勉強']);
+      expect(mockPrisma.diaryEntry.delete).toHaveBeenCalledWith({
+        where: { id: '550e8400-e29b-41d4-a716-446655440000' },
+      });
+    });
+
+    it('throws NotFoundError when deleting non-existent id', async () => {
+      const p2025Error = new Prisma.PrismaClientKnownRequestError(
+        'An operation failed because it depends on one or more records that were required but not found.',
+        { code: 'P2025', clientVersion: 'test' },
+      );
+      mockPrisma.diaryEntry.delete.mockRejectedValue(p2025Error);
+
+      await expect(repository.delete('non-existent-id')).rejects.toThrow(NotFoundError);
+    });
+
+    it('re-throws non-P2025 errors as-is', async () => {
+      const unexpectedError = new Error('Connection failed');
+      mockPrisma.diaryEntry.delete.mockRejectedValue(unexpectedError);
+
+      await expect(repository.delete('some-id')).rejects.toThrow('Connection failed');
+    });
   });
 
-  it('updates existing entry content', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-    const entry = reconstructEntry(
-      '550e8400-e29b-41d4-a716-446655440000',
-      '2026-02-08',
-      'original',
-    );
+  describe('findAll()', () => {
+    it('returns all entries sorted by date descending', async () => {
+      const records = [
+        makePrismaEntry({
+          id: '550e8400-e29b-41d4-a716-446655440001',
+          date: new Date('2026-02-08T00:00:00.000Z'),
+          content: 'newer',
+        }),
+        makePrismaEntry({
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          date: new Date('2026-02-07T00:00:00.000Z'),
+          content: 'older',
+        }),
+      ];
+      mockPrisma.diaryEntry.findMany.mockResolvedValue(records);
 
-    await repository.save(entry);
+      const result = await repository.findAll();
 
-    const updated = entry.update('updated content');
-    await repository.save(updated);
+      expect(result).toHaveLength(2);
+      expect(result[0].content).toBe('newer');
+      expect(result[1].content).toBe('older');
+    });
 
-    const byId = await repository.findById(entry.id);
-    expect(byId?.content).toBe('updated content');
-  });
+    it('returns empty array when no entries exist', async () => {
+      mockPrisma.diaryEntry.findMany.mockResolvedValue([]);
 
-  it('updates existing entry tags', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-    const entry = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'entry', [
-      '仕事',
-    ]);
+      const result = await repository.findAll();
 
-    await repository.save(entry);
-
-    const updated = entry.updateTags(['勉強', '趣味']);
-    await repository.save(updated);
-
-    const byId = await repository.findById(entry.id);
-    expect(byId?.tags).toEqual(['勉強', '趣味']);
-  });
-
-  it('throws DuplicateDateEntryError when duplicate date entry is saved', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-    const first = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'first');
-    const second = reconstructEntry('550e8400-e29b-41d4-a716-446655440001', '2026-02-08', 'second');
-
-    await repository.save(first);
-
-    await expect(repository.save(second)).rejects.toThrow(DuplicateDateEntryError);
-  });
-
-  it('finds entries by same date in past years sorted desc', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-    await repository.save(
-      reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2025-02-08', '2025'),
-    );
-    await repository.save(
-      reconstructEntry('550e8400-e29b-41d4-a716-446655440001', '2024-02-08', '2024'),
-    );
-    await repository.save(
-      reconstructEntry('550e8400-e29b-41d4-a716-446655440002', '2023-02-08', '2023'),
-    );
-    await repository.save(
-      reconstructEntry('550e8400-e29b-41d4-a716-446655440003', '2025-02-07', 'other'),
-    );
-
-    const result = await repository.findBySameDate(parseISODate('2026-02-08'), 3);
-
-    expect(result).toHaveLength(3);
-    expect(result.map((entry) => entry.content)).toEqual(['2025', '2024', '2023']);
-  });
-
-  it('deletes entry by id', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-    const entry = reconstructEntry(
-      '550e8400-e29b-41d4-a716-446655440000',
-      '2026-02-08',
-      'to-delete',
-    );
-    await repository.save(entry);
-
-    await repository.delete(entry.id);
-
-    expect(await repository.findById(entry.id)).toBeNull();
-  });
-
-  it('deletes entry and its tags (cascade)', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-    const entry = reconstructEntry(
-      '550e8400-e29b-41d4-a716-446655440000',
-      '2026-02-08',
-      'tagged-delete',
-      ['tag1', 'tag2'],
-    );
-    await repository.save(entry);
-
-    await repository.delete(entry.id);
-
-    expect(await repository.findById(entry.id)).toBeNull();
-    const tagCount = await prisma.diaryEntryTag.count();
-    expect(tagCount).toBe(0);
-  });
-
-  it('finds all entries', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-    await repository.save(
-      reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-07', 'one'),
-    );
-    await repository.save(
-      reconstructEntry('550e8400-e29b-41d4-a716-446655440001', '2026-02-08', 'two'),
-    );
-
-    const all = await repository.findAll();
-
-    expect(all).toHaveLength(2);
-  });
-
-  it('returns null for non-existent id', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-
-    const result = await repository.findById('non-existent-id');
-
-    expect(result).toBeNull();
-  });
-
-  it('returns null for non-existent date', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-
-    const result = await repository.findByDate(parseISODate('2026-01-01'));
-
-    expect(result).toBeNull();
-  });
-
-  it('returns empty array when no same-date entries exist', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-
-    const result = await repository.findBySameDate(parseISODate('2026-02-08'), 5);
-
-    expect(result).toEqual([]);
-  });
-
-  it('throws NotFoundError when deleting non-existent id', async () => {
-    const repository = new PrismaDiaryRepository(prisma);
-
-    await expect(repository.delete('non-existent-id')).rejects.toThrow(NotFoundError);
+      expect(result).toEqual([]);
+    });
   });
 });

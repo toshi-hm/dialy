@@ -4,10 +4,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  // url はドライバアダプター（@prisma/adapter-better-sqlite3）経由で
-  // ランタイムに指定するため、スキーマでは省略しています。
-  // 詳細: src/lib/infrastructure/prisma.ts
+  provider  = "postgresql"
+  // DATABASE_URL: Supabase の接続プーラー URL（本番・開発クエリ用）
+  // DIRECT_URL: Supabase の直接接続 URL（マイグレーション用）
+  // 詳細: .env.local.example を参照
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 /// 日記エントリーテーブル
