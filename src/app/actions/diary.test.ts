@@ -16,12 +16,12 @@ const mockRepository: DiaryRepository = {
   findAll: vi.fn(),
 };
 
-vi.mock('@/lib/infrastructure/prisma', () => ({
-  prisma: {},
+vi.mock('@/lib/infrastructure/supabase-client', () => ({
+  supabase: {},
 }));
 
-vi.mock('@/lib/infrastructure/prisma-diary-repository', () => ({
-  PrismaDiaryRepository: class {
+vi.mock('@/lib/infrastructure/supabase-diary-repository', () => ({
+  SupabaseDiaryRepository: class {
     save = mockRepository.save;
     findById = mockRepository.findById;
     findByDate = mockRepository.findByDate;

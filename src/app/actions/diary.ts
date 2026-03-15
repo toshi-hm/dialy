@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import type { DiaryEntry } from '@/lib/domain/diary-entry';
-import { prisma } from '@/lib/infrastructure/prisma';
-import { PrismaDiaryRepository } from '@/lib/infrastructure/prisma-diary-repository';
+import { supabase } from '@/lib/infrastructure/supabase-client';
+import { SupabaseDiaryRepository } from '@/lib/infrastructure/supabase-diary-repository';
 import {
   CreateDiaryEntryUseCase,
   DeleteDiaryEntryUseCase,
@@ -21,7 +21,7 @@ import type { AppErrorCode } from '@/types/errors';
 import { isAppError, ValidationError } from '@/types/errors';
 import type { ActionResult, SerializedDiaryEntry } from './types';
 
-const repository = new PrismaDiaryRepository(prisma);
+const repository = new SupabaseDiaryRepository(supabase);
 
 const serializeEntry = (entry: DiaryEntry): SerializedDiaryEntry => ({
   id: entry.id,
