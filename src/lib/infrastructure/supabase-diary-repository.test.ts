@@ -11,16 +11,15 @@ type QueryResult<T = unknown> = {
 };
 
 const createQueryBuilder = <T>(result: QueryResult<T>) => {
-  const builder: Record<string, unknown> = {};
+  // Promise をベースにすることで、チェーン自体が await 可能になる
+  // （Supabase クエリビルダーの thenable 動作を再現）
+  const builder = Promise.resolve(result) as Promise<QueryResult<T>> & Record<string, unknown>;
   const chainMethods = ['select', 'eq', 'neq', 'gte', 'lte', 'in', 'order', 'update', 'delete'];
   for (const method of chainMethods) {
     builder[method] = vi.fn().mockReturnValue(builder);
   }
   builder.insert = vi.fn().mockResolvedValue(result);
   builder.maybeSingle = vi.fn().mockResolvedValue(result);
-  // チェーン自体を await 可能にする（update/delete のような終端チェーン用）
-  builder.then = (resolve: (v: QueryResult<T>) => void, reject?: (e: unknown) => void) =>
-    Promise.resolve(result).then(resolve, reject);
   return builder;
 };
 
@@ -120,9 +119,7 @@ describe('SupabaseDiaryRepository', () => {
         error: null,
       });
 
-      mockFrom
-        .mockReturnValueOnce(existingBuilder)
-        .mockReturnValueOnce(duplicateBuilder);
+      mockFrom.mockReturnValueOnce(existingBuilder).mockReturnValueOnce(duplicateBuilder);
 
       await expect(repository.save(entry)).rejects.toThrow(DuplicateDateEntryError);
     });
@@ -272,7 +269,10 @@ describe('SupabaseDiaryRepository', () => {
 
   describe('delete()', () => {
     it('存在するエントリーを削除する', async () => {
-      const builder = createQueryBuilder({ data: [{ id: '550e8400-e29b-41d4-a716-446655440000' }], error: null });
+      const builder = createQueryBuilder({
+        data: [{ id: '550e8400-e29b-41d4-a716-446655440000' }],
+        error: null,
+      });
       mockFrom.mockReturnValue(builder);
 
       await expect(
