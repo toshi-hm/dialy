@@ -4,12 +4,11 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  // DATABASE_URL: Supabase の接続プーラー URL（本番・開発クエリ用）
-  // DIRECT_URL: Supabase の直接接続 URL（マイグレーション用）
-  // 詳細: .env.local.example を参照
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  // Prisma 7 では url/directUrl は schema.prisma に記述しない。
+  // マイグレーション用 URL: prisma.config.ts の datasource.url に設定
+  // ランタイム接続: src/lib/infrastructure/prisma.ts で PrismaPg アダプター経由
+  // 接続情報テンプレート: .env.local.example を参照
 }
 
 /// 日記エントリーテーブル

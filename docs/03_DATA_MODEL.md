@@ -220,11 +220,11 @@ export class DateValue {
 }
 ```
 
-## 3. データベーススキーマ（Prisma + SQLite）
+## 3. データベーススキーマ（Prisma + Supabase）
 
 ### 3.1 Prismaスキーマ
 
-Prisma 7 + SQLite を採用。ドライバアダプターとして `@prisma/adapter-better-sqlite3` を使用。
+Prisma 7 + Supabase (PostgreSQL) を採用。ドライバアダプターとして `@prisma/adapter-pg` を使用。
 
 ```prisma
 // prisma/schema.prisma
@@ -235,7 +235,11 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+  // Prisma 7 では url/directUrl は schema.prisma に記述しない。
+  // マイグレーション用 URL: prisma.config.ts の datasource.url に設定
+  // ランタイム接続: src/lib/infrastructure/prisma.ts で PrismaPg アダプター経由
+  // 接続情報テンプレート: .env.local.example を参照
 }
 
 /// 日記エントリーテーブル
@@ -274,26 +278,35 @@ model DiaryEntryTag {
 
 ```typescript
 // prisma.config.ts
-import path from 'node:path';
-import type { PrismaConfig } from 'prisma';
+import 'dotenv/config';
+import { defineConfig } from 'prisma/config';
 
-export default {
-  earlyAccess: true,
-  schema: path.join('prisma', 'schema.prisma'),
-} satisfies PrismaConfig;
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  migrations: {
+    path: 'prisma/migrations',
+  },
+  // マイグレーション実行時に使用する直接接続 URL（PgBouncer 非経由）
+  // Supabase の場合は Session mode (port: 5432) の URL を DIRECT_URL に設定する
+  datasource: {
+    url: process.env.DIRECT_URL,
+  },
+});
 ```
 
 ### 3.3 Prismaクライアント初期化
 
 ```typescript
 // src/lib/infrastructure/prisma.ts
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../generated/prisma/client';
 
-export const createPrismaClient = (url?: string): PrismaClient => {
-  const adapter = new PrismaBetterSqlite3({
-    url: url ?? process.env.DATABASE_URL ?? 'file:./prisma/dev.db',
-  });
+const createPrismaClient = (): PrismaClient => {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+  const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 };
 ```
@@ -670,7 +683,7 @@ export class LocalStorageDiaryRepository implements DiaryRepository {
 
 ### 7.1 LocalStorage → Prisma移行
 
-Prisma + SQLiteが導入されたため、LocalStorageからの移行が可能。
+Prisma + Supabase (PostgreSQL) が導入されたため、LocalStorageからの移行が可能。
 
 ```typescript
 // 移行スクリプト例
@@ -741,7 +754,7 @@ const ensureUniqueDateEntry = async (
 - **書き込み**: デバウンス処理で書き込み頻度を制限
 - **制限**: 5MB程度が上限（ブラウザによる）
 
-### 9.2 Prisma + SQLite版
+### 9.2 Prisma + Supabase (PostgreSQL) 版
 
 - **インデックス**: dateカラムにインデックスを作成済み
 - **クエリ最適化**: `findBySameDate` は `WHERE date IN (...)` でDB側フィルタリング（全件取得回避）
@@ -753,6 +766,6 @@ const ensureUniqueDateEntry = async (
 - **エンティティ**: DiaryEntry（日記エントリー）、DiaryEntryTag（タグ）
 - **値オブジェクト**: DateValue（日付）
 - **クライアント版**: LocalStorageで実装
-- **サーバー版**: Prisma + SQLiteで実装（Server Actions経由）
+- **サーバー版**: Prisma + Supabase (PostgreSQL) で実装（Server Actions経由）
 - **バリデーション**: Zodスキーマで型安全性を確保
 - **リポジトリパターン**: データ永続化の抽象化（ファクトリで切り替え）
