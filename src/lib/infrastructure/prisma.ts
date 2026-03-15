@@ -8,7 +8,10 @@ const globalForPrisma = globalThis as unknown as {
 const createPrismaClient = (): PrismaClient => {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error('DATABASE_URL environment variable is required');
+    throw new Error(
+      'DATABASE_URL environment variable is required. '
+        + 'See .env.local.example for the Supabase connection string template.',
+    );
   }
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
