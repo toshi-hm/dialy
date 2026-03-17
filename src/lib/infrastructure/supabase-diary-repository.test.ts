@@ -141,6 +141,35 @@ describe('SupabaseDiaryRepository', () => {
 
       await expect(repository.save(entry)).rejects.toThrow(DuplicateDateEntryError);
     });
+
+    it('既存確認クエリがエラーを返した場合に Error をスローする', async () => {
+      const entry = reconstructEntry('550e8400-e29b-41d4-a716-446655440000', '2026-02-08', 'hello');
+
+      const existingBuilder = createQueryBuilder({
+        data: null,
+        error: { message: 'connection error' },
+      });
+
+      mockFrom.mockReturnValueOnce(existingBuilder);
+
+      await expect(repository.save(entry)).rejects.toThrow('connection error');
+    });
+
+    it('重複確認クエリがエラーを返した場合に Error をスローする', async () => {
+      const entry = reconstructEntry('550e8400-e29b-41d4-a716-446655440001', '2026-02-08', 'hello');
+
+      const existingBuilder = createQueryBuilder({ data: null, error: null });
+      const duplicateBuilder = createQueryBuilder({
+        data: null,
+        error: { message: 'permission denied' },
+      });
+
+      mockFrom
+        .mockReturnValueOnce(existingBuilder)
+        .mockReturnValueOnce(duplicateBuilder);
+
+      await expect(repository.save(entry)).rejects.toThrow('permission denied');
+    });
   });
 
   describe('save() — 更新', () => {

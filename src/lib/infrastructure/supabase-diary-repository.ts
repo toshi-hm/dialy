@@ -40,20 +40,28 @@ export class SupabaseDiaryRepository implements DiaryRepository {
     const dateForDb = toStartOfDayUTC(entry.date);
 
     // 既存エントリーの確認
-    const { data: existing } = await this.client
+    const { data: existing, error: existingError } = await this.client
       .from('diary_entries')
       .select('id')
       .eq('id', entry.id)
       .maybeSingle();
 
+    if (existingError) {
+      throw new Error(existingError.message);
+    }
+
     if (!existing) {
       // 重複日付チェック
-      const { data: duplicate } = await this.client
+      const { data: duplicate, error: duplicateError } = await this.client
         .from('diary_entries')
         .select('id')
         .eq('date', dateForDb)
         .neq('id', entry.id)
         .maybeSingle();
+
+      if (duplicateError) {
+        throw new Error(duplicateError.message);
+      }
 
       if (duplicate) {
         throw new DuplicateDateEntryError('An entry for this date already exists');
@@ -89,6 +97,10 @@ export class SupabaseDiaryRepository implements DiaryRepository {
       }
 
       // 既存タグを削除
+      // NOTE: Supabase (PostgREST) はクライアントサイドトランザクションをサポートしないため、
+      // コンテンツ更新 → タグ削除 → タグ挿入 の各ステップは非アトミックに実行される。
+      // タグ削除/挿入が失敗した場合、コンテンツのみ更新された状態になる可能性がある。
+      // 完全なアトミック性が必要な場合は Supabase RPC（ストアドプロシージャ）への移行を検討すること。
       const { error: deleteTagsError } = await this.client
         .from('diary_entry_tags')
         .delete()

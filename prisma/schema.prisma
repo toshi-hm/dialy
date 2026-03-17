@@ -23,7 +23,9 @@ model DiaryEntry {
 
   tags DiaryEntryTag[]
 
-  @@unique([date, userId])
+  /// MVP版では userId は未使用のため、date のみで一意性を保証する。
+  /// マルチユーザー対応（Phase 2以降）では @@unique([date, userId]) に変更し userId を必須化する。
+  @@unique([date])
   @@index([date])
   @@index([userId])
   @@map("diary_entries")

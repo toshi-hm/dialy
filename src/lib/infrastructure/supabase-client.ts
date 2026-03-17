@@ -5,12 +5,14 @@ const globalForSupabase = globalThis as unknown as {
 };
 
 const createSupabaseClient = (): SupabaseClient => {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+  // Server Actions（サーバーサイド）でのみ使用するため NEXT_PUBLIC_ プレフィックスは不要。
+  // ブラウザバンドルに含める場合は NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY を使用すること。
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
-      'VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables are required.\n' +
+      'SUPABASE_URL and SUPABASE_ANON_KEY environment variables are required.\n' +
         'See .env.local.example for the Supabase configuration template.',
     );
   }

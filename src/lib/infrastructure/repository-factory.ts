@@ -14,7 +14,7 @@ export const createDiaryRepository = (): DiaryRepository => {
 /**
  * サーバー側で使用するリポジトリを生成する。
  * Server Actions や API Routes など、Node.js 環境でのみ呼び出すこと。
- * 環境変数 VITE_SUPABASE_URL と VITE_SUPABASE_ANON_KEY が必要。
+ * 環境変数 SUPABASE_URL と SUPABASE_ANON_KEY が必要（.env.local.example 参照）。
  */
 export const createServerDiaryRepository = async (): Promise<DiaryRepository> => {
   const { SupabaseDiaryRepository } = await import('./supabase-diary-repository');

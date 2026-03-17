@@ -26,7 +26,11 @@ CREATE INDEX "diary_entries_date_idx" ON "diary_entries"("date");
 CREATE INDEX "diary_entries_user_id_idx" ON "diary_entries"("user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "diary_entries_date_user_id_key" ON "diary_entries"("date", "user_id");
+-- MVP版: date のみで一意性を保証。
+-- userId が NULL の場合、PostgreSQL の UNIQUE 制約は NULL 同士を重複扱いしないため
+-- @@unique([date, userId]) では日付一意性を担保できない。
+-- Phase 2 でマルチユーザー対応する際は (date, user_id) の複合 UNIQUE に変更する。
+CREATE UNIQUE INDEX "diary_entries_date_key" ON "diary_entries"("date");
 
 -- CreateIndex
 CREATE INDEX "diary_entry_tags_entry_id_idx" ON "diary_entry_tags"("entry_id");
