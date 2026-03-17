@@ -164,9 +164,7 @@ describe('SupabaseDiaryRepository', () => {
         error: { message: 'permission denied' },
       });
 
-      mockFrom
-        .mockReturnValueOnce(existingBuilder)
-        .mockReturnValueOnce(duplicateBuilder);
+      mockFrom.mockReturnValueOnce(existingBuilder).mockReturnValueOnce(duplicateBuilder);
 
       await expect(repository.save(entry)).rejects.toThrow('permission denied');
     });
