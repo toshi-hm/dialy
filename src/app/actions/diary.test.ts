@@ -238,5 +238,23 @@ describe('Server Actions', () => {
         expect(result.error.code).toBe('VALIDATION_ERROR');
       }
     });
+
+    it('returns failure with VALIDATION_ERROR for years exceeding maximum', async () => {
+      const result = await getEntriesBySameDate(VALID_DATE, 51);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+    });
+
+    it('returns failure with VALIDATION_ERROR for non-positive years', async () => {
+      const result = await getEntriesBySameDate(VALID_DATE, 0);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+    });
   });
 });

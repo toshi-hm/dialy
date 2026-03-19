@@ -14,10 +14,10 @@ import {
 import {
   CreateDiaryEntrySchema,
   DeleteDiaryEntrySchema,
+  GetEntriesBySameDateSchema,
   ServerActionDateSchema,
   UpdateDiaryEntrySchema,
 } from '@/lib/validations/diary';
-import type { AppErrorCode } from '@/types/errors';
 import { isAppError, ValidationError } from '@/types/errors';
 import type { ActionResult, SerializedDiaryEntry } from './types';
 
@@ -43,7 +43,7 @@ const handleError = (error: unknown): ActionResult<never> => {
   return {
     success: false,
     error: {
-      code: 'INTERNAL_ERROR' as AppErrorCode,
+      code: 'INTERNAL_ERROR',
       message: 'An unexpected error occurred',
     },
   };
@@ -55,8 +55,13 @@ export const createDiaryEntry = async (
   tags: string[] = [],
 ): Promise<ActionResult<SerializedDiaryEntry>> => {
   try {
+    const dateResult = ServerActionDateSchema.safeParse(date);
+    if (!dateResult.success) {
+      throw new ValidationError(dateResult.error.issues[0]?.message ?? 'Invalid date format');
+    }
+
     const parsed = CreateDiaryEntrySchema.safeParse({
-      date: new Date(date),
+      date: dateResult.data,
       content,
       tags,
     });
@@ -138,13 +143,18 @@ export const getEntriesBySameDate = async (
   years: number = 5,
 ): Promise<ActionResult<SerializedDiaryEntry[]>> => {
   try {
-    const parsed = ServerActionDateSchema.safeParse(date);
+    const dateResult = ServerActionDateSchema.safeParse(date);
+    if (!dateResult.success) {
+      throw new ValidationError(dateResult.error.issues[0]?.message ?? 'Invalid date format');
+    }
+
+    const parsed = GetEntriesBySameDateSchema.safeParse({ date: dateResult.data, years });
     if (!parsed.success) {
-      throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid date format');
+      throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
     }
 
     const useCase = new GetEntriesBySameDateUseCase(repository);
-    const entries = await useCase.execute(parsed.data, years);
+    const entries = await useCase.execute(parsed.data.date, parsed.data.years);
 
     return {
       success: true,
