@@ -22,7 +22,7 @@ import { isAppError, ValidationError } from '@/types/errors';
 import type { ActionResult, SerializedDiaryEntry } from './types';
 
 const repository = new SupabaseDiaryRepository(supabase);
-const DIARY_ENTRIES_TAG = 'diary-entries';
+export const DIARY_ENTRIES_TAG = 'diary-entries';
 
 const serializeEntry = (entry: DiaryEntry): SerializedDiaryEntry => ({
   id: entry.id,
@@ -74,7 +74,7 @@ export const createDiaryEntry = async (
     const entry = await useCase.execute(parsed.data);
 
     revalidatePath('/');
-    revalidateTag(DIARY_ENTRIES_TAG, 'max');
+    revalidateTag(DIARY_ENTRIES_TAG);
     return { success: true, data: serializeEntry(entry) };
   } catch (error) {
     return handleError(error);
@@ -96,7 +96,7 @@ export const updateDiaryEntry = async (
     const entry = await useCase.execute(parsed.data);
 
     revalidatePath('/');
-    revalidateTag(DIARY_ENTRIES_TAG, 'max');
+    revalidateTag(DIARY_ENTRIES_TAG);
     return { success: true, data: serializeEntry(entry) };
   } catch (error) {
     return handleError(error);
@@ -114,7 +114,7 @@ export const deleteDiaryEntry = async (id: string): Promise<ActionResult<null>> 
     await useCase.execute(parsed.data);
 
     revalidatePath('/');
-    revalidateTag(DIARY_ENTRIES_TAG, 'max');
+    revalidateTag(DIARY_ENTRIES_TAG);
     return { success: true, data: null };
   } catch (error) {
     return handleError(error);

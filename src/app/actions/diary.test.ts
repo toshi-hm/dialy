@@ -38,6 +38,7 @@ const {
   deleteDiaryEntry,
   getDiaryEntry,
   getEntriesBySameDate,
+  DIARY_ENTRIES_TAG,
 } = await import('./diary');
 const { revalidatePath, revalidateTag } = await import('next/cache');
 
@@ -71,7 +72,7 @@ describe('Server Actions', () => {
         expect(result.data.tags).toEqual(['日常']);
       }
       expect(revalidatePath).toHaveBeenCalledWith('/');
-      expect(revalidateTag).toHaveBeenCalledWith('diary-entries', 'max');
+      expect(revalidateTag).toHaveBeenCalledWith(DIARY_ENTRIES_TAG);
     });
 
     it('returns failure with VALIDATION_ERROR for invalid date', async () => {
@@ -118,7 +119,7 @@ describe('Server Actions', () => {
         expect(result.data.content).toBe('updated content');
       }
       expect(revalidatePath).toHaveBeenCalledWith('/');
-      expect(revalidateTag).toHaveBeenCalledWith('diary-entries', 'max');
+      expect(revalidateTag).toHaveBeenCalledWith(DIARY_ENTRIES_TAG);
     });
 
     it('returns failure with VALIDATION_ERROR for invalid UUID', async () => {
@@ -153,7 +154,7 @@ describe('Server Actions', () => {
         expect(result.data).toBeNull();
       }
       expect(revalidatePath).toHaveBeenCalledWith('/');
-      expect(revalidateTag).toHaveBeenCalledWith('diary-entries', 'max');
+      expect(revalidateTag).toHaveBeenCalledWith(DIARY_ENTRIES_TAG);
     });
 
     it('returns failure with VALIDATION_ERROR for invalid UUID', async () => {
