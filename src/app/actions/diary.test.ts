@@ -6,6 +6,7 @@ import { NotFoundError } from '@/types/errors';
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
+  unstable_cache: vi.fn((fn) => fn),
 }));
 
 const mockRepository: DiaryRepository = {
@@ -72,7 +73,7 @@ describe('Server Actions', () => {
         expect(result.data.tags).toEqual(['日常']);
       }
       expect(revalidatePath).toHaveBeenCalledWith('/');
-      expect(revalidateTag).toHaveBeenCalledWith(DIARY_ENTRIES_TAG);
+      expect(revalidateTag).toHaveBeenCalledWith(DIARY_ENTRIES_TAG, 'max');
     });
 
     it('returns failure with VALIDATION_ERROR for invalid date', async () => {
@@ -119,7 +120,7 @@ describe('Server Actions', () => {
         expect(result.data.content).toBe('updated content');
       }
       expect(revalidatePath).toHaveBeenCalledWith('/');
-      expect(revalidateTag).toHaveBeenCalledWith(DIARY_ENTRIES_TAG);
+      expect(revalidateTag).toHaveBeenCalledWith(DIARY_ENTRIES_TAG, 'max');
     });
 
     it('returns failure with VALIDATION_ERROR for invalid UUID', async () => {
@@ -154,7 +155,7 @@ describe('Server Actions', () => {
         expect(result.data).toBeNull();
       }
       expect(revalidatePath).toHaveBeenCalledWith('/');
-      expect(revalidateTag).toHaveBeenCalledWith(DIARY_ENTRIES_TAG);
+      expect(revalidateTag).toHaveBeenCalledWith(DIARY_ENTRIES_TAG, 'max');
     });
 
     it('returns failure with VALIDATION_ERROR for invalid UUID', async () => {

@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import type { DiaryEntry } from '@/lib/domain/diary-entry';
 import { supabase } from '@/lib/infrastructure/supabase-client';
 import { SupabaseDiaryRepository } from '@/lib/infrastructure/supabase-diary-repository';
@@ -23,6 +23,24 @@ import type { ActionResult, SerializedDiaryEntry } from './types';
 
 const repository = new SupabaseDiaryRepository(supabase);
 export const DIARY_ENTRIES_TAG = 'diary-entries';
+
+const getDiaryEntryCached = unstable_cache(
+  async (dateIso: string) => {
+    const useCase = new GetDiaryEntryUseCase(repository);
+    return useCase.execute(new Date(dateIso));
+  },
+  ['diary-entry-by-date'],
+  { tags: [DIARY_ENTRIES_TAG], revalidate: 3600 },
+);
+
+const getEntriesBySameDateCached = unstable_cache(
+  async (dateIso: string, years: number) => {
+    const useCase = new GetEntriesBySameDateUseCase(repository);
+    return useCase.execute(new Date(dateIso), years);
+  },
+  ['diary-entries-by-same-date'],
+  { tags: [DIARY_ENTRIES_TAG], revalidate: 3600 },
+);
 
 const serializeEntry = (entry: DiaryEntry): SerializedDiaryEntry => ({
   id: entry.id,
@@ -74,7 +92,7 @@ export const createDiaryEntry = async (
     const entry = await useCase.execute(parsed.data);
 
     revalidatePath('/');
-    revalidateTag(DIARY_ENTRIES_TAG);
+    revalidateTag(DIARY_ENTRIES_TAG, 'max');
     return { success: true, data: serializeEntry(entry) };
   } catch (error) {
     return handleError(error);
@@ -96,7 +114,7 @@ export const updateDiaryEntry = async (
     const entry = await useCase.execute(parsed.data);
 
     revalidatePath('/');
-    revalidateTag(DIARY_ENTRIES_TAG);
+    revalidateTag(DIARY_ENTRIES_TAG, 'max');
     return { success: true, data: serializeEntry(entry) };
   } catch (error) {
     return handleError(error);
@@ -114,7 +132,7 @@ export const deleteDiaryEntry = async (id: string): Promise<ActionResult<null>> 
     await useCase.execute(parsed.data);
 
     revalidatePath('/');
-    revalidateTag(DIARY_ENTRIES_TAG);
+    revalidateTag(DIARY_ENTRIES_TAG, 'max');
     return { success: true, data: null };
   } catch (error) {
     return handleError(error);
@@ -130,8 +148,7 @@ export const getDiaryEntry = async (
       throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid date format');
     }
 
-    const useCase = new GetDiaryEntryUseCase(repository);
-    const entry = await useCase.execute(parsed.data);
+    const entry = await getDiaryEntryCached(parsed.data.toISOString());
 
     return {
       success: true,
@@ -157,8 +174,10 @@ export const getEntriesBySameDate = async (
       throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const useCase = new GetEntriesBySameDateUseCase(repository);
-    const entries = await useCase.execute(parsed.data.date, parsed.data.years);
+    const entries = await getEntriesBySameDateCached(
+      parsed.data.date.toISOString(),
+      parsed.data.years,
+    );
 
     return {
       success: true,

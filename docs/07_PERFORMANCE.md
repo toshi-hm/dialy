@@ -378,8 +378,8 @@ export const createDiaryAction = async (formData: FormData) => {
   // 日記作成処理
   await createDiary(/* ... */);
 
-  // タグを再検証
-  revalidateTag('diary-entries');
+  // タグを再検証（Next.js 16）
+  revalidateTag('diary-entries', 'max');
 };
 ```
 
