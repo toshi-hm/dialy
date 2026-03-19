@@ -1,6 +1,6 @@
 # Dialy 実装TODO（設計書準拠）
 
-最終更新: 2026-02-08
+最終更新: 2026-03-19
 
 ## 目的
 
@@ -185,13 +185,16 @@
 
 ## Phase 2: サーバー移行・機能拡張
 
+> 2026-03-19 実装再開メモ: 今回は `P2-DATA-05`（タグベース再検証）まで実装完了。  
+> それ以外の Phase 2 / Phase 3 項目は未完了（積み残し）。
+
 ### 2.1 データ基盤移行
 
 - [ ] `P2-DATA-01` `prisma/schema.prisma` 実装（`DiaryEntry`, `User`, index）
 - [ ] `P2-DATA-02` `PrismaDiaryRepository` 実装
 - [ ] `P2-DATA-03` LocalStorage -> Prismaマイグレーション機能実装
 - [ ] `P2-DATA-04` Server Actions / API Routes へ保存・取得処理を移行
-- [ ] `P2-DATA-05` キャッシュ再検証（`revalidateTag`）導入
+- [x] `P2-DATA-05` キャッシュ再検証（`revalidateTag`）導入
 
 ### 2.2 認証・認可・セキュリティ強化
 
