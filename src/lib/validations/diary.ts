@@ -45,5 +45,11 @@ export const GetEntriesBySameDateSchema = z.object({
 });
 export type GetEntriesBySameDateInput = z.input<typeof GetEntriesBySameDateSchema>;
 
+/** Server Action 境界で文字列をDateに変換・検証するスキーマ */
+export const ServerActionDateSchema = z
+  .string()
+  .transform((val) => new Date(val))
+  .refine((date) => !Number.isNaN(date.getTime()), { message: 'Invalid date format' });
+
 // Backward-compatible alias until all imports are migrated.
 export const diaryEntrySchema = DiaryEntrySchema;

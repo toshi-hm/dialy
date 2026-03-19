@@ -5,7 +5,9 @@ export type AppErrorCode =
   | 'FETCH_FAILED'
   | 'CONTENT_TOO_LONG'
   | 'LOAD_FAILED'
-  | 'DUPLICATE_DATE_ENTRY';
+  | 'DUPLICATE_DATE_ENTRY'
+  | 'NOT_FOUND'
+  | 'INTERNAL_ERROR';
 
 export class AppError extends Error {
   constructor(
@@ -64,6 +66,13 @@ export class DuplicateDateEntryError extends AppError {
   constructor(message: string = 'An entry for this date already exists', cause?: unknown) {
     super('DUPLICATE_DATE_ENTRY', message, cause);
     this.name = 'DuplicateDateEntryError';
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(message: string = 'The requested resource was not found', cause?: unknown) {
+    super('NOT_FOUND', message, cause);
+    this.name = 'NotFoundError';
   }
 }
 

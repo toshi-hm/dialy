@@ -6,6 +6,7 @@ import {
   DuplicateDateEntryError,
   FetchFailedError,
   FutureDateError,
+  NotFoundError,
   SaveFailedError,
   ValidationError,
 } from '@/types/errors';
@@ -267,6 +268,16 @@ describe('diary use cases', () => {
 
     await expect(useCase.execute({ id: '550e8400-e29b-41d4-a716-446655440000' })).rejects.toThrow(
       SaveFailedError,
+    );
+  });
+
+  it('propagates NotFoundError from repository on delete', async () => {
+    const repository = createRepositoryMock();
+    const useCase = new DeleteDiaryEntryUseCase(repository);
+    vi.mocked(repository.delete).mockRejectedValue(new NotFoundError('Diary entry not found'));
+
+    await expect(useCase.execute({ id: '550e8400-e29b-41d4-a716-446655440000' })).rejects.toThrow(
+      NotFoundError,
     );
   });
 

@@ -55,3 +55,9 @@ coverage
 
 .gemini/
 gha-creds-*.json
+
+/src/generated/prisma
+
+# prisma
+*.db
+*.db-journal

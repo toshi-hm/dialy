@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Prisma 7 では url/directUrl は schema.prisma に記述しない。
+  // マイグレーション用 URL: prisma.config.ts の datasource.url に設定
+  // ランタイム接続: src/lib/infrastructure/prisma.ts で PrismaPg アダプター経由
+  // 接続情報テンプレート: .env.local.example を参照
+}
+
+/// 日記エントリーテーブル
+model DiaryEntry {
+  id        String   @id @default(uuid())
+  date      DateTime
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  /// 将来のマルチユーザー対応に備えたフィールド（現在は未使用）
+  userId    String?  @map("user_id")
+
+  tags DiaryEntryTag[]
+
+  /// MVP版では userId は未使用のため、date のみで一意性を保証する。
+  /// マルチユーザー対応（Phase 2以降）では @@unique([date, userId]) に変更し userId を必須化する。
+  @@unique([date])
+  @@index([date])
+  @@index([userId])
+  @@map("diary_entries")
+}
+
+/// 日記エントリータグテーブル
+model DiaryEntryTag {
+  id      String @id @default(uuid())
+  name    String
+  entryId String @map("entry_id")
+
+  entry DiaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, name])
+  @@index([entryId])
+  @@map("diary_entry_tags")
+}

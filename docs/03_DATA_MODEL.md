@@ -220,77 +220,135 @@ export class DateValue {
 }
 ```
 
-## 3. データベーススキーマ（将来）
+## 3. データベーススキーマ（Prisma + Supabase）
 
 ### 3.1 Prismaスキーマ
 
-将来的にPrismaを導入する際のスキーマ定義。
+Prisma 7 + Supabase (PostgreSQL) を採用。ドライバアダプターとして `@prisma/adapter-pg` を使用。
 
 ```prisma
 // prisma/schema.prisma
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"  // または sqlite
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  // Prisma 7 では url/directUrl は schema.prisma に記述しない。
+  // マイグレーション用 URL: prisma.config.ts の datasource.url に設定
+  // ランタイム接続: src/lib/infrastructure/prisma.ts で PrismaPg アダプター経由
+  // 接続情報テンプレート: .env.local.example を参照
 }
 
-// 日記エントリーテーブル
+/// 日記エントリーテーブル
 model DiaryEntry {
   id        String   @id @default(uuid())
-  date      DateTime @db.Date
-  content   String   @db.Text
+  date      DateTime
+  content   String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  userId    String?  @map("user_id")  // 将来のマルチユーザー対応
+  /// 将来のマルチユーザー対応に備えたフィールド（現在は未使用）
+  userId    String?  @map("user_id")
 
-  // リレーション（将来）
-  user User? @relation(fields: [userId], references: [id])
+  tags DiaryEntryTag[]
 
-  // インデックス
+  @@unique([date, userId])
   @@index([date])
   @@index([userId])
   @@map("diary_entries")
 }
 
-// ユーザーテーブル（将来）
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  createdAt DateTime @default(now()) @map("created_at")
+/// 日記エントリータグテーブル
+model DiaryEntryTag {
+  id      String @id @default(uuid())
+  name    String
+  entryId String @map("entry_id")
 
-  // リレーション
-  entries DiaryEntry[]
+  entry DiaryEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
 
-  @@map("users")
+  @@unique([entryId, name])
+  @@index([entryId])
+  @@map("diary_entry_tags")
 }
 ```
 
-### 3.2 テーブル定義
+### 3.2 設定ファイル
+
+```typescript
+// prisma.config.ts
+import 'dotenv/config';
+import { defineConfig } from 'prisma/config';
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  migrations: {
+    path: 'prisma/migrations',
+  },
+  // マイグレーション実行時に使用する直接接続 URL（PgBouncer 非経由）
+  // Supabase の場合は Session mode (port: 5432) の URL を DIRECT_URL に設定する
+  datasource: {
+    url: process.env.DIRECT_URL,
+  },
+});
+```
+
+### 3.3 Prismaクライアント初期化
+
+```typescript
+// src/lib/infrastructure/prisma.ts
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../../generated/prisma/client';
+
+const createPrismaClient = (): PrismaClient => {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+  const adapter = new PrismaPg({ connectionString });
+  return new PrismaClient({ adapter });
+};
+```
+
+### 3.4 テーブル定義
 
 #### diary_entries テーブル
 
 | カラム名 | 型 | NULL | デフォルト | 説明 |
 |---------|---|------|----------|------|
-| id | UUID | NOT NULL | uuid_generate_v4() | 主キー |
-| date | DATE | NOT NULL | - | 日記の日付 |
+| id | TEXT (UUID) | NOT NULL | uuid() | 主キー |
+| date | DATETIME | NOT NULL | - | 日記の日付 |
 | content | TEXT | NOT NULL | - | 日記の本文 |
-| created_at | TIMESTAMP | NOT NULL | now() | 作成日時 |
-| updated_at | TIMESTAMP | NOT NULL | now() | 更新日時 |
-| user_id | UUID | NULL | - | ユーザーID（将来） |
+| created_at | DATETIME | NOT NULL | now() | 作成日時 |
+| updated_at | DATETIME | NOT NULL | now() | 更新日時 |
+| user_id | TEXT (UUID) | NULL | - | ユーザーID（将来） |
 
 **インデックス**:
 - PRIMARY KEY: id
+- UNIQUE: (date, user_id)
 - INDEX: date
 - INDEX: user_id（将来）
 
 **制約**:
 - date: 未来の日付は不可（アプリケーション層で制御）
 - content: 最大10,000文字（アプリケーション層で制御）
+
+#### diary_entry_tags テーブル
+
+| カラム名 | 型 | NULL | デフォルト | 説明 |
+|---------|---|------|----------|------|
+| id | TEXT (UUID) | NOT NULL | uuid() | 主キー |
+| name | TEXT | NOT NULL | - | タグ名 |
+| entry_id | TEXT (UUID) | NOT NULL | - | 日記エントリーID（FK） |
+
+**インデックス**:
+- PRIMARY KEY: id
+- UNIQUE: (entry_id, name)
+- INDEX: entry_id
+
+**制約**:
+- entry_id: diary_entries.id への外部キー（CASCADE DELETE）
 
 #### users テーブル（将来）
 
@@ -625,47 +683,42 @@ export class LocalStorageDiaryRepository implements DiaryRepository {
 
 ### 7.1 LocalStorage → Prisma移行
 
-将来的にPrismaを導入する際のマイグレーション戦略。
+Prisma + Supabase (PostgreSQL) が導入されたため、LocalStorageからの移行が可能。
 
 ```typescript
 // 移行スクリプト例
-export const migrateFromLocalStorage = async (prisma: PrismaClient) => {
+import { PrismaDiaryRepository } from '@/lib/infrastructure/prisma-diary-repository';
+import { prisma } from '@/lib/infrastructure/prisma';
+import { DiaryEntry } from '@/lib/domain/diary-entry';
+
+export const migrateFromLocalStorage = async () => {
   const storage = JSON.parse(localStorage.getItem('dialy_entries') || '{}');
+  const repository = new PrismaDiaryRepository(prisma);
 
   for (const entry of storage.entries || []) {
-    await prisma.diaryEntry.create({
-      data: {
-        id: entry.id,
-        date: new Date(entry.date),
-        content: entry.content,
-        createdAt: new Date(entry.createdAt),
-        updatedAt: new Date(entry.updatedAt),
-      },
-    });
+    const domainEntry = DiaryEntry.reconstruct(
+      entry.id,
+      new Date(entry.date),
+      entry.content,
+      new Date(entry.createdAt),
+      new Date(entry.updatedAt),
+      entry.tags ?? [],
+    );
+    await repository.save(domainEntry);
   }
 
   console.log(`Migrated ${storage.entries.length} entries`);
 };
 ```
 
-### 7.2 データバージョン管理
+### 7.2 リポジトリ切り替え機構
 
-LocalStorageにバージョン情報を保存し、将来的なデータ構造変更に対応。
+環境に応じたリポジトリ実装を返すファクトリパターン:
 
 ```typescript
-type DiaryStorage = {
-  version: string;  // "1.0.0"
-  entries: StoredDiaryEntry[];
-};
-
-// バージョンチェック
-const checkStorageVersion = (storage: DiaryStorage): DiaryStorage => {
-  if (storage.version !== STORAGE_VERSION) {
-    // マイグレーション処理
-    return migrateStorage(storage);
-  }
-  return storage;
-};
+// src/lib/infrastructure/repository-factory.ts
+// クライアント側: LocalStorageDiaryRepository
+// サーバー側: PrismaDiaryRepository（Server Actions経由）
 ```
 
 ## 8. データ整合性保証
@@ -673,7 +726,8 @@ const checkStorageVersion = (storage: DiaryStorage): DiaryStorage => {
 ### 8.1 一意性制約
 
 - **ID**: UUID v4で一意性を保証
-- **date**: 同じ日付に複数の日記は作成不可（アプリケーション層で制御）
+- **date + userId**: 同じ日付・ユーザーに複数の日記は作成不可（DBスキーマ `@@unique([date, userId])` + アプリケーション層で制御）
+- **entryId + name**: 同じエントリーに同名のタグは不可（DBスキーマ `@@unique([entryId, name])`）
 
 ### 8.2 整合性チェック
 
@@ -700,17 +754,18 @@ const ensureUniqueDateEntry = async (
 - **書き込み**: デバウンス処理で書き込み頻度を制限
 - **制限**: 5MB程度が上限（ブラウザによる）
 
-### 9.2 Prisma版（将来）
+### 9.2 Prisma + Supabase (PostgreSQL) 版
 
-- **インデックス**: dateカラムにインデックスを作成
-- **クエリ最適化**: 必要なフィールドのみ取得
-- **ページネーション**: 大量データ対応
+- **インデックス**: dateカラムにインデックスを作成済み
+- **クエリ最適化**: `findBySameDate` は `WHERE date IN (...)` でDB側フィルタリング（全件取得回避）
+- **タグ**: `include: { tags: true }` でJOINクエリを使用
+- **ページネーション**: 大量データ対応（将来）
 
 ## 10. まとめ
 
-- **エンティティ**: DiaryEntry（日記エントリー）
+- **エンティティ**: DiaryEntry（日記エントリー）、DiaryEntryTag（タグ）
 - **値オブジェクト**: DateValue（日付）
-- **MVP版**: LocalStorageで実装
-- **将来**: Prisma + PostgreSQLに移行
+- **クライアント版**: LocalStorageで実装
+- **サーバー版**: Prisma + Supabase (PostgreSQL) で実装（Server Actions経由）
 - **バリデーション**: Zodスキーマで型安全性を確保
-- **リポジトリパターン**: データ永続化の抽象化
+- **リポジトリパターン**: データ永続化の抽象化（ファクトリで切り替え）

@@ -24,6 +24,13 @@
 | 保存状態表示 | 保存中/完了/失敗の表示 | `SaveStatusIndicator` | `src/components/molecules/SaveStatusIndicator/` |
 | 自動保存 | 入力停止1秒後に保存 | `debounce` + `save` フロー | `src/lib/utils/debounce.ts` 他 |
 | 未来日付禁止 | 今日より先の日付を拒否 | `FutureDateError` / バリデーション | `src/types/errors.ts` 他 |
+| 未検出エラー | 指定リソースが見つからない場合のエラー | `NotFoundError` | `src/types/errors.ts` |
+| Prisma実装 | Prisma + Supabase (PostgreSQL) による永続化実装 | `PrismaDiaryRepository` | `src/lib/infrastructure/prisma-diary-repository.ts` |
+| リポジトリファクトリ | 環境に応じたリポジトリ実装を返すファクトリ | `createDiaryRepository` / `createServerDiaryRepository` | `src/lib/infrastructure/repository-factory.ts` |
+| Server Action | サーバーサイドで実行されるデータ操作関数 | `createDiaryEntry` / `updateDiaryEntry` 他 | `src/app/actions/diary.ts` |
+| アクション結果 | Server Actionの型安全な戻り値型 | `ActionResult<T>` | `src/app/actions/types.ts` |
+| シリアライズ済みエントリー | サーバー・クライアント境界でシリアライズされた日記 | `SerializedDiaryEntry` | `src/app/actions/types.ts` |
+| 日記エントリータグ | 日記エントリーに紐づくタグ | `DiaryEntryTag` | `prisma/schema.prisma` |
 
 ## 命名ルール
 
