@@ -66,6 +66,10 @@ jobs:
   vrt:
     name: Visual Regression Testing
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -87,6 +91,89 @@ jobs:
 
       - name: Run VRT
         run: pnpm run test:vrt
+
+      - name: Upload VRT HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vrt-report
+          path: |
+            .reg/index.html
+            .reg/out.json
+            .reg/diff/
+            .reg/actual/
+            .reg/expected/
+            .reg/detector.wasm
+            .reg/worker.js
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Comment VRT summary on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('node:fs');
+            const marker = '<!-- vrt-summary -->';
+            const outJsonPath = '.reg/out.json';
+
+            let passed = 'N/A';
+            let failed = 'N/A';
+            let added = 'N/A';
+            let parseError = null;
+
+            try {
+              const raw = fs.readFileSync(outJsonPath, 'utf8');
+              const out = JSON.parse(raw);
+              passed = Array.isArray(out.passedItems) ? out.passedItems.length : 0;
+              failed = Array.isArray(out.failedItems) ? out.failedItems.length : 0;
+              added = Array.isArray(out.newItems) ? out.newItems.length : 0;
+            } catch (error) {
+              parseError = error instanceof Error ? error.message : String(error);
+            }
+
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            const body = [
+              marker,
+              '## VRT結果',
+              '',
+              `- 差分なし: **${passed}件**`,
+              `- 差分あり: **${failed}件**`,
+              `- 新規追加: **${added}件**`,
+              '',
+              `HTMLレポートは [Artifacts (vrt-report)](${runUrl}) からダウンロードして確認できます。`,
+              parseError ? `> out.json の解析に失敗しました: ${parseError}` : '',
+            ]
+              .filter(Boolean)
+              .join('\n');
+
+            const issueNumber = context.payload.pull_request.number;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) =>
+              comment.body?.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body,
+              });
+            }
 
   lighthouse:
     name: Lighthouse CI

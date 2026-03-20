@@ -95,6 +95,10 @@ pnpm build-storybook # Build Storybook for production
 pnpm test:vrt     # Run visual regression tests
 ```
 
+In CI, the VRT HTML report is uploaded as the `vrt-report` artifact.
+The `Visual Regression Testing` job also updates a PR comment with VRT counts
+(`差分なし / 差分あり / 新規追加`) on each run.
+
 ## CI/CD Pipeline
 
 The project includes GitHub Actions workflows that run on all pull requests:
