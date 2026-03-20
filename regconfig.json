@@ -10,8 +10,8 @@
   },
   "plugins": {
     "reg-simple-keygen-plugin": {
-      "expectedKey": "expected",
-      "actualKey": "actual"
+      "expectedKey": "${EXPECTED_KEY}",
+      "actualKey": "${ACTUAL_KEY}"
     }
   }
 }

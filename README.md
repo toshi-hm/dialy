@@ -98,6 +98,13 @@ pnpm test:vrt     # Run visual regression tests
 In CI, the VRT HTML report is uploaded as the `vrt-report` artifact.
 The `Visual Regression Testing` job also updates a PR comment with VRT counts
 (`差分なし / 差分あり / 新規追加`) on each run.
+VRT compares snapshots using the PR base commit (`EXPECTED_KEY`) and PR head
+commit (`ACTUAL_KEY`).
+`EXPECTED_KEY` / `ACTUAL_KEY` are required by `reg-simple-keygen-plugin`.
+In pull_request runs, CI sets them to PR base/head SHA. In non-PR runs, CI sets
+both keys to the current commit SHA (`github.sha`) as a fallback.
+If these keys are not provided, reg-suit exits with a key-generation error and
+does not run the comparison.
 
 ## CI/CD Pipeline
 

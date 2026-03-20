@@ -89,6 +89,22 @@ jobs:
       - name: Build Storybook
         run: pnpm run build-storybook
 
+      - name: Set VRT comparison keys
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "EXPECTED_KEY=${PR_BASE_SHA}" >> "$GITHUB_ENV"
+            echo "ACTUAL_KEY=${PR_HEAD_SHA}" >> "$GITHUB_ENV"
+          else
+            echo "EXPECTED_KEY=${CURRENT_SHA}" >> "$GITHUB_ENV"
+            echo "ACTUAL_KEY=${CURRENT_SHA}" >> "$GITHUB_ENV"
+          fi
+
       - name: Run VRT
         run: pnpm run test:vrt
 
@@ -110,72 +126,9 @@ jobs:
 
       - name: Comment VRT summary on PR
         if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v8
+        uses: ./.github/actions/comment_vrt_result
         with:
-          script: |
-            const fs = require('fs');
-            const marker = '<!-- vrt-summary -->';
-            const outJsonPath = '.reg/out.json';
-
-            let passed = 'N/A';
-            let failed = 'N/A';
-            let added = 'N/A';
-            let parseError = null;
-
-            try {
-              const raw = fs.readFileSync(outJsonPath, 'utf8');
-              const out = JSON.parse(raw);
-              const getItemCount = (items) =>
-                Array.isArray(items) ? items.length : 'N/A';
-              passed = getItemCount(out.passedItems);
-              failed = getItemCount(out.failedItems);
-              added = getItemCount(out.newItems);
-            } catch (error) {
-              parseError = error instanceof Error ? error.message : String(error);
-            }
-
-            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-            const body = [
-              marker,
-              '## VRT結果',
-              '',
-              `- 差分なし: **${passed}件**`,
-              `- 差分あり: **${failed}件**`,
-              `- 新規追加: **${added}件**`,
-              '',
-              `HTMLレポートは [Artifacts (vrt-report)](${runUrl}) からダウンロードして確認できます。`,
-              parseError ? `> out.json の解析に失敗しました: ${parseError}` : '',
-            ]
-              .filter(Boolean)
-              .join('\n');
-
-            const issueNumber = context.payload.pull_request.number;
-            const comments = await github.paginate(github.rest.issues.listComments, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              per_page: 100,
-            });
-
-            const existing = comments.find((comment) =>
-              comment.body?.includes(marker),
-            );
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueNumber,
-                body,
-              });
-            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   lighthouse:
     name: Lighthouse CI
