@@ -86,7 +86,7 @@ jobs:
         run: pnpm run build-storybook
 
       - name: Run VRT
-        run: echo "VRT with reg-suit can be configured when baseline images are available"
+        run: pnpm run test:vrt
 
   lighthouse:
     name: Lighthouse CI

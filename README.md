@@ -92,7 +92,7 @@ pnpm build-storybook # Build Storybook for production
 ### Visual Regression Testing
 
 ```bash
-npx reg-suit run  # Run visual regression tests
+pnpm test:vrt     # Run visual regression tests
 ```
 
 ## CI/CD Pipeline
@@ -174,4 +174,3 @@ The CI pipeline will automatically validate your changes.
 ## License
 
 Private project - All rights reserved.
-
