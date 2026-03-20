@@ -96,9 +96,6 @@ importers:
       prisma:
         specifier: ^7.5.0
         version: 7.5.0(@types/react@19.2.9)(better-sqlite3@12.8.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
-      reg-keygen-git-hash-plugin:
-        specifier: 0.14.5
-        version: 0.14.5
       reg-simple-keygen-plugin:
         specifier: 0.14.2
         version: 0.14.2
@@ -4742,9 +4739,6 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  reg-keygen-git-hash-plugin@0.14.5:
-    resolution: {integrity: sha512-7XcF/JPoHmLlQ/Px80BCQdTyfbeDiNmI9/u5sSC6rqvuxbZ/d9IjCz83ELRc832mHtuG3uRQCGXR1/HrV7h31A==}
-
   reg-simple-keygen-plugin@0.14.2:
     resolution: {integrity: sha512-49vn+OFw1Bw5GY0tBuOSG5TL9hSSIf4DT69ILaMETA6HxEYrIQ2bcQ5dQ9NFrEzZTBNDrFLXig+LWM/pwOYcrg==}
 
@@ -4994,9 +4988,6 @@ packages:
   shebang-regex@3.0.0:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
-
-  shell-escape@0.2.0:
-    resolution: {integrity: sha512-uRRBT2MfEOyxuECseCZd28jC1AJ8hmqqneWQ4VWUTgCAFvb3wKU1jLqj6egC4Exrr88ogg3dp+zroH4wJuaXzw==}
 
   side-channel-list@1.0.0:
     resolution: {integrity: sha512-FCLHtRD/gnpCiCHEiJLOwdmFP+wzCmDEkc9y7NsYxeF4u7Btsn1ZuwgwJGxImImHicJArLP4R0yX4c2KCrMrTA==}
@@ -10831,11 +10822,6 @@ snapshots:
       xmlbuilder2: 4.0.3
       yargs-parser: 21.1.1
 
-  reg-keygen-git-hash-plugin@0.14.5:
-    dependencies:
-      reg-suit-util: 0.14.3
-      shell-escape: 0.2.0
-
   reg-simple-keygen-plugin@0.14.2: {}
 
   reg-suit-core@0.14.5:
@@ -11151,8 +11137,6 @@ snapshots:
       shebang-regex: 3.0.0
 
   shebang-regex@3.0.0: {}
-
-  shell-escape@0.2.0: {}
 
   side-channel-list@1.0.0:
     dependencies:
