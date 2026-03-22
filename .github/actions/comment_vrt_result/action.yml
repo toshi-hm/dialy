@@ -55,7 +55,7 @@ runs:
           const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
           const body = [
             marker,
-            '## VRT結果',
+            '### VRT結果',
             '',
             `- 差分なし: **${passed}件**`,
             `- 差分あり: **${failed}件**`,

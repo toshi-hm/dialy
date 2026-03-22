@@ -12,7 +12,7 @@ A diary app that lets you see past entries for the same day at a glance.
 - **Validation**: Zod v4.3.6
 - **Unit Testing**: Vitest v4.0.18
 - **Component Development**: Storybook v10.2.0
-- **Visual Regression Testing**: reg-suit v0.14.4
+- **Visual Regression Testing**: reg-suit v0.14.5
 - **CI/CD**: GitHub Actions (Unit Test / VRT / Lint / Format)
 
 ## Project Structure
@@ -41,8 +41,8 @@ dialy/
 
 ### Prerequisites
 
-- Node.js 20.x or higher
-- pnpm 9.x or higher
+- Node.js 22.x or higher
+- pnpm 10.x or higher
 
 ### Installation
 
@@ -93,6 +93,9 @@ pnpm build-storybook # Build Storybook for production
 
 ```bash
 pnpm test:vrt     # Run visual regression tests
+# local example:
+# EXPECTED_KEY = baseline snapshot key, ACTUAL_KEY = your current local snapshot key
+EXPECTED_KEY=baseline ACTUAL_KEY=local pnpm test:vrt
 ```
 
 In CI, the VRT HTML report is uploaded as the `vrt-report` artifact.
@@ -101,8 +104,7 @@ The `Visual Regression Testing` job also updates a PR comment with VRT counts
 VRT compares snapshots using the PR base commit (`EXPECTED_KEY`) and PR head
 commit (`ACTUAL_KEY`).
 `EXPECTED_KEY` / `ACTUAL_KEY` are required by `reg-simple-keygen-plugin`.
-In pull_request runs, CI sets them to PR base/head SHA. In non-PR runs, CI sets
-both keys to the current commit SHA (`github.sha`) as a fallback.
+In pull_request runs, CI sets them to PR base/head SHA.
 If these keys are not provided, reg-suit exits with a key-generation error and
 does not run the comparison.
 

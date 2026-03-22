@@ -65,6 +65,7 @@ jobs:
 
   vrt:
     name: Visual Regression Testing
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -92,18 +93,11 @@ jobs:
       - name: Set VRT comparison keys
         shell: bash
         env:
-          EVENT_NAME: ${{ github.event_name }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          CURRENT_SHA: ${{ github.sha }}
         run: |
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            echo "EXPECTED_KEY=${PR_BASE_SHA}" >> "$GITHUB_ENV"
-            echo "ACTUAL_KEY=${PR_HEAD_SHA}" >> "$GITHUB_ENV"
-          else
-            echo "EXPECTED_KEY=${CURRENT_SHA}" >> "$GITHUB_ENV"
-            echo "ACTUAL_KEY=${CURRENT_SHA}" >> "$GITHUB_ENV"
-          fi
+          echo "EXPECTED_KEY=${PR_BASE_SHA}" >> "$GITHUB_ENV"
+          echo "ACTUAL_KEY=${PR_HEAD_SHA}" >> "$GITHUB_ENV"
 
       - name: Run VRT
         run: pnpm run test:vrt
