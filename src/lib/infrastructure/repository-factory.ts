@@ -21,3 +21,16 @@ export const createServerDiaryRepository = async (): Promise<DiaryRepository> =>
   const { supabase } = await import('./supabase-client');
   return new SupabaseDiaryRepository(supabase);
 };
+
+/**
+ * サーバー側で Prisma ベースのリポジトリを生成する。
+ * データ移行（LocalStorage -> Prisma）や Prisma を前提とした処理で利用する。
+ * Prisma Client は Node.js ランタイムでのみ動作するため、サーバーサイド専用。
+ *
+ * @returns Promise<DiaryRepository> Prisma 実装のリポジトリ
+ */
+export const createPrismaDiaryRepository = async (): Promise<DiaryRepository> => {
+  const { PrismaDiaryRepository } = await import('./prisma-diary-repository');
+  const { prisma } = await import('./prisma');
+  return new PrismaDiaryRepository(prisma);
+};

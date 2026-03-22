@@ -193,7 +193,7 @@
 
 - [ ] `P2-DATA-01` `prisma/schema.prisma` 実装（`DiaryEntry`, `User`, index）
 - [ ] `P2-DATA-02` `PrismaDiaryRepository` 実装
-- [ ] `P2-DATA-03` LocalStorage -> Prismaマイグレーション機能実装
+- [x] `P2-DATA-03` LocalStorage -> Prismaマイグレーション機能実装（`migrateFromLocalStorage` を追加）
 - [ ] `P2-DATA-04` Server Actions / API Routes へ保存・取得処理を移行
 - [ ] `P2-DATA-05` キャッシュ再検証（`revalidateTag`）導入（mutation 側実装済、read 側 `unstable_cache` は未対応）
 
