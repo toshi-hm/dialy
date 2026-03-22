@@ -96,11 +96,19 @@ jobs:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          echo "EXPECTED_KEY=${PR_BASE_SHA}" >> "$GITHUB_ENV"
-          echo "ACTUAL_KEY=${PR_HEAD_SHA}" >> "$GITHUB_ENV"
+          set -euo pipefail
+          test -f regconfig.json
+          jq \
+            --arg expected "$PR_BASE_SHA" \
+            --arg actual "$PR_HEAD_SHA" \
+            '.plugins["reg-simple-keygen-plugin"].expectedKey = $expected | .plugins["reg-simple-keygen-plugin"].actualKey = $actual' \
+            regconfig.json > regconfig.ci.json
+          test -f regconfig.ci.json
 
       - name: Run VRT
-        run: pnpm run test:vrt
+        run: |
+          test -f regconfig.ci.json
+          pnpm run test:vrt -- --config regconfig.ci.json
 
       - name: Upload VRT HTML report
         if: always()
