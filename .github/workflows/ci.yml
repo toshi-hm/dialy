@@ -12,6 +12,9 @@ jobs:
     name: Lint & Format Check
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup CI environment
         uses: ./.github/actions/setup_ci
 
@@ -25,6 +28,9 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup CI environment
         uses: ./.github/actions/setup_ci
 
@@ -48,6 +54,9 @@ jobs:
       issues: write
       pull-requests: write
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup CI environment
         uses: ./.github/actions/setup_ci
 
@@ -100,6 +109,9 @@ jobs:
     name: Lighthouse CI
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup CI environment
         uses: ./.github/actions/setup_ci
 
@@ -115,6 +127,9 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup CI environment
         uses: ./.github/actions/setup_ci
 

@@ -1,5 +1,5 @@
 name: Setup CI environment
-description: Checkout repository, setup pnpm/node, and install dependencies
+description: Setup pnpm/node, and install dependencies
 
 inputs:
   node-version:
@@ -10,9 +10,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Setup pnpm
       uses: pnpm/action-setup@v4
 
