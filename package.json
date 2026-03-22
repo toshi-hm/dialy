@@ -19,6 +19,7 @@
     "test:coverage:check": "pnpm test:coverage && node scripts/check-coverage-thresholds.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:vrt": "reg-suit run",
     "lighthouse": "lhci autorun",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -55,6 +56,7 @@
     "lint-staged": "^16.2.7",
     "postcss": "^8.5.6",
     "prisma": "^7.5.0",
+    "reg-simple-keygen-plugin": "0.14.2",
     "reg-suit": "0.14.5",
     "storybook": "10.2.0",
     "tailwindcss": "4.1.18",

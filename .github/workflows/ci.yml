@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, develop]
+    types: [opened, synchronize]
 
 permissions:
   contents: read
@@ -15,17 +15,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup CI environment
+        uses: ./.github/actions/setup_ci
 
       - name: Run Biome lint
         run: pnpm run lint
@@ -40,17 +31,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup CI environment
+        uses: ./.github/actions/setup_ci
 
       - name: Run tests with coverage
         run: pnpm run test:coverage
@@ -65,28 +47,63 @@ jobs:
 
   vrt:
     name: Visual Regression Testing
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup CI environment
+        uses: ./.github/actions/setup_ci
 
       - name: Build Storybook
         run: pnpm run build-storybook
 
+      - name: Set VRT comparison keys
+        shell: bash
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test -f regconfig.json
+          jq \
+            --arg expected "$PR_BASE_SHA" \
+            --arg actual "$PR_HEAD_SHA" \
+            '.plugins["reg-simple-keygen-plugin"].expectedKey = $expected | .plugins["reg-simple-keygen-plugin"].actualKey = $actual' \
+            regconfig.json > regconfig.ci.json
+          test -f regconfig.ci.json
+
       - name: Run VRT
-        run: echo "VRT with reg-suit can be configured when baseline images are available"
+        run: |
+          test -f regconfig.ci.json
+          pnpm run test:vrt -- --config regconfig.ci.json
+
+      - name: Upload VRT HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vrt-report
+          path: |
+            .reg/index.html
+            .reg/out.json
+            .reg/diff/
+            .reg/actual/
+            .reg/expected/
+            .reg/detector.wasm
+            .reg/worker.js
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Comment VRT summary on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: ./.github/actions/comment_vrt_result
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   lighthouse:
     name: Lighthouse CI
@@ -95,17 +112,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup CI environment
+        uses: ./.github/actions/setup_ci
 
       - name: Build
         run: pnpm build
@@ -122,17 +130,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup CI environment
+        uses: ./.github/actions/setup_ci
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
