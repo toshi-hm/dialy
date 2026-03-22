@@ -1,0 +1,25 @@
+name: Lint and Format
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-format:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup CI environment
+        uses: ./.github/actions/setup_ci
+
+      - name: Run Biome lint
+        run: pnpm run lint
+
+      - name: Run Biome format check
+        run: pnpm run format:check
