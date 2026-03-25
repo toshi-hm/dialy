@@ -60,8 +60,10 @@ MVP版では完全にクライアントサイドで動作する簡易実装を�
 
 **Phase 2.1で実装済み**:
 - **データベース**: Supabase (PostgreSQL)（`@supabase/supabase-js` によるPostgREST経由アクセス）
-- **Server Actions**: `src/app/actions/diary.ts` でサーバーサイドCRUD
+- **Server Actions**: `src/app/actions/diary.ts` でサーバーサイドCRUD（`unstable_cache` + `revalidateTag` によるキャッシュ管理含む）
 - **リポジトリ切り替え**: クライアント→LocalStorage、サーバー→Supabase（`SupabaseDiaryRepository`）
+- **UI移行**: `HomeContent.tsx` が Server Actions 経由でデータを読み書きするよう移行済み
+- **LocalStorage移行**: `migrate-local-storage.ts` により既存LocalStorageデータをSupabaseへ移行（初回起動時に自動実行）
 
 ## 2. アーキテクチャ概要
 
