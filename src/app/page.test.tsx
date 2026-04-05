@@ -211,31 +211,30 @@ describe('Home page integration', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('削除に失敗しました');
   });
 
-  it(
-    'shows save error when createDiaryEntry returns SaveFailed',
-    async () => {
-      vi.mocked(createDiaryEntry).mockResolvedValue({
-        success: false as const,
-        error: { code: 'SAVE_FAILED', message: 'save failed' },
-      });
+  it('shows save error when createDiaryEntry returns SaveFailed', async () => {
+    vi.mocked(createDiaryEntry).mockResolvedValue({
+      success: false as const,
+      error: { code: 'SAVE_FAILED', message: 'save failed' },
+    });
 
-      render(<HomeContent />);
+    render(<HomeContent />);
 
-      const textarea = await screen.findByRole('textbox', { name: '日記本文' });
-      fireEvent.change(textarea, { target: { value: '保存失敗テスト' } });
+    const textarea = await screen.findByRole('textbox', { name: '日記本文' });
+    fireEvent.change(textarea, { target: { value: '保存失敗テスト' } });
 
-      // 1秒のデバウンス後に最初の呼び出し、その後3回のリトライ（250+500+1000ms）が行われる。
-      // タイムアウトはデバウンス+リトライ総計（約2750ms）を超える値を設定する。
-      await waitFor(
-        () => {
-          expect(createDiaryEntry).toHaveBeenCalledTimes(4); // 初回 + 3回リトライ
-        },
-        { timeout: 4000 },
-      );
+    // 1秒のデバウンス後に最初の呼び出し、その後3回のリトライ（250+500+1000ms）が行われる。
+    // タイムアウトはデバウンス+リトライ総計（約2750ms）を超える値を設定する。
+    await waitFor(
+      () => {
+        expect(createDiaryEntry).toHaveBeenCalledTimes(4); // 初回 + 3回リトライ
+      },
+      { timeout: 4000 },
+    );
 
-      // リトライ後にエラーメッセージが SaveStatusIndicator 経由で表示される
-      expect(screen.getByText('保存に失敗しました。再度お試しください。')).toBeInTheDocument();
-    },
-    10_000, // リトライ待機のためテストタイムアウトを延長
-  );
+    // リトライ後にエラーメッセージが SaveStatusIndicator 経由で表示される
+    // findByText で React state 更新の DOM 反映を待つ
+    expect(
+      await screen.findByText('保存に失敗しました。再度お試しください。'),
+    ).toBeInTheDocument();
+  }, 10_000); // リトライ待機のためテストタイムアウトを延長
 });

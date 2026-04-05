@@ -16,9 +16,7 @@ export const MIGRATION_FLAG_KEY = 'dialy_migrated_to_server';
  * ActionResult<SerializedDiaryEntry> の代わりにここでローカル定義する。
  * 判別ユニオンにより、success === false の分岐で error が必ず存在することを型安全に保証。
  */
-type MigrationActionResult =
-  | { success: true }
-  | { success: false; error: { code: string } };
+type MigrationActionResult = { success: true } | { success: false; error: { code: string } };
 
 /** 移行結果 */
 export type MigrationResult = {
@@ -65,11 +63,7 @@ export const markAsMigrated = (): void => {
  * @param createEntry Server Action: createDiaryEntry と同じシグネチャ
  */
 export const migrateFromLocalStorage = async (
-  createEntry: (
-    date: string,
-    content: string,
-    tags: string[],
-  ) => Promise<MigrationActionResult>,
+  createEntry: (date: string, content: string, tags: string[]) => Promise<MigrationActionResult>,
 ): Promise<MigrationResult> => {
   const entries = readLocalStorageEntries();
 
