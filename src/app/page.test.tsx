@@ -50,6 +50,7 @@ const emptyListSuccess = makeActionSuccess<SerializedDiaryEntry[]>([]);
 describe('Home page integration', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.clearAllMocks();
     vi.mocked(getDiaryEntry).mockResolvedValue(emptySuccess);
     vi.mocked(getEntriesBySameDate).mockResolvedValue(emptyListSuccess);
     vi.mocked(createDiaryEntry).mockResolvedValue(makeActionSuccess(makeEntry()));
