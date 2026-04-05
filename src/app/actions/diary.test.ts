@@ -39,9 +39,10 @@ const {
   deleteDiaryEntry,
   getDiaryEntry,
   getEntriesBySameDate,
-  DIARY_ENTRIES_TAG,
 } = await import('./diary');
 const { revalidatePath, revalidateTag } = await import('next/cache');
+
+const DIARY_ENTRIES_TAG = 'diary-entries';
 
 const VALID_DATE = '2026-02-08T00:00:00.000Z';
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';

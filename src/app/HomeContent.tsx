@@ -153,7 +153,7 @@ const Home = () => {
             : await createDiaryEntry(selectedDate.toISOString(), content, tags);
 
           if (!result.success) {
-            throwFromActionError(result.error.code, result.error.message);
+            return throwFromActionError(result.error.code, result.error.message);
           }
 
           const savedEntry = deserializeEntry(result.data);

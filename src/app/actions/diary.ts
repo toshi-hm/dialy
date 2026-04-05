@@ -22,7 +22,7 @@ import { isAppError, ValidationError } from '@/types/errors';
 import type { ActionResult, SerializedDiaryEntry } from './types';
 
 const repository = new SupabaseDiaryRepository(supabase);
-export const DIARY_ENTRIES_TAG = 'diary-entries';
+const DIARY_ENTRIES_TAG = 'diary-entries';
 
 const getDiaryEntryCached = unstable_cache(
   async (dateIso: string) => {
