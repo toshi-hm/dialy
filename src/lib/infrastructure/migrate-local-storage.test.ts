@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ActionResult, SerializedDiaryEntry } from '@/app/actions/types';
+import { parseISODate } from '@/lib/utils/date';
 import { STORAGE_KEY } from './local-storage-diary-repository';
 import {
   hasMigrated,
@@ -186,8 +187,9 @@ describe('migrateFromLocalStorage', () => {
 
     await migrateFromLocalStorage(createEntry);
 
+    // parseISODate でローカルタイムゾーン（JST +09:00）基準の日付に変換されることを確認
     expect(createEntry).toHaveBeenCalledWith(
-      new Date(VALID_ENTRY.date).toISOString(),
+      parseISODate(VALID_ENTRY.date).toISOString(),
       VALID_ENTRY.content,
       VALID_ENTRY.tags,
     );

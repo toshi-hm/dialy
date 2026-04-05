@@ -4,7 +4,9 @@
  */
 
 import type { ActionResult, SerializedDiaryEntry } from '@/app/actions/types';
-import { STORAGE_KEY } from './local-storage-diary-repository';
+import { parseISODate } from '@/lib/utils/date';
+import type { StoredDiaryEntry } from '@/types/diary';
+import { isStoredDiaryEntry, STORAGE_KEY } from './local-storage-diary-repository';
 
 /** 移行完了フラグのキー */
 export const MIGRATION_FLAG_KEY = 'dialy_migrated_to_server';
@@ -16,29 +18,8 @@ export type MigrationResult = {
   errors: number;
 };
 
-type StoredEntry = {
-  id: string;
-  date: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-  tags?: unknown;
-};
-
-const isStoredEntry = (value: unknown): value is StoredEntry => {
-  if (!value || typeof value !== 'object') return false;
-  const e = value as Record<string, unknown>;
-  return (
-    typeof e.id === 'string' &&
-    typeof e.date === 'string' &&
-    typeof e.content === 'string' &&
-    typeof e.createdAt === 'string' &&
-    typeof e.updatedAt === 'string'
-  );
-};
-
 /** LocalStorage から全エントリーを読み込む */
-export const readLocalStorageEntries = (): StoredEntry[] => {
+export const readLocalStorageEntries = (): StoredDiaryEntry[] => {
   if (typeof window === 'undefined') return [];
   const raw = window.localStorage.getItem(STORAGE_KEY);
   if (!raw) return [];
@@ -48,7 +29,7 @@ export const readLocalStorageEntries = (): StoredEntry[] => {
     if (!parsed || typeof parsed !== 'object') return [];
     const storage = parsed as Record<string, unknown>;
     if (!Array.isArray(storage.entries)) return [];
-    return (storage.entries as unknown[]).filter(isStoredEntry);
+    return (storage.entries as unknown[]).filter(isStoredDiaryEntry);
   } catch {
     return [];
   }
@@ -95,13 +76,13 @@ export const migrateFromLocalStorage = async (
   for (const entry of entries) {
     try {
       const tags = Array.isArray(entry.tags)
-        ? (entry.tags as unknown[]).filter((t): t is string => typeof t === 'string')
+        ? entry.tags.filter((t): t is string => typeof t === 'string')
         : [];
 
-      // LocalStorage の date フィールドは 'YYYY-MM-DD' 形式で保存されており、
-      // new Date('YYYY-MM-DD') は UTC 午前0時として解釈されるため、
-      // toISOString() で変換しても日付情報は正確に保持される。
-      const result = await createEntry(new Date(entry.date).toISOString(), entry.content, tags);
+      // LocalStorage の date フィールドは 'YYYY-MM-DD' 形式（toISODate() で生成）で保存されている。
+      // parseISODate() でローカルタイムゾーン（JST +09:00）の深夜0時として復元し、
+      // HomeContent.tsx の startOfDay(new Date()).toISOString() と同じ UTC 表現に揃える。
+      const result = await createEntry(parseISODate(entry.date).toISOString(), entry.content, tags);
 
       if (result.success) {
         migrated++;

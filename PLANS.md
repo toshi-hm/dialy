@@ -191,9 +191,9 @@
 
 ### 2.1 データ基盤移行
 
-- [x] `P2-DATA-01` `prisma/schema.prisma` 実装（`DiaryEntry`, `User`, index）
-- [x] `P2-DATA-02` `PrismaDiaryRepository` 実装
-- [x] `P2-DATA-03` LocalStorage -> Prismaマイグレーション機能実装
+- [x] `P2-DATA-01` Supabase テーブルスキーマ実装（`DiaryEntry`, `User`, index）
+- [x] `P2-DATA-02` `SupabaseDiaryRepository` 実装
+- [x] `P2-DATA-03` LocalStorage -> Supabase マイグレーション機能実装
 - [x] `P2-DATA-04` Server Actions / API Routes へ保存・取得処理を移行
 - [x] `P2-DATA-05` キャッシュ再検証（`revalidateTag`）導入（mutation 側実装済、read 側 `unstable_cache` は未対応）
 

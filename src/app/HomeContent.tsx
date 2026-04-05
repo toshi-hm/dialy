@@ -9,6 +9,7 @@ import {
   getEntriesBySameDate,
   updateDiaryEntry,
 } from '@/app/actions/diary';
+import { throwFromActionError } from '@/app/actions/errors';
 import type { SerializedDiaryEntry } from '@/app/actions/types';
 import { DateDisplay } from '@/components/molecules';
 import { Dial, DiaryEditor, PastEntriesList } from '@/components/organisms';
@@ -34,21 +35,6 @@ const deserializeEntry = (entry: SerializedDiaryEntry): DiaryEntry =>
     new Date(entry.updatedAt),
     entry.tags,
   );
-
-const throwFromActionError = (code: string, message: string): never => {
-  switch (code) {
-    case 'VALIDATION_ERROR':
-      throw new ValidationError(message);
-    case 'FUTURE_DATE_NOT_ALLOWED':
-      throw new FutureDateError(message);
-    case 'DUPLICATE_DATE_ENTRY':
-      throw new DuplicateDateEntryError(message);
-    case 'CONTENT_TOO_LONG':
-      throw new ContentTooLongError(message);
-    default:
-      throw new SaveFailedError(message);
-  }
-};
 
 // Dynamic imports for dialogs (only loaded when needed)
 const CalendarDialog = dynamic(() =>
@@ -111,10 +97,18 @@ const Home = () => {
     };
   }, []);
 
-  // Phase 2 移行: LocalStorage データをサーバーに移行する（初回のみ）
+  // Phase 2 移行: LocalStorage データをサーバーに移行する（初回のみ）。
+  // ベストエフォート方式: 一部のエントリーが失敗しても移行フラグを設定し再試行しない。
+  // 失敗したエントリーはコンソールに警告として記録する。
   useEffect(() => {
     if (!hasMigrated()) {
-      void migrateFromLocalStorage(createDiaryEntry);
+      void migrateFromLocalStorage(createDiaryEntry).then((result) => {
+        if (result.errors > 0) {
+          console.warn(
+            `[Migration] ${result.errors}件のエントリーをサーバーに移行できませんでした（移行済み: ${result.migrated}件、スキップ: ${result.skipped}件）`,
+          );
+        }
+      });
     }
   }, []);
 
