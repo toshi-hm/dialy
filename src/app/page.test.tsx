@@ -222,19 +222,13 @@ describe('Home page integration', () => {
     const textarea = await screen.findByRole('textbox', { name: '日記本文' });
     fireEvent.change(textarea, { target: { value: '保存失敗テスト' } });
 
-    // 1秒のデバウンス後に最初の呼び出し、その後3回のリトライ（250+500+1000ms）が行われる。
-    // タイムアウトはデバウンス+リトライ総計（約2750ms）を超える値を設定する。
-    await waitFor(
-      () => {
-        expect(createDiaryEntry).toHaveBeenCalledTimes(4); // 初回 + 3回リトライ
-      },
-      { timeout: 4000 },
-    );
-
-    // リトライ後にエラーメッセージが SaveStatusIndicator 経由で表示される
-    // findByText で React state 更新の DOM 反映を待つ
+    // デバウンス(1s) + リトライ合計(250+500+1000ms) = 最低2750ms
+    // エラーメッセージの出現を直接待つ（タイムアウトを十分に設定）
     expect(
-      await screen.findByText('保存に失敗しました。再度お試しください。'),
+      await screen.findByText('保存に失敗しました。再度お試しください。', {}, { timeout: 6000 }),
     ).toBeInTheDocument();
+
+    // 初回 + 3回リトライ = 合計4回の呼び出しを確認
+    expect(createDiaryEntry).toHaveBeenCalledTimes(4);
   }, 10_000); // リトライ待機のためテストタイムアウトを延長
 });
