@@ -3,13 +3,22 @@
  * Phase 2 移行時に、既存のブラウザローカルデータをサーバーに同期する。
  */
 
-import type { ActionResult, SerializedDiaryEntry } from '@/app/actions/types';
 import { parseISODate } from '@/lib/utils/date';
 import type { StoredDiaryEntry } from '@/types/diary';
 import { isStoredDiaryEntry, STORAGE_KEY } from './local-storage-diary-repository';
 
 /** 移行完了フラグのキー */
 export const MIGRATION_FLAG_KEY = 'dialy_migrated_to_server';
+
+/**
+ * 移行用の最小コールバック戻り型。
+ * Infrastructure 層が Presentation 層（@/app/actions/types）に依存しないよう、
+ * ActionResult<SerializedDiaryEntry> の代わりにここでローカル定義する。
+ * 判別ユニオンにより、success === false の分岐で error が必ず存在することを型安全に保証。
+ */
+type MigrationActionResult =
+  | { success: true }
+  | { success: false; error: { code: string } };
 
 /** 移行結果 */
 export type MigrationResult = {
@@ -60,7 +69,7 @@ export const migrateFromLocalStorage = async (
     date: string,
     content: string,
     tags: string[],
-  ) => Promise<ActionResult<SerializedDiaryEntry>>,
+  ) => Promise<MigrationActionResult>,
 ): Promise<MigrationResult> => {
   const entries = readLocalStorageEntries();
 

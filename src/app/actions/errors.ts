@@ -22,6 +22,8 @@ export const throwFromActionError = (code: string, message: string): never => {
     case 'CONTENT_TOO_LONG':
       throw new ContentTooLongError(message);
     default:
+      // NOT_FOUND, INTERNAL_ERROR, FETCH_FAILED, LOAD_FAILED などの既知外コードも
+      // 一時的な障害として SaveFailedError に変換し、リトライ対象として扱う。
       throw new SaveFailedError(message);
   }
 };
