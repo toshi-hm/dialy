@@ -19,7 +19,8 @@ const mockRepository: DiaryRepository = {
 };
 
 vi.mock('@/lib/infrastructure/supabase-client', () => ({
-  supabase: {},
+  isSupabaseConfigured: () => true,
+  getSupabaseClient: () => ({}),
 }));
 
 vi.mock('@/lib/infrastructure/supabase-diary-repository', () => ({

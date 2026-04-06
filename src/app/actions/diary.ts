@@ -2,8 +2,7 @@
 
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import type { DiaryEntry } from '@/lib/domain/diary-entry';
-import { supabase } from '@/lib/infrastructure/supabase-client';
-import { SupabaseDiaryRepository } from '@/lib/infrastructure/supabase-diary-repository';
+import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
 import {
   CreateDiaryEntryUseCase,
   DeleteDiaryEntryUseCase,
@@ -21,12 +20,50 @@ import {
 import { isAppError, ValidationError } from '@/types/errors';
 import type { ActionResult, SerializedDiaryEntry } from './types';
 
-const repository = new SupabaseDiaryRepository(supabase);
 const DIARY_ENTRIES_TAG = 'diary-entries';
+
+let _repository: DiaryRepository | null = null;
+
+/**
+ * サーバー側リポジトリを返す（レイジー初期化）。
+ * SUPABASE_URL / SUPABASE_ANON_KEY が未設定の場合:
+ *   - development: InMemoryDiaryRepository（モックデータ）にフォールバック
+ *   - production:  エラーをスロー
+ */
+const getRepository = async (): Promise<DiaryRepository> => {
+  if (_repository) return _repository;
+
+  const { isSupabaseConfigured } = await import('@/lib/infrastructure/supabase-client');
+
+  if (!isSupabaseConfigured()) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'SUPABASE_URL and SUPABASE_ANON_KEY environment variables are required in production.\n' +
+          'See .env.local.example for the Supabase configuration template.',
+      );
+    }
+    const { InMemoryDiaryRepository } = await import(
+      '@/lib/infrastructure/in-memory-diary-repository'
+    );
+    console.warn(
+      '[Dev] SUPABASE_URL / SUPABASE_ANON_KEY が未設定です。InMemoryDiaryRepository（モックデータ）を使用します。\n' +
+        '.env.local に SUPABASE_URL と SUPABASE_ANON_KEY を設定すると実際の Supabase に接続します。',
+    );
+    _repository = new InMemoryDiaryRepository();
+    return _repository;
+  }
+
+  const { getSupabaseClient } = await import('@/lib/infrastructure/supabase-client');
+  const { SupabaseDiaryRepository } = await import(
+    '@/lib/infrastructure/supabase-diary-repository'
+  );
+  _repository = new SupabaseDiaryRepository(getSupabaseClient());
+  return _repository;
+};
 
 const getDiaryEntryCached = unstable_cache(
   async (dateIso: string) => {
-    const useCase = new GetDiaryEntryUseCase(repository);
+    const useCase = new GetDiaryEntryUseCase(await getRepository());
     return useCase.execute(new Date(dateIso));
   },
   ['diary-entry-by-date'],
@@ -35,7 +72,7 @@ const getDiaryEntryCached = unstable_cache(
 
 const getEntriesBySameDateCached = unstable_cache(
   async (dateIso: string, years: number) => {
-    const useCase = new GetEntriesBySameDateUseCase(repository);
+    const useCase = new GetEntriesBySameDateUseCase(await getRepository());
     return useCase.execute(new Date(dateIso), years);
   },
   ['diary-entries-by-same-date'],
@@ -88,7 +125,7 @@ export const createDiaryEntry = async (
       throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const useCase = new CreateDiaryEntryUseCase(repository);
+    const useCase = new CreateDiaryEntryUseCase(await getRepository());
     const entry = await useCase.execute(parsed.data);
 
     revalidatePath('/');
@@ -110,7 +147,7 @@ export const updateDiaryEntry = async (
       throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const useCase = new UpdateDiaryEntryUseCase(repository);
+    const useCase = new UpdateDiaryEntryUseCase(await getRepository());
     const entry = await useCase.execute(parsed.data);
 
     revalidatePath('/');
@@ -128,7 +165,7 @@ export const deleteDiaryEntry = async (id: string): Promise<ActionResult<null>> 
       throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const useCase = new DeleteDiaryEntryUseCase(repository);
+    const useCase = new DeleteDiaryEntryUseCase(await getRepository());
     await useCase.execute(parsed.data);
 
     revalidatePath('/');
