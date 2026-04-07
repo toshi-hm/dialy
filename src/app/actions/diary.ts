@@ -36,7 +36,7 @@ const getRepository = async (): Promise<DiaryRepository> => {
   const { isSupabaseConfigured } = await import('@/lib/infrastructure/supabase-client');
 
   if (!isSupabaseConfigured()) {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' && !process.env.CI) {
       throw new Error(
         'SUPABASE_URL and SUPABASE_ANON_KEY environment variables are required in production.\n' +
           'See .env.local.example for the Supabase configuration template.',
