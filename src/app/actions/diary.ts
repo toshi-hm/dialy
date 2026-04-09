@@ -17,7 +17,7 @@ import {
   ServerActionDateSchema,
   UpdateDiaryEntrySchema,
 } from '@/lib/validations/diary';
-import { isAppError, ValidationError } from '@/types/errors';
+import { DuplicateDateEntryError, isAppError, ValidationError } from '@/types/errors';
 import type { ActionResult, SerializedDiaryEntry } from './types';
 
 const DIARY_ENTRIES_TAG = 'diary-entries';
@@ -125,12 +125,29 @@ export const createDiaryEntry = async (
       throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
     }
 
-    const useCase = new CreateDiaryEntryUseCase(await getRepository());
-    const entry = await useCase.execute(parsed.data);
+    const repository = await getRepository();
 
-    revalidatePath('/');
-    revalidateTag(DIARY_ENTRIES_TAG, 'max');
-    return { success: true, data: serializeEntry(entry) };
+    try {
+      const useCase = new CreateDiaryEntryUseCase(repository);
+      const entry = await useCase.execute(parsed.data);
+      revalidatePath('/');
+      revalidateTag(DIARY_ENTRIES_TAG, 'max');
+      return { success: true, data: serializeEntry(entry) };
+    } catch (createError) {
+      if (createError instanceof DuplicateDateEntryError) {
+        // クライアントのキャッシュが stale でエントリが既に存在する場合、
+        // 既存エントリを新しい内容で上書きする（アップサート）。
+        const existing = await repository.findByDate(parsed.data.date);
+        if (existing) {
+          const updated = existing.update(parsed.data.content).updateTags(parsed.data.tags ?? []);
+          await repository.save(updated);
+          revalidatePath('/');
+          revalidateTag(DIARY_ENTRIES_TAG, 'max');
+          return { success: true, data: serializeEntry(updated) };
+        }
+      }
+      throw createError;
+    }
   } catch (error) {
     return handleError(error);
   }
