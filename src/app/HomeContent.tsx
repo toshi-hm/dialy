@@ -1,19 +1,21 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  createDiaryEntry,
+  deleteDiaryEntry,
+  getDiaryEntry,
+  getEntriesBySameDate,
+  updateDiaryEntry,
+} from '@/app/actions/diary';
+import { throwFromActionError } from '@/app/actions/errors';
+import type { SerializedDiaryEntry } from '@/app/actions/types';
 import { DateDisplay } from '@/components/molecules';
 import { Dial, DiaryEditor, PastEntriesList } from '@/components/organisms';
 import { MainLayout } from '@/components/templates';
-import type { DiaryEntry } from '@/lib/domain/diary-entry';
-import { LocalStorageDiaryRepository } from '@/lib/infrastructure/local-storage-diary-repository';
-import {
-  CreateDiaryEntryUseCase,
-  DeleteDiaryEntryUseCase,
-  GetDiaryEntryUseCase,
-  GetEntriesBySameDateUseCase,
-  UpdateDiaryEntryUseCase,
-} from '@/lib/use-cases';
+import { DiaryEntry } from '@/lib/domain/diary-entry';
+import { hasMigrated, migrateFromLocalStorage } from '@/lib/infrastructure/migrate-local-storage';
 import { startOfDay } from '@/lib/utils/date';
 import { reportWebVitals } from '@/lib/utils/performance';
 import {
@@ -23,6 +25,16 @@ import {
   SaveFailedError,
   ValidationError,
 } from '@/types/errors';
+
+const deserializeEntry = (entry: SerializedDiaryEntry): DiaryEntry =>
+  DiaryEntry.reconstruct(
+    entry.id,
+    new Date(entry.date),
+    entry.content,
+    new Date(entry.createdAt),
+    new Date(entry.updatedAt),
+    entry.tags,
+  );
 
 // Dynamic imports for dialogs (only loaded when needed)
 const CalendarDialog = dynamic(() =>
@@ -68,25 +80,6 @@ const Home = () => {
   const [pageError, setPageError] = useState<string | null>(null);
   const [dialSize, setDialSize] = useState(180);
 
-  const repository = useMemo(() => new LocalStorageDiaryRepository(), []);
-  const createDiaryEntryUseCase = useMemo(
-    () => new CreateDiaryEntryUseCase(repository),
-    [repository],
-  );
-  const updateDiaryEntryUseCase = useMemo(
-    () => new UpdateDiaryEntryUseCase(repository),
-    [repository],
-  );
-  const deleteDiaryEntryUseCase = useMemo(
-    () => new DeleteDiaryEntryUseCase(repository),
-    [repository],
-  );
-  const getDiaryEntryUseCase = useMemo(() => new GetDiaryEntryUseCase(repository), [repository]);
-  const getEntriesBySameDateUseCase = useMemo(
-    () => new GetEntriesBySameDateUseCase(repository),
-    [repository],
-  );
-
   useEffect(() => {
     return reportWebVitals();
   }, []);
@@ -104,29 +97,48 @@ const Home = () => {
     };
   }, []);
 
-  const loadEntriesByDate = useCallback(
-    async (date: Date) => {
-      setIsLoading(true);
-      setPageError(null);
+  // Phase 2 移行: LocalStorage データをサーバーに移行する（初回のみ）。
+  // ベストエフォート方式: 一部のエントリーが失敗しても移行フラグを設定し再試行しない。
+  // 失敗したエントリーはコンソールに警告として記録する。
+  useEffect(() => {
+    if (!hasMigrated()) {
+      void migrateFromLocalStorage(createDiaryEntry).then((result) => {
+        if (result.errors > 0) {
+          console.warn(
+            `[Migration] ${result.errors}件のエントリーをサーバーに移行できませんでした（移行済み: ${result.migrated}件、スキップ: ${result.skipped}件）`,
+          );
+        }
+      });
+    }
+  }, []);
 
-      try {
-        const [entry, sameDateEntries] = await Promise.all([
-          getDiaryEntryUseCase.execute(date),
-          getEntriesBySameDateUseCase.execute(date, 5),
-        ]);
+  const loadEntriesByDate = useCallback(async (date: Date) => {
+    setIsLoading(true);
+    setPageError(null);
 
-        setCurrentEntry(entry);
-        setPastEntries(sameDateEntries);
-      } catch {
-        setPageError('データの読み込みに失敗しました');
-        setCurrentEntry(null);
-        setPastEntries([]);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [getDiaryEntryUseCase, getEntriesBySameDateUseCase],
-  );
+    try {
+      const dateIso = date.toISOString();
+      const [entryResult, sameDateResult] = await Promise.all([
+        getDiaryEntry(dateIso),
+        getEntriesBySameDate(dateIso, 5),
+      ]);
+
+      const entry =
+        entryResult.success && entryResult.data ? deserializeEntry(entryResult.data) : null;
+      const pastEntriesList = sameDateResult.success
+        ? sameDateResult.data.map(deserializeEntry)
+        : [];
+
+      setCurrentEntry(entry);
+      setPastEntries(pastEntriesList);
+    } catch {
+      setPageError('データの読み込みに失敗しました');
+      setCurrentEntry(null);
+      setPastEntries([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     void loadEntriesByDate(selectedDate);
@@ -136,13 +148,21 @@ const Home = () => {
     async (content: string, tags: string[] = []) => {
       for (let attempt = 0; ; attempt += 1) {
         try {
-          const savedEntry = currentEntry
-            ? await updateDiaryEntryUseCase.execute({ id: currentEntry.id, content, tags })
-            : await createDiaryEntryUseCase.execute({ date: selectedDate, content, tags });
+          const result = currentEntry
+            ? await updateDiaryEntry(currentEntry.id, content, tags)
+            : await createDiaryEntry(selectedDate.toISOString(), content, tags);
 
+          if (!result.success) {
+            return throwFromActionError(result.error.code, result.error.message);
+          }
+
+          const savedEntry = deserializeEntry(result.data);
           setCurrentEntry(savedEntry);
-          const sameDateEntries = await getEntriesBySameDateUseCase.execute(selectedDate, 5);
-          setPastEntries(sameDateEntries);
+
+          const sameDateResult = await getEntriesBySameDate(selectedDate.toISOString(), 5);
+          if (sameDateResult.success) {
+            setPastEntries(sameDateResult.data.map(deserializeEntry));
+          }
           return;
         } catch (error) {
           if (
@@ -165,13 +185,7 @@ const Home = () => {
         }
       }
     },
-    [
-      createDiaryEntryUseCase,
-      currentEntry,
-      getEntriesBySameDateUseCase,
-      selectedDate,
-      updateDiaryEntryUseCase,
-    ],
+    [currentEntry, selectedDate],
   );
 
   const deleteEntry = useCallback(async () => {
@@ -180,12 +194,20 @@ const Home = () => {
       return;
     }
 
-    await deleteDiaryEntryUseCase.execute({ id: currentEntry.id });
+    const result = await deleteDiaryEntry(currentEntry.id);
+    if (!result.success) {
+      setPageError('削除に失敗しました');
+      return;
+    }
+
     setIsDeleteDialogOpen(false);
     setCurrentEntry(null);
-    const sameDateEntries = await getEntriesBySameDateUseCase.execute(selectedDate, 5);
-    setPastEntries(sameDateEntries);
-  }, [currentEntry, deleteDiaryEntryUseCase, getEntriesBySameDateUseCase, selectedDate]);
+
+    const sameDateResult = await getEntriesBySameDate(selectedDate.toISOString(), 5);
+    if (sameDateResult.success) {
+      setPastEntries(sameDateResult.data.map(deserializeEntry));
+    }
+  }, [currentEntry, selectedDate]);
 
   const handleFutureDateAttempt = () => {
     setPageError('未来の日付は選択できません');

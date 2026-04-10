@@ -19,7 +19,8 @@ const mockRepository: DiaryRepository = {
 };
 
 vi.mock('@/lib/infrastructure/supabase-client', () => ({
-  supabase: {},
+  isSupabaseConfigured: () => true,
+  getSupabaseClient: () => ({}),
 }));
 
 vi.mock('@/lib/infrastructure/supabase-diary-repository', () => ({
@@ -39,9 +40,10 @@ const {
   deleteDiaryEntry,
   getDiaryEntry,
   getEntriesBySameDate,
-  DIARY_ENTRIES_TAG,
 } = await import('./diary');
 const { revalidatePath, revalidateTag } = await import('next/cache');
+
+const DIARY_ENTRIES_TAG = 'diary-entries';
 
 const VALID_DATE = '2026-02-08T00:00:00.000Z';
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';
@@ -94,16 +96,20 @@ describe('Server Actions', () => {
       }
     });
 
-    it('returns failure with DUPLICATE_DATE_ENTRY for duplicate date', async () => {
+    it('upserts existing entry when duplicate date is detected (stale cache recovery)', async () => {
       const existing = reconstructEntry();
       vi.mocked(mockRepository.findByDate).mockResolvedValue(existing);
+      vi.mocked(mockRepository.save).mockResolvedValue(undefined);
 
-      const result = await createDiaryEntry(VALID_DATE, 'duplicate');
+      const result = await createDiaryEntry(VALID_DATE, 'updated content', ['new-tag']);
 
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('DUPLICATE_DATE_ENTRY');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.content).toBe('updated content');
+        expect(result.data.tags).toEqual(['new-tag']);
       }
+      expect(revalidatePath).toHaveBeenCalledWith('/');
+      expect(revalidateTag).toHaveBeenCalledWith(DIARY_ENTRIES_TAG, 'max');
     });
   });
 

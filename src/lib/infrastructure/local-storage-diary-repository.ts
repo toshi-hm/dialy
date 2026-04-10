@@ -14,7 +14,7 @@ const createEmptyStorage = (): DiaryStorage => {
   };
 };
 
-const isStoredDiaryEntry = (value: unknown): value is StoredDiaryEntry => {
+export const isStoredDiaryEntry = (value: unknown): value is StoredDiaryEntry => {
   if (!value || typeof value !== 'object') {
     return false;
   }

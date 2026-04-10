@@ -17,7 +17,7 @@ export const createDiaryRepository = (): DiaryRepository => {
  * 環境変数 SUPABASE_URL と SUPABASE_ANON_KEY が必要（.env.local.example 参照）。
  */
 export const createServerDiaryRepository = async (): Promise<DiaryRepository> => {
+  const { getSupabaseClient } = await import('./supabase-client');
   const { SupabaseDiaryRepository } = await import('./supabase-diary-repository');
-  const { supabase } = await import('./supabase-client');
-  return new SupabaseDiaryRepository(supabase);
+  return new SupabaseDiaryRepository(getSupabaseClient());
 };

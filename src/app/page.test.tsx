@@ -1,12 +1,61 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SerializedDiaryEntry } from '@/app/actions/types';
 import HomeContent from './HomeContent';
 
-const STORAGE_KEY = 'dialy_entries';
+// Server Actions をモック化
+vi.mock('@/app/actions/diary', () => ({
+  createDiaryEntry: vi.fn(),
+  updateDiaryEntry: vi.fn(),
+  deleteDiaryEntry: vi.fn(),
+  getDiaryEntry: vi.fn(),
+  getEntriesBySameDate: vi.fn(),
+}));
+
+// 移行ユーティリティをモック化（テスト中は移行済みと見なす）
+vi.mock('@/lib/infrastructure/migrate-local-storage', () => ({
+  hasMigrated: vi.fn().mockReturnValue(true),
+  markAsMigrated: vi.fn(),
+  migrateFromLocalStorage: vi.fn().mockResolvedValue({ migrated: 0, skipped: 0, errors: 0 }),
+}));
+
+import {
+  createDiaryEntry,
+  deleteDiaryEntry,
+  getDiaryEntry,
+  getEntriesBySameDate,
+  updateDiaryEntry,
+} from '@/app/actions/diary';
+
+const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';
+
+const makeEntry = (overrides: Partial<SerializedDiaryEntry> = {}): SerializedDiaryEntry => {
+  const now = new Date();
+  const dateIso = now.toISOString();
+  return {
+    id: VALID_UUID,
+    date: dateIso,
+    content: '',
+    createdAt: dateIso,
+    updatedAt: dateIso,
+    tags: [],
+    ...overrides,
+  };
+};
+
+const makeActionSuccess = <T,>(data: T) => ({ success: true as const, data });
+const emptySuccess = makeActionSuccess<SerializedDiaryEntry | null>(null);
+const emptyListSuccess = makeActionSuccess<SerializedDiaryEntry[]>([]);
 
 describe('Home page integration', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.clearAllMocks();
+    vi.mocked(getDiaryEntry).mockResolvedValue(emptySuccess);
+    vi.mocked(getEntriesBySameDate).mockResolvedValue(emptyListSuccess);
+    vi.mocked(createDiaryEntry).mockResolvedValue(makeActionSuccess(makeEntry()));
+    vi.mocked(updateDiaryEntry).mockResolvedValue(makeActionSuccess(makeEntry()));
+    vi.mocked(deleteDiaryEntry).mockResolvedValue(makeActionSuccess(null));
   });
 
   it('shows today date by default', async () => {
@@ -15,7 +64,10 @@ describe('Home page integration', () => {
     expect(await screen.findByText(/\d+月\d+日（[日月火水木金土]）/)).toBeInTheDocument();
   });
 
-  it('auto saves content to localStorage after 1 second debounce', async () => {
+  it('auto saves content via Server Action after 1 second debounce', async () => {
+    const savedEntry = makeEntry({ content: '今日は統合テストを書いた' });
+    vi.mocked(createDiaryEntry).mockResolvedValue(makeActionSuccess(savedEntry));
+
     render(<HomeContent />);
 
     const textarea = await screen.findByRole('textbox', { name: '日記本文' });
@@ -23,24 +75,37 @@ describe('Home page integration', () => {
 
     await waitFor(
       () => {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        expect(raw).toContain('今日は統合テストを書いた');
+        expect(createDiaryEntry).toHaveBeenCalledWith(
+          expect.any(String),
+          '今日は統合テストを書いた',
+          expect.any(Array),
+        );
       },
       { timeout: 2500 },
     );
   });
 
   it('saves tags and restores them after remount', async () => {
+    const entryWithTag = makeEntry({ tags: ['仕事'] });
+    vi.mocked(createDiaryEntry).mockResolvedValue(makeActionSuccess(entryWithTag));
+
     const { unmount } = render(<HomeContent />);
 
     const tagInput = await screen.findByPlaceholderText('タグを追加...');
     fireEvent.change(tagInput, { target: { value: '仕事' } });
     fireEvent.keyDown(tagInput, { key: 'Enter' });
 
-    await waitFor(() => {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      expect(raw).toContain('"tags":["仕事"]');
-    });
+    await waitFor(
+      () => {
+        expect(createDiaryEntry).toHaveBeenCalledWith(expect.any(String), expect.any(String), [
+          '仕事',
+        ]);
+      },
+      { timeout: 2500 },
+    );
+
+    // リマウント後 getDiaryEntry はタグ付きエントリーを返す
+    vi.mocked(getDiaryEntry).mockResolvedValue(makeActionSuccess(entryWithTag));
 
     unmount();
     render(<HomeContent />);
@@ -62,23 +127,17 @@ describe('Home page integration', () => {
     const previousYear = now.getFullYear() - 1;
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    const date = `${previousYear}-${month}-${day}`;
+    const pastDate = `${previousYear}-${month}-${day}T00:00:00.000Z`;
 
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        version: '1.0.0',
-        entries: [
-          {
-            id: '550e8400-e29b-41d4-a716-446655440000',
-            date,
-            content: '1年前の記録',
-            createdAt: `${date}T00:00:00.000Z`,
-            updatedAt: `${date}T00:00:00.000Z`,
-          },
-        ],
-      }),
-    );
+    const pastEntry = makeEntry({
+      id: '550e8400-e29b-41d4-a716-446655440001',
+      date: pastDate,
+      content: '1年前の記録',
+      createdAt: pastDate,
+      updatedAt: pastDate,
+    });
+
+    vi.mocked(getEntriesBySameDate).mockResolvedValue(makeActionSuccess([pastEntry]));
 
     render(<HomeContent />);
 
@@ -90,23 +149,11 @@ describe('Home page integration', () => {
     const now = new Date();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    const date = `${now.getFullYear()}-${month}-${day}`;
+    const dateIso = `${now.getFullYear()}-${month}-${day}T00:00:00.000Z`;
+    const todayEntry = makeEntry({ date: dateIso, content: '削除する日記' });
 
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        version: '1.0.0',
-        entries: [
-          {
-            id: '550e8400-e29b-41d4-a716-446655440000',
-            date,
-            content: '削除する日記',
-            createdAt: `${date}T00:00:00.000Z`,
-            updatedAt: `${date}T00:00:00.000Z`,
-          },
-        ],
-      }),
-    );
+    vi.mocked(getDiaryEntry).mockResolvedValue(makeActionSuccess(todayEntry));
+    vi.mocked(deleteDiaryEntry).mockResolvedValue(makeActionSuccess(null));
 
     render(<HomeContent />);
 
@@ -137,4 +184,52 @@ describe('Home page integration', () => {
     const dial = screen.getByRole('slider', { name: '日付選択' });
     expect(dial).toBeInTheDocument();
   });
+
+  it('shows error message when getDiaryEntry fails', async () => {
+    vi.mocked(getDiaryEntry).mockRejectedValue(new Error('network error'));
+
+    render(<HomeContent />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('データの読み込みに失敗しました');
+  });
+
+  it('shows delete error when deleteDiaryEntry returns failure', async () => {
+    const todayEntry = makeEntry({ content: '削除テスト' });
+    vi.mocked(getDiaryEntry).mockResolvedValue(makeActionSuccess(todayEntry));
+    vi.mocked(deleteDiaryEntry).mockResolvedValue({
+      success: false as const,
+      error: { code: 'NOT_FOUND', message: 'not found' },
+    });
+
+    render(<HomeContent />);
+
+    const deleteButton = await screen.findByRole('button', { name: '削除' });
+    fireEvent.click(deleteButton);
+
+    const confirmButton = await screen.findByRole('button', { name: '削除する' });
+    fireEvent.click(confirmButton);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('削除に失敗しました');
+  });
+
+  it('shows save error when createDiaryEntry returns SaveFailed', async () => {
+    vi.mocked(createDiaryEntry).mockResolvedValue({
+      success: false as const,
+      error: { code: 'SAVE_FAILED', message: 'save failed' },
+    });
+
+    render(<HomeContent />);
+
+    const textarea = await screen.findByRole('textbox', { name: '日記本文' });
+    fireEvent.change(textarea, { target: { value: '保存失敗テスト' } });
+
+    // デバウンス(1s) + リトライ合計(250+500+1000ms) = 最低2750ms
+    // エラーメッセージの出現を直接待つ（タイムアウトを十分に設定）
+    expect(
+      await screen.findByText('保存に失敗しました。再度お試しください。', {}, { timeout: 6000 }),
+    ).toBeInTheDocument();
+
+    // 初回 + 3回リトライ = 合計4回の呼び出しを確認
+    expect(createDiaryEntry).toHaveBeenCalledTimes(4);
+  }, 10_000); // リトライ待機のためテストタイムアウトを延長
 });

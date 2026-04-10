@@ -1,15 +1,10 @@
-'use client';
+import ClientPage from './ClientPage';
 
-import dynamic from 'next/dynamic';
-
-// Disable SSR for the home content:
-// - All data comes from localStorage (browser-only)
-// - Prevents hydration mismatch from date computations that differ between
-//   server (UTC) and client (user's local timezone)
-const HomeContent = dynamic(() => import('./HomeContent'), { ssr: false });
-
+// page.tsx はサーバーコンポーネントとして維持する。
+// 'use client' をここに置くと Turbopack が layout.tsx をクライアントバンドルに
+// 誤って含め、SyntaxError が発生する場合があるため ClientPage に分離した。
 const Page = () => {
-  return <HomeContent />;
+  return <ClientPage />;
 };
 
 export default Page;
