@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('P2-FEAT-04: タグ機能', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }) => {
+    await request.post('/api/test/reset');
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();

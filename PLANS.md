@@ -185,9 +185,8 @@
 
 ## Phase 2: サーバー移行・機能拡張
 
-> 2026-03-19 実装再開メモ: `P2-DATA-05` は mutation 側（`revalidateTag` 呼び出し）を実装完了。
-> read 側（`unstable_cache` によるタグ付きキャッシュ）は未実装のため、タグ再検証は現状 no-op。
-> read 側の対応は後続タスクとして積み残し。それ以外の Phase 2 / Phase 3 項目も未完了。
+> 2026-04-12 実装再開: `P2-DATA-05` の read 側（`unstable_cache`）も実装済みを確認。`P2-FEAT-04`（タグ機能）も実装済みを確認。
+> 継続実装: P2-SEC-01/02/03（NextAuth.js認証）、P2-FEAT-01（検索機能）、P2-FEAT-05（エクスポート）、P2-PERF-01/02（Server Components + Suspense）。
 
 ### 2.1 データ基盤移行
 
@@ -195,7 +194,7 @@
 - [x] `P2-DATA-02` `SupabaseDiaryRepository` 実装
 - [x] `P2-DATA-03` LocalStorage -> Supabase マイグレーション機能実装
 - [x] `P2-DATA-04` Server Actions / API Routes へ保存・取得処理を移行
-- [x] `P2-DATA-05` キャッシュ再検証（`revalidateTag`）導入（mutation 側実装済、read 側 `unstable_cache` は未対応）
+- [x] `P2-DATA-05` キャッシュ再検証（`revalidateTag`）導入（mutation 側 `revalidateTag` + read 側 `unstable_cache` タグ付きキャッシュ実装済）
 
 ### 2.2 認証・認可・セキュリティ強化
 
@@ -210,7 +209,7 @@
 - [ ] `P2-FEAT-01` 検索・フィルタリング（全文/タグ/日付範囲）
 - [ ] `P2-FEAT-02` マークダウン編集 + 安全なサニタイズ
 - [ ] `P2-FEAT-03` 画像添付（最大5枚、サムネイル、アップロード導線）
-- [ ] `P2-FEAT-04` タグ機能（作成・複数付与・表示）
+- [x] `P2-FEAT-04` タグ機能（作成・複数付与・表示）
 - [ ] `P2-FEAT-05` エクスポート（JSON/Markdown/PDF）
 
 ### 2.4 パフォーマンス高度化

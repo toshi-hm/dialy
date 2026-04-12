@@ -12,7 +12,7 @@ import {
 import { throwFromActionError } from '@/app/actions/errors';
 import type { SerializedDiaryEntry } from '@/app/actions/types';
 import { DateDisplay } from '@/components/molecules';
-import { Dial, DiaryEditor, PastEntriesList } from '@/components/organisms';
+import { Dial, DiaryEditor, ExportButton, PastEntriesList } from '@/components/organisms';
 import { MainLayout } from '@/components/templates';
 import { DiaryEntry } from '@/lib/domain/diary-entry';
 import { hasMigrated, migrateFromLocalStorage } from '@/lib/infrastructure/migrate-local-storage';
@@ -49,6 +49,12 @@ const DeleteConfirmDialog = dynamic(() =>
   })),
 );
 
+const SearchModal = dynamic(() =>
+  import('@/components/organisms/SearchModal').then((mod) => ({
+    default: mod.SearchModal,
+  })),
+);
+
 const RETRY_DELAYS_MS = [250, 500, 1000];
 const EMPTY_TAGS: readonly string[] = [];
 
@@ -77,6 +83,7 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
   const [dialSize, setDialSize] = useState(180);
 
@@ -110,6 +117,19 @@ const Home = () => {
         }
       });
     }
+  }, []);
+
+  // Ctrl+K / Cmd+K で検索を開く
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const loadEntriesByDate = useCallback(async (date: Date) => {
@@ -213,8 +233,13 @@ const Home = () => {
     setPageError('未来の日付は選択できません');
   };
 
+  const handleSearchSelectDate = (date: Date) => {
+    setSelectedDate(startOfDay(date));
+  };
+
   return (
     <MainLayout
+      headerActions={<ExportButton />}
       sidebar={
         <div className="space-y-3">
           <Dial
@@ -225,6 +250,31 @@ const Home = () => {
             onFutureDateAttempt={handleFutureDateAttempt}
             onOpenCalendar={() => setIsCalendarOpen(true)}
           />
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen(true)}
+            className="flex w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 shadow-sm hover:border-gray-300 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="日記を検索 (Ctrl+K)"
+          >
+            <svg
+              className="h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <span className="flex-1 text-left">検索...</span>
+            <kbd className="hidden rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-xs text-gray-400 md:inline">
+              ⌘K
+            </kbd>
+          </button>
         </div>
       }
     >
@@ -269,6 +319,12 @@ const Home = () => {
         open={isDeleteDialogOpen}
         onCancel={() => setIsDeleteDialogOpen(false)}
         onConfirm={deleteEntry}
+      />
+
+      <SearchModal
+        open={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelectDate={handleSearchSelectDate}
       />
     </MainLayout>
   );

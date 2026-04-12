@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('FR-05: 日記削除機能', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }) => {
+    await request.post('/api/test/reset');
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();

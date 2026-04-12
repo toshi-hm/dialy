@@ -9,6 +9,10 @@ vi.mock('next/cache', () => ({
   unstable_cache: vi.fn((fn) => fn),
 }));
 
+vi.mock('@/lib/auth/get-server-session', () => ({
+  getCurrentUserId: vi.fn().mockResolvedValue(null),
+}));
+
 const mockRepository: DiaryRepository = {
   save: vi.fn(),
   findById: vi.fn(),
@@ -16,6 +20,7 @@ const mockRepository: DiaryRepository = {
   findBySameDate: vi.fn(),
   delete: vi.fn(),
   findAll: vi.fn(),
+  search: vi.fn(),
 };
 
 vi.mock('@/lib/infrastructure/supabase-client', () => ({
@@ -31,6 +36,7 @@ vi.mock('@/lib/infrastructure/supabase-diary-repository', () => ({
     findBySameDate = mockRepository.findBySameDate;
     delete = mockRepository.delete;
     findAll = mockRepository.findAll;
+    search = mockRepository.search;
   },
 }));
 

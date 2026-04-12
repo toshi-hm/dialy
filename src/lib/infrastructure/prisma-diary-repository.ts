@@ -9,6 +9,7 @@ type PrismaEntryWithTags = {
   content: string;
   createdAt: Date;
   updatedAt: Date;
+  userId: string | null;
   tags: { name: string }[];
 };
 
@@ -20,6 +21,7 @@ const toDomainEntry = (record: PrismaEntryWithTags): DiaryEntry => {
     record.createdAt,
     record.updatedAt,
     record.tags.map((t) => t.name),
+    record.userId,
   );
 };
 
@@ -51,6 +53,7 @@ export class PrismaDiaryRepository implements DiaryRepository {
           where: {
             date: dateForDb,
             id: { not: entry.id },
+            userId: entry.userId ?? null,
           },
         });
 
@@ -65,6 +68,7 @@ export class PrismaDiaryRepository implements DiaryRepository {
             content: entry.content,
             createdAt: entry.createdAt,
             updatedAt: entry.updatedAt,
+            userId: entry.userId ?? null,
             tags: {
               create: entry.tags.map((name) => ({ name })),
             },
@@ -98,13 +102,14 @@ export class PrismaDiaryRepository implements DiaryRepository {
     return record ? toDomainEntry(record) : null;
   }
 
-  async findByDate(date: Date): Promise<DiaryEntry | null> {
+  async findByDate(date: Date, userId?: string | null): Promise<DiaryEntry | null> {
     const start = toStartOfDayUTC(date);
     const end = toEndOfDayUTC(date);
 
     const record = await this.prisma.diaryEntry.findFirst({
       where: {
         date: { gte: start, lte: end },
+        ...(userId !== undefined ? { userId: userId ?? null } : {}),
       },
       include: { tags: true },
     });
@@ -112,7 +117,11 @@ export class PrismaDiaryRepository implements DiaryRepository {
     return record ? toDomainEntry(record) : null;
   }
 
-  async findBySameDate(date: Date, years: number = 5): Promise<DiaryEntry[]> {
+  async findBySameDate(
+    date: Date,
+    years: number = 5,
+    userId?: string | null,
+  ): Promise<DiaryEntry[]> {
     const month = date.getUTCMonth();
     const day = date.getUTCDate();
     const currentYear = date.getUTCFullYear();
@@ -130,6 +139,7 @@ export class PrismaDiaryRepository implements DiaryRepository {
     const entries = await this.prisma.diaryEntry.findMany({
       where: {
         date: { in: targetDates },
+        ...(userId !== undefined ? { userId: userId ?? null } : {}),
       },
       include: { tags: true },
       orderBy: { date: 'desc' },
@@ -151,8 +161,27 @@ export class PrismaDiaryRepository implements DiaryRepository {
     }
   }
 
-  async findAll(): Promise<DiaryEntry[]> {
+  async findAll(userId?: string | null): Promise<DiaryEntry[]> {
     const records = await this.prisma.diaryEntry.findMany({
+      where: {
+        ...(userId !== undefined ? { userId: userId ?? null } : {}),
+      },
+      include: { tags: true },
+      orderBy: { date: 'desc' },
+    });
+
+    return records.map(toDomainEntry);
+  }
+
+  async search(query: string, userId?: string | null): Promise<DiaryEntry[]> {
+    const records = await this.prisma.diaryEntry.findMany({
+      where: {
+        ...(userId !== undefined ? { userId: userId ?? null } : {}),
+        content: {
+          contains: query,
+          mode: 'insensitive',
+        },
+      },
       include: { tags: true },
       orderBy: { date: 'desc' },
     });

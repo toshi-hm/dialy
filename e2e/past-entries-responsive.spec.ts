@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('FR-04: 過去同日日記表示機能', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }) => {
+    await request.post('/api/test/reset');
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();

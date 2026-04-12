@@ -15,12 +15,18 @@ export class DiaryEntry {
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     tags: readonly string[],
+    public readonly userId: string | null = null,
   ) {
     this.tags = Object.freeze(tags.map((tag) => tag.trim()));
     this.validate();
   }
 
-  static create(date: Date, content: string, tags: string[] = []): DiaryEntry {
+  static create(
+    date: Date,
+    content: string,
+    tags: string[] = [],
+    userId: string | null = null,
+  ): DiaryEntry {
     return new DiaryEntry(
       crypto.randomUUID(),
       new Date(date),
@@ -28,6 +34,7 @@ export class DiaryEntry {
       new Date(),
       new Date(),
       tags,
+      userId,
     );
   }
 
@@ -38,6 +45,7 @@ export class DiaryEntry {
     createdAt: Date,
     updatedAt: Date,
     tags: string[] = [],
+    userId: string | null = null,
   ): DiaryEntry {
     return new DiaryEntry(
       id,
@@ -46,15 +54,32 @@ export class DiaryEntry {
       new Date(createdAt),
       new Date(updatedAt),
       tags,
+      userId,
     );
   }
 
   update(newContent: string): DiaryEntry {
-    return new DiaryEntry(this.id, this.date, newContent, this.createdAt, new Date(), this.tags);
+    return new DiaryEntry(
+      this.id,
+      this.date,
+      newContent,
+      this.createdAt,
+      new Date(),
+      this.tags,
+      this.userId,
+    );
   }
 
   updateTags(newTags: string[]): DiaryEntry {
-    return new DiaryEntry(this.id, this.date, this.content, this.createdAt, new Date(), newTags);
+    return new DiaryEntry(
+      this.id,
+      this.date,
+      this.content,
+      this.createdAt,
+      new Date(),
+      newTags,
+      this.userId,
+    );
   }
 
   isSameDate(other: Date): boolean {

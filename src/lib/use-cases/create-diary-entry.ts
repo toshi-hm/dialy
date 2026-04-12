@@ -7,15 +7,15 @@ import { parseOrThrowAppError } from './parse-or-throw-app-error';
 export class CreateDiaryEntryUseCase {
   constructor(private readonly repository: DiaryRepository) {}
 
-  async execute(input: CreateDiaryEntryInput): Promise<DiaryEntry> {
+  async execute(input: CreateDiaryEntryInput, userId: string | null = null): Promise<DiaryEntry> {
     const validated = parseOrThrowAppError(CreateDiaryEntrySchema, input);
 
-    const existing = await this.repository.findByDate(validated.date);
+    const existing = await this.repository.findByDate(validated.date, userId);
     if (existing) {
       throw new DuplicateDateEntryError('An entry for this date already exists');
     }
 
-    const entry = DiaryEntry.create(validated.date, validated.content, validated.tags);
+    const entry = DiaryEntry.create(validated.date, validated.content, validated.tags, userId);
 
     try {
       await this.repository.save(entry);

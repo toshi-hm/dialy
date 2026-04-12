@@ -24,6 +24,7 @@ const createRepositoryMock = (): DiaryRepository => {
     findBySameDate: vi.fn(),
     delete: vi.fn(),
     findAll: vi.fn(),
+    search: vi.fn(),
   };
 };
 
@@ -40,7 +41,7 @@ describe('diary use cases', () => {
       tags: ['仕事', '勉強'],
     });
 
-    expect(repository.findByDate).toHaveBeenCalledWith(inputDate);
+    expect(repository.findByDate).toHaveBeenCalledWith(inputDate, null);
     expect(repository.save).toHaveBeenCalledWith(expect.any(DiaryEntry));
     expect(result.content).toBe('new diary entry');
     expect(result.tags).toEqual(['仕事', '勉強']);
@@ -200,7 +201,11 @@ describe('diary use cases', () => {
 
     const result = await useCase.execute(new Date('2026-02-08T00:00:00.000Z'), 5);
 
-    expect(repository.findBySameDate).toHaveBeenCalledWith(new Date('2026-02-08T00:00:00.000Z'), 5);
+    expect(repository.findBySameDate).toHaveBeenCalledWith(
+      new Date('2026-02-08T00:00:00.000Z'),
+      5,
+      null,
+    );
     expect(result).toEqual(entries);
   });
 
