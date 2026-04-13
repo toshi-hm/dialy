@@ -91,11 +91,10 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token && session.user) {
-        if (typeof token.userId === 'string') {
-          session.user.id = token.userId;
-        } else {
-          delete session.user;
+      if (session.user) {
+        const userId = typeof token.userId === 'string' ? token.userId : token.sub;
+        if (typeof userId === 'string') {
+          session.user.id = userId;
         }
       }
       return session;

@@ -197,5 +197,22 @@ describe('auth-options', () => {
 
       expect((result.user as { id?: string }).id).toBe('user-456');
     });
+
+    it('session callback: token.userIdがない場合はtoken.subをsession.user.idにセットする', async () => {
+      const sessionCallback = authOptions.callbacks?.session;
+      if (!sessionCallback) throw new Error('session callback not found');
+
+      // biome-ignore lint/suspicious/noExplicitAny: test utility
+      const token = { sub: 'sub-user-789' } as any;
+      const session = {
+        user: { name: 'Test', email: 'test@example.com', image: null },
+        expires: '',
+      };
+
+      // biome-ignore lint/suspicious/noExplicitAny: test utility
+      const result = await (sessionCallback as any)({ session, token });
+
+      expect((result.user as { id?: string }).id).toBe('sub-user-789');
+    });
   });
 });
