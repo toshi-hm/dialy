@@ -34,7 +34,8 @@ const HighlightedText = ({ text, query }: HighlightedTextProps) => {
   return (
     <span>
       {parts.map((part, index) =>
-        regex.test(part) ? (
+        // split の結果はキャプチャグループを含む場合、奇数インデックスが一致部分になる
+        index % 2 === 1 ? (
           // biome-ignore lint/suspicious/noArrayIndexKey: highlight parts, no stable key available
           <mark key={index} className="rounded bg-yellow-100 px-0.5 text-yellow-900">
             {part}

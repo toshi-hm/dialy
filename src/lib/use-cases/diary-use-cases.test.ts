@@ -14,6 +14,7 @@ import { CreateDiaryEntryUseCase } from './create-diary-entry';
 import { DeleteDiaryEntryUseCase } from './delete-diary-entry';
 import { GetDiaryEntryUseCase } from './get-diary-entry';
 import { GetEntriesBySameDateUseCase } from './get-entries-by-same-date';
+import { SearchDiaryEntriesUseCase } from './search-diary-entries';
 import { UpdateDiaryEntryUseCase } from './update-diary-entry';
 
 const createRepositoryMock = (): DiaryRepository => {
@@ -304,5 +305,72 @@ describe('diary use cases', () => {
     await expect(useCase.execute(new Date('2026-02-08T00:00:00.000Z'), 5)).rejects.toThrow(
       FetchFailedError,
     );
+  });
+
+  describe('SearchDiaryEntriesUseCase', () => {
+    it('returns empty array for empty query', async () => {
+      const repository = createRepositoryMock();
+      const useCase = new SearchDiaryEntriesUseCase(repository);
+
+      const result = await useCase.execute('');
+
+      expect(result).toEqual([]);
+      expect(repository.search).not.toHaveBeenCalled();
+    });
+
+    it('returns empty array for whitespace-only query', async () => {
+      const repository = createRepositoryMock();
+      const useCase = new SearchDiaryEntriesUseCase(repository);
+
+      const result = await useCase.execute('   ');
+
+      expect(result).toEqual([]);
+      expect(repository.search).not.toHaveBeenCalled();
+    });
+
+    it('throws ValidationError for query exceeding max length', async () => {
+      const repository = createRepositoryMock();
+      const useCase = new SearchDiaryEntriesUseCase(repository);
+
+      await expect(useCase.execute('a'.repeat(201))).rejects.toThrow(ValidationError);
+    });
+
+    it('calls repository.search with trimmed query and userId', async () => {
+      const repository = createRepositoryMock();
+      const useCase = new SearchDiaryEntriesUseCase(repository);
+      const entry = DiaryEntry.reconstruct(
+        '550e8400-e29b-41d4-a716-446655440000',
+        new Date('2026-02-08T00:00:00.000Z'),
+        'found content',
+        new Date('2026-02-08T00:00:00.000Z'),
+        new Date('2026-02-08T00:00:00.000Z'),
+        [],
+      );
+      vi.mocked(repository.search).mockResolvedValue([entry]);
+
+      const result = await useCase.execute('  hello  ', 'user-1');
+
+      expect(repository.search).toHaveBeenCalledWith('hello', 'user-1');
+      expect(result).toHaveLength(1);
+      expect(result[0].content).toBe('found content');
+    });
+
+    it('passes null userId to repository.search', async () => {
+      const repository = createRepositoryMock();
+      const useCase = new SearchDiaryEntriesUseCase(repository);
+      vi.mocked(repository.search).mockResolvedValue([]);
+
+      await useCase.execute('query', null);
+
+      expect(repository.search).toHaveBeenCalledWith('query', null);
+    });
+
+    it('wraps repository error in FetchFailedError', async () => {
+      const repository = createRepositoryMock();
+      const useCase = new SearchDiaryEntriesUseCase(repository);
+      vi.mocked(repository.search).mockRejectedValue(new Error('DB error'));
+
+      await expect(useCase.execute('query')).rejects.toThrow(FetchFailedError);
+    });
   });
 });

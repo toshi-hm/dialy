@@ -1,32 +1,9 @@
 'use server';
 
 import { getCurrentUserId } from '@/lib/auth/get-server-session';
-import type { DiaryRepository } from '@/lib/domain/interfaces/diary-repository';
+import { getRepository } from '@/lib/infrastructure/server-repository';
 import { isAppError } from '@/types/errors';
 import type { ActionResult } from './types';
-
-let _repository: DiaryRepository | null = null;
-
-const getRepository = async (): Promise<DiaryRepository> => {
-  if (_repository) return _repository;
-
-  const { isSupabaseConfigured } = await import('@/lib/infrastructure/supabase-client');
-
-  if (!isSupabaseConfigured()) {
-    const { InMemoryDiaryRepository } = await import(
-      '@/lib/infrastructure/in-memory-diary-repository'
-    );
-    _repository = new InMemoryDiaryRepository();
-    return _repository;
-  }
-
-  const { getSupabaseClient } = await import('@/lib/infrastructure/supabase-client');
-  const { SupabaseDiaryRepository } = await import(
-    '@/lib/infrastructure/supabase-diary-repository'
-  );
-  _repository = new SupabaseDiaryRepository(getSupabaseClient());
-  return _repository;
-};
 
 export type ExportFormat = 'json' | 'markdown';
 

@@ -16,8 +16,8 @@ export const middleware = async (request: NextRequest) => {
 
   const { pathname } = request.nextUrl;
 
-  // 認証不要なパス
-  const publicPaths = ['/login', '/api/auth'];
+  // 認証不要なパス（/api/test はE2Eテスト用リセットエンドポイントを含む）
+  const publicPaths = ['/login', '/api/auth', '/api/test'];
   const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
 
   if (isPublicPath) {

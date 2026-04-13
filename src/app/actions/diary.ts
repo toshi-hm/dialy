@@ -9,6 +9,7 @@ import {
   DeleteDiaryEntryUseCase,
   GetDiaryEntryUseCase,
   GetEntriesBySameDateUseCase,
+  SearchDiaryEntriesUseCase,
   UpdateDiaryEntryUseCase,
 } from '@/lib/use-cases';
 import {
@@ -212,13 +213,9 @@ export const searchDiaryEntries = async (
   query: string,
 ): Promise<ActionResult<SerializedDiaryEntry[]>> => {
   try {
-    if (!query.trim()) {
-      return { success: true, data: [] };
-    }
-
     const userId = await getCurrentUserId();
-    const repository = await getRepository();
-    const entries = await repository.search(query.trim(), userId);
+    const useCase = new SearchDiaryEntriesUseCase(await getRepository());
+    const entries = await useCase.execute(query, userId);
 
     return {
       success: true,

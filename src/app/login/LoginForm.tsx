@@ -6,7 +6,9 @@ import { useState } from 'react';
 
 export const LoginForm = () => {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/';
+  // オープンリダイレクト対策: 相対パス（/始まり）のみ許可
+  const rawCallbackUrl = searchParams.get('callbackUrl') ?? '/';
+  const callbackUrl = rawCallbackUrl.startsWith('/') ? rawCallbackUrl : '/';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

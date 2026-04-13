@@ -152,8 +152,8 @@ export class SupabaseDiaryRepository implements DiaryRepository {
       .gte('date', start)
       .lte('date', end);
 
-    if (userId) {
-      query = query.eq('user_id', userId);
+    if (userId !== undefined) {
+      query = userId === null ? query.is('user_id', null) : query.eq('user_id', userId);
     }
 
     const { data, error } = await query.maybeSingle();
@@ -182,8 +182,8 @@ export class SupabaseDiaryRepository implements DiaryRepository {
       .in('date', targetDates)
       .order('date', { ascending: false });
 
-    if (userId) {
-      query = query.eq('user_id', userId);
+    if (userId !== undefined) {
+      query = userId === null ? query.is('user_id', null) : query.eq('user_id', userId);
     }
 
     const { data, error } = await query;
@@ -214,8 +214,8 @@ export class SupabaseDiaryRepository implements DiaryRepository {
       .select('*, diary_entry_tags(name)')
       .order('date', { ascending: false });
 
-    if (userId) {
-      query = query.eq('user_id', userId);
+    if (userId !== undefined) {
+      query = userId === null ? query.is('user_id', null) : query.eq('user_id', userId);
     }
 
     const { data, error } = await query;
@@ -228,14 +228,30 @@ export class SupabaseDiaryRepository implements DiaryRepository {
   async search(query: string, userId?: string | null): Promise<DiaryEntry[]> {
     const lower = `%${query.toLowerCase()}%`;
 
+    // タグ名が一致するエントリー ID を取得
+    const { data: tagData, error: tagError } = await this.client
+      .from('diary_entry_tags')
+      .select('entry_id')
+      .ilike('name', lower);
+
+    if (tagError) throw new Error(tagError.message);
+
+    const tagMatchIds = ((tagData ?? []) as { entry_id: string }[]).map((r) => r.entry_id);
+
+    // メインクエリ: content 一致またはタグ一致エントリー
     let dbQuery = this.client
       .from('diary_entries')
       .select('*, diary_entry_tags(name)')
-      .ilike('content', lower)
       .order('date', { ascending: false });
 
-    if (userId) {
-      dbQuery = dbQuery.eq('user_id', userId);
+    if (tagMatchIds.length > 0) {
+      dbQuery = dbQuery.or(`content.ilike.${lower},id.in.(${tagMatchIds.join(',')})`);
+    } else {
+      dbQuery = dbQuery.ilike('content', lower);
+    }
+
+    if (userId !== undefined) {
+      dbQuery = userId === null ? dbQuery.is('user_id', null) : dbQuery.eq('user_id', userId);
     }
 
     const { data, error } = await dbQuery;

@@ -40,7 +40,8 @@ const createMockEntries = (): DiaryEntry[] => {
 };
 
 const matchesUser = (entry: DiaryEntry, userId?: string | null): boolean => {
-  if (!userId) return true;
+  if (userId === undefined) return true;
+  if (userId === null) return entry.userId === null;
   return entry.userId === userId;
 };
 

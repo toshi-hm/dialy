@@ -177,10 +177,24 @@ export class PrismaDiaryRepository implements DiaryRepository {
     const records = await this.prisma.diaryEntry.findMany({
       where: {
         ...(userId !== undefined ? { userId: userId ?? null } : {}),
-        content: {
-          contains: query,
-          mode: 'insensitive',
-        },
+        OR: [
+          {
+            content: {
+              contains: query,
+              mode: 'insensitive',
+            },
+          },
+          {
+            tags: {
+              some: {
+                name: {
+                  contains: query,
+                  mode: 'insensitive',
+                },
+              },
+            },
+          },
+        ],
       },
       include: { tags: true },
       orderBy: { date: 'desc' },
