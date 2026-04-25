@@ -1,7 +1,7 @@
 {
   "core": {
     "workingDir": ".reg",
-    "actualDir": "./storybook-static",
+    "actualDir": "./storybook-screenshots",
     "thresholdRate": 0,
     "addIgnore": true,
     "ximgdiff": {

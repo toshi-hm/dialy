@@ -19,7 +19,7 @@
     "test:coverage:check": "pnpm test:coverage && node scripts/check-coverage-thresholds.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:vrt": "reg-suit run",
+    "test:vrt": "node scripts/capture-screenshots.mjs && reg-suit run",
     "lighthouse": "lhci autorun",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
