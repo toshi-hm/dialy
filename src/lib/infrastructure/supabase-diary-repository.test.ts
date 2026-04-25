@@ -14,7 +14,19 @@ const createQueryBuilder = <T>(result: QueryResult<T>) => {
   // Promise をベースにすることで、チェーン自体が await 可能になる
   // （Supabase クエリビルダーの thenable 動作を再現）
   const builder = Promise.resolve(result) as Promise<QueryResult<T>> & Record<string, unknown>;
-  const chainMethods = ['select', 'eq', 'neq', 'gte', 'lte', 'in', 'order', 'update', 'delete'];
+  const chainMethods = [
+    'select',
+    'eq',
+    'neq',
+    'gte',
+    'lte',
+    'in',
+    'is',
+    'ilike',
+    'order',
+    'update',
+    'delete',
+  ];
   for (const method of chainMethods) {
     builder[method] = vi.fn().mockReturnValue(builder);
   }

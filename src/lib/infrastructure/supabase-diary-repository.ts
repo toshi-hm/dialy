@@ -31,6 +31,7 @@ const toDomainEntry = (record: DbDiaryEntry): DiaryEntry =>
     new Date(record.created_at),
     new Date(record.updated_at),
     record.diary_entry_tags.map((t) => t.name),
+    record.user_id,
   );
 
 export class SupabaseDiaryRepository implements DiaryRepository {
@@ -51,13 +52,20 @@ export class SupabaseDiaryRepository implements DiaryRepository {
     }
 
     if (!existing) {
-      // 重複日付チェック
-      const { data: duplicate, error: duplicateError } = await this.client
+      // 重複日付チェック（同一ユーザー内）
+      let duplicateQuery = this.client
         .from('diary_entries')
         .select('id')
         .eq('date', dateForDb)
-        .neq('id', entry.id)
-        .maybeSingle();
+        .neq('id', entry.id);
+
+      if (entry.userId) {
+        duplicateQuery = duplicateQuery.eq('user_id', entry.userId);
+      } else {
+        duplicateQuery = duplicateQuery.is('user_id', null);
+      }
+
+      const { data: duplicate, error: duplicateError } = await duplicateQuery.maybeSingle();
 
       if (duplicateError) {
         throw new Error(duplicateError.message);
@@ -74,6 +82,7 @@ export class SupabaseDiaryRepository implements DiaryRepository {
         content: entry.content,
         created_at: entry.createdAt.toISOString(),
         updated_at: entry.updatedAt.toISOString(),
+        user_id: entry.userId ?? null,
       });
 
       if (insertError) {
@@ -99,8 +108,6 @@ export class SupabaseDiaryRepository implements DiaryRepository {
       // 既存タグを削除
       // NOTE: Supabase (PostgREST) はクライアントサイドトランザクションをサポートしないため、
       // コンテンツ更新 → タグ削除 → タグ挿入 の各ステップは非アトミックに実行される。
-      // タグ削除/挿入が失敗した場合、コンテンツのみ更新された状態になる可能性がある。
-      // 完全なアトミック性が必要な場合は Supabase RPC（ストアドプロシージャ）への移行を検討すること。
       const { error: deleteTagsError } = await this.client
         .from('diary_entry_tags')
         .delete()
@@ -135,23 +142,28 @@ export class SupabaseDiaryRepository implements DiaryRepository {
     return toDomainEntry(data as DbDiaryEntry);
   }
 
-  async findByDate(date: Date): Promise<DiaryEntry | null> {
+  async findByDate(date: Date, userId?: string | null): Promise<DiaryEntry | null> {
     const start = toStartOfDayUTC(date);
     const end = toEndOfDayUTC(date);
 
-    const { data, error } = await this.client
+    let query = this.client
       .from('diary_entries')
       .select('*, diary_entry_tags(name)')
       .gte('date', start)
-      .lte('date', end)
-      .maybeSingle();
+      .lte('date', end);
+
+    if (userId !== undefined) {
+      query = userId === null ? query.is('user_id', null) : query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) throw new Error(error.message);
     if (!data) return null;
     return toDomainEntry(data as DbDiaryEntry);
   }
 
-  async findBySameDate(date: Date, years = 5): Promise<DiaryEntry[]> {
+  async findBySameDate(date: Date, years = 5, userId?: string | null): Promise<DiaryEntry[]> {
     const month = date.getUTCMonth();
     const day = date.getUTCDate();
     const currentYear = date.getUTCFullYear();
@@ -164,11 +176,17 @@ export class SupabaseDiaryRepository implements DiaryRepository {
 
     if (targetDates.length === 0) return [];
 
-    const { data, error } = await this.client
+    let query = this.client
       .from('diary_entries')
       .select('*, diary_entry_tags(name)')
       .in('date', targetDates)
       .order('date', { ascending: false });
+
+    if (userId !== undefined) {
+      query = userId === null ? query.is('user_id', null) : query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw new Error(error.message);
     if (!data) return [];
@@ -190,14 +208,82 @@ export class SupabaseDiaryRepository implements DiaryRepository {
     }
   }
 
-  async findAll(): Promise<DiaryEntry[]> {
-    const { data, error } = await this.client
+  async findAll(userId?: string | null): Promise<DiaryEntry[]> {
+    let query = this.client
       .from('diary_entries')
       .select('*, diary_entry_tags(name)')
       .order('date', { ascending: false });
 
+    if (userId !== undefined) {
+      query = userId === null ? query.is('user_id', null) : query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query;
+
     if (error) throw new Error(error.message);
     if (!data) return [];
     return (data as DbDiaryEntry[]).map(toDomainEntry);
+  }
+
+  async search(query: string, userId?: string | null): Promise<DiaryEntry[]> {
+    const lower = `%${query.toLowerCase()}%`;
+
+    // タグ名が一致するエントリー ID を取得
+    const { data: tagData, error: tagError } = await this.client
+      .from('diary_entry_tags')
+      .select('entry_id')
+      .ilike('name', lower);
+
+    if (tagError) throw new Error(tagError.message);
+
+    const tagMatchIds = ((tagData ?? []) as { entry_id: string }[]).map((r) => r.entry_id);
+
+    // content 一致クエリ（ユーザー入力を .or() 文字列に埋め込まない安全な形式）
+    let contentQuery = this.client
+      .from('diary_entries')
+      .select('*, diary_entry_tags(name)')
+      .ilike('content', lower)
+      .order('date', { ascending: false });
+
+    if (userId !== undefined) {
+      contentQuery =
+        userId === null ? contentQuery.is('user_id', null) : contentQuery.eq('user_id', userId);
+    }
+
+    const { data: contentData, error: contentError } = await contentQuery;
+    if (contentError) throw new Error(contentError.message);
+
+    // タグ一致クエリ（tagMatchIds がある場合のみ実行）
+    let tagEntries: DbDiaryEntry[] = [];
+    if (tagMatchIds.length > 0) {
+      let tagQuery = this.client
+        .from('diary_entries')
+        .select('*, diary_entry_tags(name)')
+        .in('id', tagMatchIds)
+        .order('date', { ascending: false });
+
+      if (userId !== undefined) {
+        tagQuery = userId === null ? tagQuery.is('user_id', null) : tagQuery.eq('user_id', userId);
+      }
+
+      const { data: tagEntryData, error: tagEntryError } = await tagQuery;
+      if (tagEntryError) throw new Error(tagEntryError.message);
+      tagEntries = (tagEntryData ?? []) as DbDiaryEntry[];
+    }
+
+    // マージして重複排除（content 一致を先頭に）
+    const seen = new Set<string>();
+    const merged: DbDiaryEntry[] = [];
+    for (const entry of [...((contentData ?? []) as DbDiaryEntry[]), ...tagEntries]) {
+      if (!seen.has(entry.id)) {
+        seen.add(entry.id);
+        merged.push(entry);
+      }
+    }
+
+    // 日付降順でソート
+    merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return merged.map(toDomainEntry);
   }
 }

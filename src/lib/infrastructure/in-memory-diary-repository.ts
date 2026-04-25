@@ -39,6 +39,12 @@ const createMockEntries = (): DiaryEntry[] => {
   ];
 };
 
+const matchesUser = (entry: DiaryEntry, userId?: string | null): boolean => {
+  if (userId === undefined) return true;
+  if (userId === null) return entry.userId === null;
+  return entry.userId === userId;
+};
+
 /**
  * 開発時に Supabase 環境変数が未設定の場合に使用するインメモリリポジトリ。
  * サーバープロセスが生きている間データを保持する（再起動でリセット）。
@@ -57,7 +63,7 @@ export class InMemoryDiaryRepository implements DiaryRepository {
   async save(entry: DiaryEntry): Promise<void> {
     const dateKey = toDateKey(entry.date);
     const duplicate = [...this.entries.values()].find(
-      (e) => toDateKey(e.date) === dateKey && e.id !== entry.id,
+      (e) => toDateKey(e.date) === dateKey && e.id !== entry.id && matchesUser(e, entry.userId),
     );
     if (duplicate) {
       throw new DuplicateDateEntryError('An entry for this date already exists');
@@ -69,12 +75,20 @@ export class InMemoryDiaryRepository implements DiaryRepository {
     return this.entries.get(id) ?? null;
   }
 
-  async findByDate(date: Date): Promise<DiaryEntry | null> {
+  async findByDate(date: Date, userId?: string | null): Promise<DiaryEntry | null> {
     const dateKey = toDateKey(date);
-    return [...this.entries.values()].find((e) => toDateKey(e.date) === dateKey) ?? null;
+    return (
+      [...this.entries.values()].find(
+        (e) => toDateKey(e.date) === dateKey && matchesUser(e, userId),
+      ) ?? null
+    );
   }
 
-  async findBySameDate(date: Date, years: number = 5): Promise<DiaryEntry[]> {
+  async findBySameDate(
+    date: Date,
+    years: number = 5,
+    userId?: string | null,
+  ): Promise<DiaryEntry[]> {
     const month = date.getMonth();
     const day = date.getDate();
     const currentYear = date.getFullYear();
@@ -84,7 +98,11 @@ export class InMemoryDiaryRepository implements DiaryRepository {
       .filter((e) => {
         const y = e.date.getFullYear();
         return (
-          e.date.getMonth() === month && e.date.getDate() === day && y < currentYear && y >= minYear
+          e.date.getMonth() === month &&
+          e.date.getDate() === day &&
+          y < currentYear &&
+          y >= minYear &&
+          matchesUser(e, userId)
         );
       })
       .sort((a, b) => b.date.getTime() - a.date.getTime());
@@ -97,7 +115,23 @@ export class InMemoryDiaryRepository implements DiaryRepository {
     this.entries.delete(id);
   }
 
-  async findAll(): Promise<DiaryEntry[]> {
-    return [...this.entries.values()];
+  async findAll(userId?: string | null): Promise<DiaryEntry[]> {
+    return [...this.entries.values()].filter((e) => matchesUser(e, userId));
+  }
+
+  async search(query: string, userId?: string | null): Promise<DiaryEntry[]> {
+    const lower = query.toLowerCase();
+    return [...this.entries.values()]
+      .filter(
+        (e) =>
+          matchesUser(e, userId) &&
+          (e.content.toLowerCase().includes(lower) ||
+            e.tags.some((tag) => tag.toLowerCase().includes(lower))),
+      )
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
+  clearAll(): void {
+    this.entries.clear();
   }
 }

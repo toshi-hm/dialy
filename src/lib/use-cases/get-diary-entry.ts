@@ -7,11 +7,11 @@ import { parseOrThrowAppError } from './parse-or-throw-app-error';
 export class GetDiaryEntryUseCase {
   constructor(private readonly repository: DiaryRepository) {}
 
-  async execute(date: Date): Promise<DiaryEntry | null> {
+  async execute(date: Date, userId: string | null = null): Promise<DiaryEntry | null> {
     const validatedDate = parseOrThrowAppError(DiaryDateSchema, date);
 
     try {
-      return await this.repository.findByDate(validatedDate);
+      return await this.repository.findByDate(validatedDate, userId);
     } catch (error) {
       throw new FetchFailedError('Failed to load diary entry', error);
     }

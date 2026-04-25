@@ -7,11 +7,15 @@ import { parseOrThrowAppError } from './parse-or-throw-app-error';
 export class GetEntriesBySameDateUseCase {
   constructor(private readonly repository: DiaryRepository) {}
 
-  async execute(date: Date, years: number = 5): Promise<DiaryEntry[]> {
+  async execute(
+    date: Date,
+    years: number = 5,
+    userId: string | null = null,
+  ): Promise<DiaryEntry[]> {
     const validated = parseOrThrowAppError(GetEntriesBySameDateSchema, { date, years });
 
     try {
-      return await this.repository.findBySameDate(validated.date, validated.years);
+      return await this.repository.findBySameDate(validated.date, validated.years, userId);
     } catch (error) {
       throw new FetchFailedError('Failed to load diary entries', error);
     }

@@ -38,6 +38,7 @@ const makeSuccessResult = (): ActionResult<SerializedDiaryEntry> => ({
     createdAt: VALID_ENTRY.createdAt,
     updatedAt: VALID_ENTRY.updatedAt,
     tags: VALID_ENTRY.tags,
+    userId: null,
   },
 });
 

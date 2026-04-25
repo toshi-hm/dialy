@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('FR-02/FR-03: 日記作成・編集機能', () => {
-  test.beforeEach(async ({ page }) => {
-    // Clear localStorage before each test
+  test.beforeEach(async ({ page, request }) => {
+    // Clear server-side InMemory data and localStorage before each test
+    await request.post('/api/test/reset');
     await page.goto('/');
     await page.evaluate(() => localStorage.clear());
     await page.reload();

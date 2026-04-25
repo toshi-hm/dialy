@@ -7,11 +7,15 @@ import { parseOrThrowAppError } from './parse-or-throw-app-error';
 export class UpdateDiaryEntryUseCase {
   constructor(private readonly repository: DiaryRepository) {}
 
-  async execute(input: UpdateDiaryEntryInput): Promise<DiaryEntry> {
+  async execute(input: UpdateDiaryEntryInput, userId: string | null = null): Promise<DiaryEntry> {
     const validated = parseOrThrowAppError(UpdateDiaryEntrySchema, input);
     const existing = await this.repository.findById(validated.id);
 
     if (!existing) {
+      throw new FetchFailedError('Diary entry not found');
+    }
+
+    if (userId !== null && existing.userId !== userId) {
       throw new FetchFailedError('Diary entry not found');
     }
 

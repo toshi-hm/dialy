@@ -9,6 +9,10 @@ vi.mock('next/cache', () => ({
   unstable_cache: vi.fn((fn) => fn),
 }));
 
+vi.mock('@/lib/auth/get-server-session', () => ({
+  getCurrentUserId: vi.fn().mockResolvedValue(null),
+}));
+
 const mockRepository: DiaryRepository = {
   save: vi.fn(),
   findById: vi.fn(),
@@ -16,6 +20,7 @@ const mockRepository: DiaryRepository = {
   findBySameDate: vi.fn(),
   delete: vi.fn(),
   findAll: vi.fn(),
+  search: vi.fn(),
 };
 
 vi.mock('@/lib/infrastructure/supabase-client', () => ({
@@ -31,6 +36,7 @@ vi.mock('@/lib/infrastructure/supabase-diary-repository', () => ({
     findBySameDate = mockRepository.findBySameDate;
     delete = mockRepository.delete;
     findAll = mockRepository.findAll;
+    search = mockRepository.search;
   },
 }));
 
@@ -40,6 +46,7 @@ const {
   deleteDiaryEntry,
   getDiaryEntry,
   getEntriesBySameDate,
+  searchDiaryEntries,
 } = await import('./diary');
 const { revalidatePath, revalidateTag } = await import('next/cache');
 
@@ -270,6 +277,62 @@ describe('Server Actions', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+    });
+  });
+
+  describe('searchDiaryEntries', () => {
+    it('returns empty array for empty query', async () => {
+      const result = await searchDiaryEntries('');
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual([]);
+      }
+      expect(mockRepository.search).not.toHaveBeenCalled();
+    });
+
+    it('returns empty array for whitespace-only query', async () => {
+      const result = await searchDiaryEntries('   ');
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual([]);
+      }
+      expect(mockRepository.search).not.toHaveBeenCalled();
+    });
+
+    it('calls repository.search with trimmed query and userId', async () => {
+      const entry = reconstructEntry();
+      vi.mocked(mockRepository.search).mockResolvedValue([entry]);
+
+      const result = await searchDiaryEntries('  hello  ');
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].content).toBe('test content');
+      }
+      expect(mockRepository.search).toHaveBeenCalledWith('hello', null);
+    });
+
+    it('returns failure with VALIDATION_ERROR for query exceeding max length', async () => {
+      const result = await searchDiaryEntries('a'.repeat(201));
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+    });
+
+    it('returns failure when repository throws', async () => {
+      vi.mocked(mockRepository.search).mockRejectedValue(new Error('DB error'));
+
+      const result = await searchDiaryEntries('query');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('FETCH_FAILED');
       }
     });
   });
