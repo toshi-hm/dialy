@@ -34,6 +34,7 @@ const deserializeEntry = (entry: SerializedDiaryEntry): DiaryEntry =>
     new Date(entry.createdAt),
     new Date(entry.updatedAt),
     entry.tags,
+    entry.userId,
   );
 
 // Dynamic imports for dialogs (only loaded when needed)

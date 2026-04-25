@@ -49,6 +49,7 @@ const serializeEntry = (entry: DiaryEntry): SerializedDiaryEntry => ({
   createdAt: entry.createdAt.toISOString(),
   updatedAt: entry.updatedAt.toISOString(),
   tags: [...entry.tags],
+  userId: entry.userId,
 });
 
 const handleError = (error: unknown): ActionResult<never> => {
@@ -128,8 +129,9 @@ export const updateDiaryEntry = async (
       throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
     }
 
+    const userId = await getCurrentUserId();
     const useCase = new UpdateDiaryEntryUseCase(await getRepository());
-    const entry = await useCase.execute(parsed.data);
+    const entry = await useCase.execute(parsed.data, userId);
 
     revalidatePath('/');
     revalidateTag(DIARY_ENTRIES_TAG, 'max');
@@ -146,8 +148,9 @@ export const deleteDiaryEntry = async (id: string): Promise<ActionResult<null>> 
       throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
     }
 
+    const userId = await getCurrentUserId();
     const useCase = new DeleteDiaryEntryUseCase(await getRepository());
-    await useCase.execute(parsed.data);
+    await useCase.execute(parsed.data, userId);
 
     revalidatePath('/');
     revalidateTag(DIARY_ENTRIES_TAG, 'max');

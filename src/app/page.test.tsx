@@ -39,6 +39,7 @@ const makeEntry = (overrides: Partial<SerializedDiaryEntry> = {}): SerializedDia
     createdAt: dateIso,
     updatedAt: dateIso,
     tags: [],
+    userId: null,
     ...overrides,
   };
 };

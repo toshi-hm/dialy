@@ -44,6 +44,7 @@ export const LoginForm = () => {
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
         <div
+          id="login-error"
           role="alert"
           className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700"
         >
@@ -63,6 +64,8 @@ export const LoginForm = () => {
           required
           autoComplete="email"
           aria-required="true"
+          aria-invalid={error !== null}
+          aria-describedby={error !== null ? 'login-error' : undefined}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
           placeholder="mail@example.com"
         />
@@ -79,6 +82,8 @@ export const LoginForm = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="current-password"
+          aria-invalid={error !== null}
+          aria-describedby={error !== null ? 'login-error' : undefined}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900 outline-none transition-shadow focus:ring-2 focus:ring-blue-500"
           placeholder="パスワードを入力"
         />

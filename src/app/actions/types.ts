@@ -7,6 +7,7 @@ export type SerializedDiaryEntry = {
   createdAt: string;
   updatedAt: string;
   tags: string[];
+  userId: string | null;
 };
 
 export type ActionSuccess<T> = {

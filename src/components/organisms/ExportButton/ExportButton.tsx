@@ -24,16 +24,18 @@ const downloadFile = (content: string, filename: string, mimeType: string) => {
 export const ExportButton = ({ className }: ExportButtonProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const handleExport = async (format: ExportFormat) => {
     setIsExporting(true);
     setIsOpen(false);
+    setExportError(null);
 
     try {
       const result = await exportDiaryEntries(format);
 
       if (!result.success) {
-        console.error('Export failed:', result.error.message);
+        setExportError(result.error.message);
         return;
       }
 
@@ -52,6 +54,17 @@ export const ExportButton = ({ className }: ExportButtonProps) => {
 
   return (
     <div className={cn('relative', className)}>
+      {exportError && (
+        <div
+          role="alert"
+          className={cn(
+            'absolute right-0 top-full z-10 mt-1 w-56 rounded-md border border-red-300',
+            'bg-red-50 px-3 py-2 text-xs text-red-700 shadow-md',
+          )}
+        >
+          {exportError}
+        </div>
+      )}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}

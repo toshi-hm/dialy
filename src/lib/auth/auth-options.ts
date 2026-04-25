@@ -1,5 +1,8 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+
+const toHashBuffer = (s: string) => Buffer.from(createHash('sha256').update(s).digest());
 
 /**
  * NextAuth.js 設定
@@ -34,7 +37,15 @@ export const authOptions: NextAuthOptions = {
         const adminPassword = process.env.NEXTAUTH_ADMIN_PASSWORD;
 
         if (adminEmail && adminPassword) {
-          if (credentials.email === adminEmail && credentials.password === adminPassword) {
+          const emailMatch = timingSafeEqual(
+            toHashBuffer(credentials.email),
+            toHashBuffer(adminEmail),
+          );
+          const passwordMatch = timingSafeEqual(
+            toHashBuffer(credentials.password),
+            toHashBuffer(adminPassword),
+          );
+          if (emailMatch && passwordMatch) {
             return {
               id: 'admin',
               email: adminEmail,

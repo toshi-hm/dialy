@@ -132,8 +132,7 @@ describe('ExportButton', () => {
     });
   });
 
-  it('エクスポート失敗時にconsole.errorが呼ばれダウンロードは実行されない', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('エクスポート失敗時にエラーメッセージが表示されダウンロードは実行されない', async () => {
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     mockExportDiaryEntries.mockResolvedValue({
       success: false,
@@ -145,11 +144,10 @@ describe('ExportButton', () => {
     fireEvent.click(screen.getByText('JSON でエクスポート'));
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Export failed:', 'Export failed');
+      expect(screen.getByRole('alert')).toBeInTheDocument();
     });
-
+    expect(screen.getByRole('alert')).toHaveTextContent('Export failed');
     expect(clickSpy).not.toHaveBeenCalled();
-    consoleSpy.mockRestore();
     clickSpy.mockRestore();
   });
 

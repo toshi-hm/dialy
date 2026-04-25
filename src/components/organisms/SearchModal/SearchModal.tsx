@@ -103,7 +103,7 @@ export const SearchModal = ({ open, onClose, onSelectDate }: SearchModalProps) =
     debounce((q: string) => {
       void doSearch(q);
     }, 400),
-    [],
+    [doSearch],
   );
 
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,6 +158,7 @@ export const SearchModal = ({ open, onClose, onSelectDate }: SearchModalProps) =
             onChange={handleQueryChange}
             placeholder="日記を検索..."
             aria-label="検索キーワード"
+            maxLength={200}
             className="w-full py-4 pl-3 text-base text-gray-900 outline-none placeholder:text-gray-400"
           />
           {isSearching && (
