@@ -63,10 +63,7 @@ export class InMemoryDiaryRepository implements DiaryRepository {
   async save(entry: DiaryEntry): Promise<void> {
     const dateKey = toDateKey(entry.date);
     const duplicate = [...this.entries.values()].find(
-      (e) =>
-        toDateKey(e.date) === dateKey &&
-        e.id !== entry.id &&
-        matchesUser(e, entry.userId),
+      (e) => toDateKey(e.date) === dateKey && e.id !== entry.id && matchesUser(e, entry.userId),
     );
     if (duplicate) {
       throw new DuplicateDateEntryError('An entry for this date already exists');

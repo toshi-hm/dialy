@@ -8,10 +8,9 @@
  */
 
 import { spawn } from 'node:child_process';
-import { writeFile, mkdir } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -45,7 +44,7 @@ const MIME_TYPES = {
   '.map': 'application/json',
 };
 
-function startStaticServer(staticDir, port) {
+const startStaticServer = (staticDir, port) => {
   return new Promise((resolve, reject) => {
     const server = createServer(async (req, res) => {
       try {
@@ -79,23 +78,19 @@ function startStaticServer(staticDir, port) {
       resolve(server);
     });
   });
-}
+};
 
-function getStories() {
+const getStories = () => {
   const indexPath = join(STORYBOOK_STATIC, 'index.json');
   if (!existsSync(indexPath)) {
-    throw new Error(
-      `storybook-static/index.json not found.\nRun: pnpm build-storybook`,
-    );
+    throw new Error(`storybook-static/index.json not found.\nRun: pnpm build-storybook`);
   }
   const index = JSON.parse(readFileSync(indexPath, 'utf-8'));
   const entries = index.entries || index.stories || {};
-  return Object.values(entries).filter(
-    (e) => !e.type || e.type === 'story',
-  );
-}
+  return Object.values(entries).filter((e) => !e.type || e.type === 'story');
+};
 
-function findChrome() {
+const findChrome = () => {
   const candidates = [
     process.env.CHROME_PATH,
     '/usr/bin/google-chrome-stable',
@@ -110,26 +105,26 @@ function findChrome() {
   for (const p of candidates) {
     if (existsSync(p)) return p;
   }
-  throw new Error(
-    'Chrome not found. Install Chrome or set CHROME_PATH environment variable.',
-  );
-}
+  throw new Error('Chrome not found. Install Chrome or set CHROME_PATH environment variable.');
+};
 
-function createCDPClient(ws) {
+const createCDPClient = (ws) => {
   let nextId = 1;
   const pending = new Map();
   const handlers = new Map();
 
   ws.onmessage = ({ data }) => {
-    const msg = JSON.parse(data);
-    if (msg.id !== undefined && pending.has(msg.id)) {
-      const { resolve, reject } = pending.get(msg.id);
-      pending.delete(msg.id);
-      if (msg.error) reject(new Error(msg.error.message));
-      else resolve(msg.result);
-    } else if (msg.method && handlers.has(msg.method)) {
-      for (const h of handlers.get(msg.method)) h(msg.params);
-    }
+    try {
+      const msg = JSON.parse(data);
+      if (msg.id !== undefined && pending.has(msg.id)) {
+        const { resolve, reject } = pending.get(msg.id);
+        pending.delete(msg.id);
+        if (msg.error) reject(new Error(msg.error.message));
+        else resolve(msg.result ?? {});
+      } else if (msg.method && handlers.has(msg.method)) {
+        for (const h of handlers.get(msg.method)) h(msg.params);
+      }
+    } catch {}
   };
 
   return {
@@ -145,11 +140,11 @@ function createCDPClient(ws) {
       handlers.get(event).push(handler);
     },
   };
-}
+};
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function waitForCDP(port, timeout = 15000) {
+const waitForCDP = async (port, timeout = 15000) => {
   const end = Date.now() + timeout;
   while (Date.now() < end) {
     try {
@@ -159,81 +154,54 @@ async function waitForCDP(port, timeout = 15000) {
     await sleep(200);
   }
   throw new Error('Chrome CDP did not become ready in time');
-}
+};
 
-async function captureStory(cdpPort, servPort, story) {
-  const newTabRes = await fetch(`http://localhost:${cdpPort}/json/new?about:blank`);
-  const tab = await newTabRes.json();
-  const ws = new WebSocket(tab.webSocketDebuggerUrl);
+const captureStory = async (cdp, servPort, story) => {
+  const storyUrl = `http://localhost:${servPort}/iframe.html?id=${story.id}&viewMode=story`;
 
-  await new Promise((resolve, reject) => {
-    ws.onopen = resolve;
-    ws.onerror = () => reject(new Error('WebSocket connection failed'));
-    setTimeout(() => reject(new Error('WebSocket open timeout')), 5000);
+  await Promise.race([
+    new Promise((resolve) => {
+      cdp.on('Page.loadEventFired', resolve);
+      cdp.send('Page.navigate', { url: storyUrl });
+    }),
+    sleep(NAVIGATION_TIMEOUT),
+  ]);
+
+  await sleep(RENDER_WAIT);
+
+  await cdp.send('Runtime.evaluate', {
+    expression: `
+      const s = document.createElement('style');
+      s.textContent = [
+        '*, *::before, *::after {',
+        '  animation: none !important;',
+        '  animation-duration: 0s !important;',
+        '  transition: none !important;',
+        '  transition-duration: 0s !important;',
+        '}',
+      ].join('');
+      document.head && document.head.appendChild(s);
+    `,
   });
 
-  const cdp = createCDPClient(ws);
+  await sleep(200);
 
-  try {
-    await cdp.send('Page.enable');
-    await cdp.send('Runtime.enable');
-    await cdp.send('Emulation.setDeviceMetricsOverride', {
-      width: 1280,
-      height: 800,
-      deviceScaleFactor: 1,
-      mobile: false,
-    });
+  const { data } = await cdp.send('Page.captureScreenshot', {
+    format: 'png',
+    captureBeyondViewport: false,
+  });
 
-    const storyUrl = `http://localhost:${servPort}/iframe.html?id=${story.id}&viewMode=story`;
+  return Buffer.from(data, 'base64');
+};
 
-    await Promise.race([
-      new Promise((resolve) => {
-        cdp.on('Page.loadEventFired', resolve);
-        cdp.send('Page.navigate', { url: storyUrl });
-      }),
-      sleep(NAVIGATION_TIMEOUT),
-    ]);
-
-    await sleep(RENDER_WAIT);
-
-    await cdp.send('Runtime.evaluate', {
-      expression: `
-        const s = document.createElement('style');
-        s.textContent = [
-          '*, *::before, *::after {',
-          '  animation: none !important;',
-          '  animation-duration: 0s !important;',
-          '  transition: none !important;',
-          '  transition-duration: 0s !important;',
-          '}',
-        ].join('');
-        document.head && document.head.appendChild(s);
-      `,
-    });
-
-    await sleep(200);
-
-    const { data } = await cdp.send('Page.captureScreenshot', {
-      format: 'png',
-      captureBeyondViewport: false,
-    });
-
-    return Buffer.from(data, 'base64');
-  } finally {
-    ws.close();
-    await fetch(`http://localhost:${cdpPort}/json/close/${tab.id}`).catch(() => {});
-  }
-}
-
-async function main() {
+const main = async () => {
   let server = null;
   let chrome = null;
+  let ws = null;
 
   try {
     if (!existsSync(STORYBOOK_STATIC)) {
-      throw new Error(
-        `storybook-static/ not found. Run: pnpm build-storybook`,
-      );
+      throw new Error(`storybook-static/ not found. Run: pnpm build-storybook`);
     }
 
     await mkdir(OUT_DIR, { recursive: true });
@@ -278,6 +246,30 @@ async function main() {
     await waitForCDP(CDP_PORT);
     console.log('[chrome] CDP ready');
 
+    // /json/new の代わりに /json/list から既存タブを取得（新バージョンChrome対応）
+    const listRes = await fetch(`http://localhost:${CDP_PORT}/json/list`);
+    const tabs = await listRes.json();
+    const pageTab = tabs.find((t) => t.type === 'page') || tabs[0];
+    if (!pageTab) throw new Error('No Chrome tab available');
+
+    ws = new WebSocket(pageTab.webSocketDebuggerUrl);
+    await new Promise((resolve, reject) => {
+      ws.onopen = resolve;
+      ws.onerror = () => reject(new Error('Tab WebSocket connection failed'));
+      setTimeout(() => reject(new Error('Tab WebSocket open timeout')), 5000);
+    });
+
+    const cdp = createCDPClient(ws);
+
+    await cdp.send('Page.enable');
+    await cdp.send('Runtime.enable');
+    await cdp.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280,
+      height: 800,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+
     let ok = 0;
     let ng = 0;
 
@@ -285,7 +277,7 @@ async function main() {
       const label = `${story.title || ''}/${story.name || story.id}`;
       try {
         const png = await Promise.race([
-          captureStory(CDP_PORT, SERVER_PORT, story),
+          captureStory(cdp, SERVER_PORT, story),
           sleep(CAPTURE_TIMEOUT).then(() => {
             throw new Error('Capture timeout');
           }),
@@ -305,6 +297,7 @@ async function main() {
       throw new Error('No screenshots were captured. Check Chrome and Storybook setup.');
     }
   } finally {
+    if (ws) ws.close();
     if (server) server.close();
     if (chrome) {
       chrome.kill('SIGTERM');
@@ -312,7 +305,7 @@ async function main() {
       chrome.kill('SIGKILL');
     }
   }
-}
+};
 
 main().catch((err) => {
   console.error('[fatal]', err.message);

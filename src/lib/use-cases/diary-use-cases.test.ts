@@ -305,5 +305,4 @@ describe('diary use cases', () => {
       FetchFailedError,
     );
   });
-
 });

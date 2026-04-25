@@ -247,9 +247,7 @@ export class SupabaseDiaryRepository implements DiaryRepository {
 
     if (userId !== undefined) {
       contentQuery =
-        userId === null
-          ? contentQuery.is('user_id', null)
-          : contentQuery.eq('user_id', userId);
+        userId === null ? contentQuery.is('user_id', null) : contentQuery.eq('user_id', userId);
     }
 
     const { data: contentData, error: contentError } = await contentQuery;
@@ -265,8 +263,7 @@ export class SupabaseDiaryRepository implements DiaryRepository {
         .order('date', { ascending: false });
 
       if (userId !== undefined) {
-        tagQuery =
-          userId === null ? tagQuery.is('user_id', null) : tagQuery.eq('user_id', userId);
+        tagQuery = userId === null ? tagQuery.is('user_id', null) : tagQuery.eq('user_id', userId);
       }
 
       const { data: tagEntryData, error: tagEntryError } = await tagQuery;
