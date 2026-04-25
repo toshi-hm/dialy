@@ -66,7 +66,7 @@ export class InMemoryDiaryRepository implements DiaryRepository {
       (e) =>
         toDateKey(e.date) === dateKey &&
         e.id !== entry.id &&
-        (entry.userId ? e.userId === entry.userId : !e.userId),
+        matchesUser(e, entry.userId),
     );
     if (duplicate) {
       throw new DuplicateDateEntryError('An entry for this date already exists');

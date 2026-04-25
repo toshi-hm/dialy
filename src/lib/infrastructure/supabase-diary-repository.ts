@@ -238,26 +238,55 @@ export class SupabaseDiaryRepository implements DiaryRepository {
 
     const tagMatchIds = ((tagData ?? []) as { entry_id: string }[]).map((r) => r.entry_id);
 
-    // メインクエリ: content 一致またはタグ一致エントリー
-    let dbQuery = this.client
+    // content 一致クエリ（ユーザー入力を .or() 文字列に埋め込まない安全な形式）
+    let contentQuery = this.client
       .from('diary_entries')
       .select('*, diary_entry_tags(name)')
+      .ilike('content', lower)
       .order('date', { ascending: false });
 
-    if (tagMatchIds.length > 0) {
-      dbQuery = dbQuery.or(`content.ilike.${lower},id.in.(${tagMatchIds.join(',')})`);
-    } else {
-      dbQuery = dbQuery.ilike('content', lower);
-    }
-
     if (userId !== undefined) {
-      dbQuery = userId === null ? dbQuery.is('user_id', null) : dbQuery.eq('user_id', userId);
+      contentQuery =
+        userId === null
+          ? contentQuery.is('user_id', null)
+          : contentQuery.eq('user_id', userId);
     }
 
-    const { data, error } = await dbQuery;
+    const { data: contentData, error: contentError } = await contentQuery;
+    if (contentError) throw new Error(contentError.message);
 
-    if (error) throw new Error(error.message);
-    if (!data) return [];
-    return (data as DbDiaryEntry[]).map(toDomainEntry);
+    // タグ一致クエリ（tagMatchIds がある場合のみ実行）
+    let tagEntries: DbDiaryEntry[] = [];
+    if (tagMatchIds.length > 0) {
+      let tagQuery = this.client
+        .from('diary_entries')
+        .select('*, diary_entry_tags(name)')
+        .in('id', tagMatchIds)
+        .order('date', { ascending: false });
+
+      if (userId !== undefined) {
+        tagQuery =
+          userId === null ? tagQuery.is('user_id', null) : tagQuery.eq('user_id', userId);
+      }
+
+      const { data: tagEntryData, error: tagEntryError } = await tagQuery;
+      if (tagEntryError) throw new Error(tagEntryError.message);
+      tagEntries = (tagEntryData ?? []) as DbDiaryEntry[];
+    }
+
+    // マージして重複排除（content 一致を先頭に）
+    const seen = new Set<string>();
+    const merged: DbDiaryEntry[] = [];
+    for (const entry of [...((contentData ?? []) as DbDiaryEntry[]), ...tagEntries]) {
+      if (!seen.has(entry.id)) {
+        seen.add(entry.id);
+        merged.push(entry);
+      }
+    }
+
+    // 日付降順でソート
+    merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return merged.map(toDomainEntry);
   }
 }

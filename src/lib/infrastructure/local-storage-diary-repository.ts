@@ -153,7 +153,7 @@ export class LocalStorageDiaryRepository implements DiaryRepository {
     return this.getStorage().entries.map((entry) => this.deserialize(entry));
   }
 
-  async search(query: string): Promise<DiaryEntry[]> {
+  async search(query: string, _userId?: string | null): Promise<DiaryEntry[]> {
     const lower = query.toLowerCase();
     return this.getStorage()
       .entries.map((entry) => this.deserialize(entry))
